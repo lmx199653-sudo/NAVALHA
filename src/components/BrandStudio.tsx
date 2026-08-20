@@ -21,9 +21,11 @@ type Props = {
   /** Persistência opcional (usada nas Configurações). */
   onSave?: (brand: Brand) => Promise<void> | void;
   saving?: boolean;
+  /** Permite enviar a logo (desativado na criação da barbearia). */
+  allowLogoUpload?: boolean;
 };
 
-export function BrandStudio({ shopName, value, onChange, onSave, saving }: Props) {
+export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLogoUpload = true }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [custom, setCustom] = useState(false);
 
