@@ -46,7 +46,7 @@ const NAV = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[10]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
 
 
 
