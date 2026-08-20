@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Clock,
   Crown,
+  CreditCard,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -22,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useBrand } from "@/lib/brand";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
