@@ -153,7 +153,7 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
         )}
       </div>
 
-      {!value.logo_url && (
+      {allowLogoUpload && !value.logo_url && (
         <p className="text-xs text-muted-foreground">
           Sem logo? Sem problema — usamos a identidade padrão até você enviar a sua.
         </p>
