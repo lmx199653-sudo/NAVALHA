@@ -60,9 +60,7 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           return new Response("ok");
         }
 
-        const userId =
-          subscription.metadata?.user_id ||
-          (subscription as unknown as { metadata?: { user_id?: string } }).metadata?.user_id;
+        const userId = subscription.metadata?.["user_id"];
         if (!userId) {
           return new Response("ok");
         }
@@ -76,18 +74,20 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           .eq("user_id", userId)
           .maybeSingle();
 
+        const subAny = subscription as Record<string, unknown>;
+        const currentPeriodEnd = subAny.current_period_end as number | undefined;
+        const trialEnd = subAny.trial_end as number | undefined;
+
         const payload = {
           user_id: userId,
           stripe_customer_id: subscription.customer as string,
           stripe_subscription_id: subscription.id,
           stripe_price_id: priceId,
           status: subscription.status,
-          current_period_end: subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
+          current_period_end: currentPeriodEnd
+            ? new Date(currentPeriodEnd * 1000).toISOString()
             : null,
-          trial_end: subscription.trial_end
-            ? new Date(subscription.trial_end * 1000).toISOString()
-            : null,
+          trial_end: trialEnd ? new Date(trialEnd * 1000).toISOString() : null,
         };
 
         if (existing) {
