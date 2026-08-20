@@ -136,7 +136,7 @@ function Onboarding() {
           </div>
 
           <div className="rounded-xl border border-border p-4">
-            <BrandStudio shopName={form.name} value={brand} onChange={setBrand} />
+            <BrandStudio shopName={form.name} value={brand} onChange={setBrand} allowLogoUpload={false} />
           </div>
 
           <button

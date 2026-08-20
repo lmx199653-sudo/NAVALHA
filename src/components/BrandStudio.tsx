@@ -21,9 +21,11 @@ type Props = {
   /** Persistência opcional (usada nas Configurações). */
   onSave?: (brand: Brand) => Promise<void> | void;
   saving?: boolean;
+  /** Permite enviar a logo (desativado na criação da barbearia). */
+  allowLogoUpload?: boolean;
 };
 
-export function BrandStudio({ shopName, value, onChange, onSave, saving }: Props) {
+export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLogoUpload = true }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [custom, setCustom] = useState(false);
 
@@ -58,7 +60,9 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving }: Props
         <div>
           <h3 className="font-display text-2xl">Identidade visual</h3>
           <p className="text-xs text-muted-foreground">
-            Envie sua logo e ajuste as cores da sua barbearia.
+            {allowLogoUpload
+              ? "Envie sua logo e ajuste as cores da sua barbearia."
+              : "Ajuste as cores da sua barbearia."}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -113,24 +117,28 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving }: Props
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-          <Upload className="size-4" /> Enviar minha logo
-        </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void upload(f);
-            e.target.value = "";
-          }}
-        />
-        {value.logo_url && (
-          <Button type="button" variant="ghost" onClick={() => patch({ logo_url: null })}>
-            Remover logo
-          </Button>
+        {allowLogoUpload && (
+          <>
+            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+              <Upload className="size-4" /> Enviar minha logo
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void upload(f);
+                e.target.value = "";
+              }}
+            />
+            {value.logo_url && (
+              <Button type="button" variant="ghost" onClick={() => patch({ logo_url: null })}>
+                Remover logo
+              </Button>
+            )}
+          </>
         )}
         {onSave && (
           <Button
@@ -145,7 +153,7 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving }: Props
         )}
       </div>
 
-      {!value.logo_url && (
+      {allowLogoUpload && !value.logo_url && (
         <p className="text-xs text-muted-foreground">
           Sem logo? Sem problema — usamos a identidade padrão até você enviar a sua.
         </p>
