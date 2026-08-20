@@ -34,7 +34,8 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
     if (!customerId) {
       const customers = await stripe.customers.list({ email, limit: 1 });
       if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
+        const customer = customers.data[0];
+        if (customer) customerId = customer.id;
       }
     }
 
