@@ -720,6 +720,22 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
+  const whatsappMessage = [
+    `✅ *Agendamento confirmado* — ${shop.name}`,
+    "",
+    `Cliente: ${name}`,
+    `Serviço: ${service.name}`,
+    `Profissional: ${barber.name}`,
+    `Dia: ${WEEKDAYS[start.getDay()]}, ${start.toLocaleDateString("pt-BR")}`,
+    `Horário: ${timeLabel(slot)}`,
+    `Valor: ${brl(service.price_cents)}`,
+    `Telefone: ${phone}`,
+  ].join("\n");
+  const whatsappConfirmLink = whatsappLink
+    ? `${whatsappLink}?text=${encodeURIComponent(whatsappMessage)}`
+    : null;
+
+
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
