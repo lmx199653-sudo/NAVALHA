@@ -60,7 +60,9 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
         <div>
           <h3 className="font-display text-2xl">Identidade visual</h3>
           <p className="text-xs text-muted-foreground">
-            Envie sua logo e ajuste as cores da sua barbearia.
+            {allowLogoUpload
+              ? "Envie sua logo e ajuste as cores da sua barbearia."
+              : "Ajuste as cores da sua barbearia."}
           </p>
         </div>
         <div className="flex items-center gap-3">
