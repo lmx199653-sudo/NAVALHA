@@ -123,7 +123,9 @@ function PublicBooking() {
     queryFn: async () => {
       const { data: shop } = await supabase
         .from("barbershops")
-        .select("*")
+        .select(
+          "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family",
+        )
         .eq("slug", slug)
         .maybeSingle();
       if (!shop) return null;
@@ -137,7 +139,7 @@ function PublicBooking() {
           .order("name"),
         supabase.from("barbers").select("*").eq("barbershop_id", shop.id).eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
-        supabase.from("schedule_breaks").select("*").eq("barbershop_id", shop.id),
+        supabase.rpc("public_breaks", { _slug: slug }),
       ]);
       return {
         shop: shop as Shop,
