@@ -20,8 +20,8 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const stripe = getStripe();
     const { userId, supabase } = context;
-    const email = (context.claims.email as string | undefined) || "";
-    if (!email) throw new Error("E-mail do usuário não disponível");
+    const email = context.claims.email;
+    if (typeof email !== "string" || !email) throw new Error("E-mail do usuário não disponível");
 
     const { data: existing } = await supabase
       .from("user_subscriptions")
@@ -41,7 +41,6 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
     const origin = getOrigin();
 
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer_email: customerId ? undefined : email,
       line_items: [{ price: PRICE_ID, quantity: 1 }],
       mode: "subscription",
       subscription_data: { trial_period_days: TRIAL_DAYS },
@@ -51,6 +50,8 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
     };
     if (customerId) {
       sessionParams.customer = customerId;
+    } else {
+      sessionParams.customer_email = email;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
