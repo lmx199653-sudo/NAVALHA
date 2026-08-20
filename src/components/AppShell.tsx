@@ -62,12 +62,17 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { data: shop } = useShop();
+  const { data: subscription } = useSubscription();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   const { installed } = usePwaInstall();
   useBrand(shop);
+
+  const isSubscribed = subscription?.subscribed;
+  const subLabel = isSubscribed ? "Ativo" : "Grátis";
+  const subClass = isSubscribed ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground";
 
 
 
