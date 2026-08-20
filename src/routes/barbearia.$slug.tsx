@@ -770,9 +770,9 @@ function SuccessScreen({
                 <CalendarPlus className="size-4" /> Adicionar ao calendário
               </a>
             </Button>
-            {whatsappLink && (
+            {whatsappConfirmLink && (
               <Button variant="outline" className="h-12 w-full" asChild>
-                <a href={whatsappLink} target="_blank" rel="noreferrer">
+                <a href={whatsappConfirmLink} target="_blank" rel="noreferrer">
                   <MessageCircle className="size-4" /> Falar com a barbearia
                 </a>
               </Button>
