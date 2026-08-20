@@ -96,6 +96,18 @@ export function AppShell({
             {shop?.name ? shop.name.toUpperCase() : <>NAVALHA <span className="text-primary">PRO</span></>}
           </span>
         </div>
+        <div className="px-5 pb-3">
+          <Link
+            to="/assinatura"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+              subClass,
+              !isSubscribed && "hover:text-foreground",
+            )}
+          >
+            <Crown className="size-3" /> {subLabel}
+          </Link>
+        </div>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map((item) => {
             const active = pathname.startsWith(item.to);
