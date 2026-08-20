@@ -74,9 +74,9 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           .eq("user_id", userId)
           .maybeSingle();
 
-        const subAny = subscription as Record<string, unknown>;
-        const currentPeriodEnd = subAny.current_period_end as number | undefined;
-        const trialEnd = subAny.trial_end as number | undefined;
+        const subAny = subscription as unknown as Record<string, unknown>;
+        const currentPeriodEnd = subAny["current_period_end"] as number | undefined;
+        const trialEnd = subAny["trial_end"] as number | undefined;
 
         const payload = {
           user_id: userId,
