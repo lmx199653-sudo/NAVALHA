@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Clock,
   Crown,
+  CreditCard,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -22,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useBrand } from "@/lib/brand";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -40,10 +42,11 @@ const NAV = [
   { to: "/financeiro", label: "Financeiro", icon: BarChart3 },
   { to: "/planos", label: "Planos", icon: Crown },
   { to: "/marketing", label: "Marketing", icon: Megaphone },
+  { to: "/assinatura", label: "Assinatura", icon: CreditCard },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[10]] as const;
 
 
 
@@ -59,12 +62,17 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { data: shop } = useShop();
+  const { data: subscription } = useSubscription();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   const { installed } = usePwaInstall();
   useBrand(shop);
+
+  const isSubscribed = subscription?.subscribed;
+  const subLabel = isSubscribed ? "Ativo" : "Grátis";
+  const subClass = isSubscribed ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground";
 
 
 
@@ -87,6 +95,18 @@ export function AppShell({
           <span className="break-words font-display text-2xl leading-tight tracking-wide">
             {shop?.name ? shop.name.toUpperCase() : <>NAVALHA <span className="text-primary">PRO</span></>}
           </span>
+        </div>
+        <div className="px-5 pb-3">
+          <Link
+            to="/assinatura"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+              subClass,
+              !isSubscribed && "hover:text-foreground",
+            )}
+          >
+            <Crown className="size-3" /> {subLabel}
+          </Link>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map((item) => {
