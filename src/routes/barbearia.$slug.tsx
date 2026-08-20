@@ -764,19 +764,19 @@ function SuccessScreen({
               <span className="font-display text-3xl text-primary">{brl(service.price_cents)}</span>
             </div>
           </div>
-          <div className="space-y-2 p-5">
-            <Button className="h-12 w-full" asChild>
+          <div className="space-y-3 p-5">
+            {whatsappConfirmLink && (
+              <Button className="h-14 w-full text-base font-semibold shadow-lg" size="lg" asChild>
+                <a href={whatsappConfirmLink} target="_blank" rel="noreferrer">
+                  <MessageCircle className="size-5" /> CONFIRMAR COM BARBEARIA
+                </a>
+              </Button>
+            )}
+            <Button variant="outline" className="h-12 w-full" asChild>
               <a href={calendarUrl} target="_blank" rel="noreferrer">
                 <CalendarPlus className="size-4" /> Adicionar ao calendário
               </a>
             </Button>
-            {whatsappConfirmLink && (
-              <Button variant="outline" className="h-12 w-full" asChild>
-                <a href={whatsappConfirmLink} target="_blank" rel="noreferrer">
-                  <MessageCircle className="size-4" /> Falar com a barbearia
-                </a>
-              </Button>
-            )}
           </div>
         </div>
       </div>
