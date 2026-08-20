@@ -117,24 +117,28 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
-          <Upload className="size-4" /> Enviar minha logo
-        </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) void upload(f);
-            e.target.value = "";
-          }}
-        />
-        {value.logo_url && (
-          <Button type="button" variant="ghost" onClick={() => patch({ logo_url: null })}>
-            Remover logo
-          </Button>
+        {allowLogoUpload && (
+          <>
+            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}>
+              <Upload className="size-4" /> Enviar minha logo
+            </Button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void upload(f);
+                e.target.value = "";
+              }}
+            />
+            {value.logo_url && (
+              <Button type="button" variant="ghost" onClick={() => patch({ logo_url: null })}>
+                Remover logo
+              </Button>
+            )}
+          </>
         )}
         {onSave && (
           <Button
