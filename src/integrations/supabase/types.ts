@@ -735,6 +735,18 @@ export type Database = {
         }[]
       }
       is_member: { Args: { _shop: string }; Returns: boolean }
+      public_breaks: {
+        Args: { _slug: string }
+        Returns: {
+          barber_id: string
+          end_time: string
+          id: string
+          name: string
+          specific_date: string
+          start_time: string
+          weekdays: number[]
+        }[]
+      }
     }
     Enums: {
       app_role: "owner" | "admin" | "barber" | "customer"
