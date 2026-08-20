@@ -8,7 +8,11 @@ const TRIAL_DAYS = 7;
 function getStripe() {
   const key = process.env["STRIPE_SECRET_KEY"];
   if (!key) throw new Error("STRIPE_SECRET_KEY não configurada");
-  return new Stripe(key, { apiVersion: "2025-08-27.basil" });
+  return new Stripe(key, { apiVersion: "2026-07-29.dahlia" });
+}
+
+function getOrigin() {
+  return process.env["WEBSITE_URL"] || "https://pronavalha.lovable.app";
 }
 
 export const createCheckoutSubscription = createServerFn({ method: "POST" })
@@ -16,7 +20,7 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const stripe = getStripe();
     const { userId, supabase } = context;
-    const email = context.claims.email as string | undefined;
+    const email = (context.claims.email as string | undefined) || "";
     if (!email) throw new Error("E-mail do usuário não disponível");
 
     const { data: existing } = await supabase
@@ -25,7 +29,7 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
       .eq("user_id", userId)
       .maybeSingle();
 
-    let customerId = existing?.stripe_customer_id as string | undefined;
+    let customerId = (existing?.stripe_customer_id as string | undefined) || "";
 
     if (!customerId) {
       const customers = await stripe.customers.list({ email, limit: 1 });
@@ -34,10 +38,9 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
       }
     }
 
-    const origin = "https://pronavalha.lovable.app";
+    const origin = getOrigin();
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
+    const sessionParams: Stripe.Checkout.SessionCreateParams = {
       customer_email: customerId ? undefined : email,
       line_items: [{ price: PRICE_ID, quantity: 1 }],
       mode: "subscription",
@@ -45,7 +48,12 @@ export const createCheckoutSubscription = createServerFn({ method: "POST" })
       success_url: `${origin}/assinatura?success=1`,
       cancel_url: `${origin}/assinatura?canceled=1`,
       metadata: { user_id: userId },
-    });
+    };
+    if (customerId) {
+      sessionParams.customer = customerId;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     if (!session.url) throw new Error("Falha ao criar sessão de checkout");
     return { url: session.url };
