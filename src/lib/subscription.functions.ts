@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import Stripe from "stripe";
 
@@ -12,6 +13,9 @@ function getStripe() {
 }
 
 function getOrigin() {
+  const request = getRequest();
+  const headerOrigin = request?.headers.get("origin");
+  if (headerOrigin) return headerOrigin;
   return process.env["WEBSITE_URL"] || "https://pronavalha.lovable.app";
 }
 
