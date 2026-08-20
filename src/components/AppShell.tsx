@@ -42,10 +42,11 @@ const NAV = [
   { to: "/financeiro", label: "Financeiro", icon: BarChart3 },
   { to: "/planos", label: "Planos", icon: Crown },
   { to: "/marketing", label: "Marketing", icon: Megaphone },
+  { to: "/assinatura", label: "Assinatura", icon: CreditCard },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[10]] as const;
 
 
 
