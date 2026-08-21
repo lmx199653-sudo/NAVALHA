@@ -54,9 +54,10 @@ function Onboarding() {
       font_family: brand.font_family,
     };
 
+    const returning = "id, slug, name, onboarding_done";
     const { data, error } = shop
-      ? await supabase.from("barbershops").update(payload).eq("id", shop.id).select().single()
-      : await supabase.from("barbershops").insert(payload).select().single();
+      ? await supabase.from("barbershops").update(payload).eq("id", shop.id).select(returning).single()
+      : await supabase.from("barbershops").insert(payload).select(returning).single();
 
     if (error || !data) {
       setLoading(false);

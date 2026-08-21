@@ -8,7 +8,7 @@ export const DEMO_SHOP_ID = "demo-shop";
 
 export const demoShop: Shop = {
   id: DEMO_SHOP_ID,
-  owner_id: "demo-owner",
+  
   name: "Navalha Pro",
   slug: "navalha-pro",
   description: "Barbearia demonstração — explore o sistema à vontade.",
