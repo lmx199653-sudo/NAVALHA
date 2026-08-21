@@ -152,21 +152,15 @@ function Onboarding() {
             <BrandStudio shopName={form.name} value={brand} onChange={setBrand} allowLogoUpload={false} />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setWithDemo(!withDemo)}
-            className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${
-              withDemo ? "border-primary bg-primary/10" : "border-border"
-            }`}
-          >
+          <div className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left text-sm">
             <Sparkles className="size-4 text-primary" />
             <span>
-              Criar dados de demonstração
+              Sua barbearia começa do zero
               <span className="block text-xs text-muted-foreground">
-                Serviços, barbeiros, clientes e agendamentos para você testar o sistema.
+                Você cadastra seus serviços, preços, barbeiros e clientes do seu jeito.
               </span>
             </span>
-          </button>
+          </div>
 
           <Button className="w-full" size="lg" disabled={loading}>
             {loading ? "Criando..." : "Criar minha barbearia"}
