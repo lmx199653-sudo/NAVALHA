@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import {
@@ -27,7 +27,6 @@ import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { demoDashboardData } from "@/lib/demo-dashboard";
 
 export const Route = createFileRoute("/dashboard")({
@@ -177,29 +176,11 @@ function Dashboard() {
     <AppShell
       title="Dashboard"
       subtitle={
-        isDemo
-          ? "Visualização de demonstração · entre pelo app para ver seus dados"
-          : shop
-            ? `${shop.name} · /barbearia/${shop.slug}`
-            : "Carregando..."
+        shop
+          ? `${shop.name} · /barbearia/${shop.slug}`
+          : "Carregando..."
       }
     >
-      {isDemo && (
-        <div className="surface-card mb-4 flex flex-col gap-3 border-primary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">
-            Você está vendo um painel de <strong className="text-foreground">demonstração</strong>.
-            Para gerenciar sua barbearia, instale o app Navalha Pro e faça login por ele.
-          </p>
-          <div className="flex shrink-0 gap-2">
-            <Button asChild size="sm">
-              <Link to="/instalar-app">Instalar app</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/auth">Entrar</Link>
-            </Button>
-          </div>
-        </div>
-      )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
         <StatCard label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" />
