@@ -22,6 +22,8 @@ import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { InstallAppCta } from "@/components/InstallAppCta";
+
 import { useBrand } from "@/lib/brand";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
