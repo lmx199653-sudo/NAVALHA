@@ -22,6 +22,8 @@ import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
+import { InstallAppCta } from "@/components/InstallAppCta";
+
 import { useBrand } from "@/lib/brand";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
@@ -160,7 +162,11 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">{children}</main>
+        <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
+          <InstallAppCta />
+          {children}
+        </main>
+
       </div>
 
       
