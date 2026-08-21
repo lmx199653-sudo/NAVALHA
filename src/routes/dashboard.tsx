@@ -28,6 +28,7 @@ import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { demoDashboardData } from "@/lib/demo-dashboard";
+import { requireLoginInApp } from "@/lib/app-auth";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/dashboard")({
       ],
     };
   },
+  beforeLoad: () => requireLoginInApp(),
   component: Dashboard,
 });
 
