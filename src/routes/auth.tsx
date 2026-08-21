@@ -132,6 +132,8 @@ function AuthPage() {
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 
+  if (checking) return <div className="min-h-screen bg-background" />;
+
   return (
     <div className="grid-noise flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
