@@ -20,13 +20,18 @@ export async function seedDemoData(shopId: string) {
   const { data: services } = await supabase
     .from("services")
     .insert([
-      { barbershop_id: shopId, name: "Corte", description: "Corte na máquina e tesoura", price_cents: 5000, duration_min: 30 },
-      { barbershop_id: shopId, name: "Barba", description: "Toalha quente e navalha", price_cents: 3500, duration_min: 30 },
-      { barbershop_id: shopId, name: "Corte + Barba", description: "Combo completo", price_cents: 7500, duration_min: 60 },
-      { barbershop_id: shopId, name: "Sobrancelha", description: "Design masculino", price_cents: 2000, duration_min: 15 },
-      { barbershop_id: shopId, name: "Pigmentação", description: "Preenchimento de barba", price_cents: 4500, duration_min: 45 },
+      { barbershop_id: shopId, name: "Navalhado", description: "Acabamento na navalha", price_cents: 5000, duration_min: 40, sort_order: 1 },
+      { barbershop_id: shopId, name: "Corte Máquina", description: "Corte todo na máquina", price_cents: 4000, duration_min: 30, sort_order: 2 },
+      { barbershop_id: shopId, name: "Corte Tesoura", description: "Corte clássico na tesoura", price_cents: 5500, duration_min: 40, sort_order: 3 },
+      { barbershop_id: shopId, name: "Barba", description: "Toalha quente e navalha", price_cents: 3500, duration_min: 30, sort_order: 4 },
+      { barbershop_id: shopId, name: "Sobrancelha", description: "Design masculino", price_cents: 2000, duration_min: 15, sort_order: 5 },
+      { barbershop_id: shopId, name: "Corte Infantil", description: "Atendimento para crianças", price_cents: 4000, duration_min: 30, sort_order: 6 },
+      { barbershop_id: shopId, name: "Pigmentação", description: "Preenchimento de barba", price_cents: 4500, duration_min: 45, sort_order: 7 },
+      { barbershop_id: shopId, name: "Reflexo", description: "Luzes e reflexos", price_cents: 9000, duration_min: 60, sort_order: 8 },
+      { barbershop_id: shopId, name: "Nevou", description: "Descoloração global", price_cents: 12000, duration_min: 90, sort_order: 9 },
     ])
     .select();
+
 
   const { data: barbers } = await supabase
     .from("barbers")
