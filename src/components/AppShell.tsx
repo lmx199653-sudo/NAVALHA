@@ -21,6 +21,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
+import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
 
@@ -154,6 +155,11 @@ export function AppShell({
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              {!canManage() && (
+                <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground sm:inline">
+                  Somente visualização
+                </span>
+              )}
               {action}
               <Button
                 variant="ghost"

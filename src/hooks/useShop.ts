@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { demoShop } from "@/lib/demo-db";
 
 export type Shop = {
   id: string;
@@ -50,12 +51,14 @@ export function useShop() {
 
   return useQuery({
     queryKey: ["shop", userId],
-    enabled: ready && !!userId,
+    enabled: ready,
     queryFn: async (): Promise<Shop | null> => {
+      // Visitante sem login: barbearia de demonstração (somente visualização).
+      if (!userId) return demoShop;
       const { data, error } = await supabase
         .from("barbershops")
         .select("*")
-        .eq("owner_id", userId!)
+        .eq("owner_id", userId)
         .order("created_at")
         .limit(1)
         .maybeSingle();
