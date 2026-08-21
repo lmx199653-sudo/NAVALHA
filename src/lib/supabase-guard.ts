@@ -10,7 +10,7 @@
 import { toast } from "sonner";
 
 import { supabase as realClient } from "@/integrations/supabase/client";
-import { isStandalone } from "@/lib/pwa";
+
 import { demoTables } from "@/lib/demo-db";
 
 export const MANAGE_BLOCKED_MESSAGE =
