@@ -97,10 +97,13 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) { toast.error(traduzErro(error.message)); return; }
-    navigate({ to: "/dashboard" });
+    const userId = data.session?.user.id;
+    const to = userId && (await hasShop(userId)) ? "/dashboard" : "/onboarding";
+    navigate({ to, replace: true });
+
   }
 
   async function signUp(e: React.FormEvent) {
