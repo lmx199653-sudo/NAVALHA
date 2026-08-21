@@ -175,9 +175,32 @@ function Dashboard() {
   return (
     <AppShell
       title="Dashboard"
-      subtitle={shop ? `${shop.name} · /barbearia/${shop.slug}` : "Carregando..."}
+      subtitle={
+        isDemo
+          ? "Visualização de demonstração · entre pelo app para ver seus dados"
+          : shop
+            ? `${shop.name} · /barbearia/${shop.slug}`
+            : "Carregando..."
+      }
     >
+      {isDemo && (
+        <div className="surface-card mb-4 flex flex-col gap-3 border-primary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Você está vendo um painel de <strong className="text-foreground">demonstração</strong>.
+            Para gerenciar sua barbearia, instale o app Navalha Pro e faça login por ele.
+          </p>
+          <div className="flex shrink-0 gap-2">
+            <Button asChild size="sm">
+              <Link to="/instalar-app">Instalar app</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/auth">Entrar</Link>
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+
         <StatCard label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" />
         <StatCard label="Faturamento do dia" value={brl(revToday)} icon={Coins} />
         <StatCard label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
