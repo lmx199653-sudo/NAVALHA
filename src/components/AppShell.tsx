@@ -74,9 +74,15 @@ export function AppShell({
   const { installed } = usePwaInstall();
   useBrand(shop);
 
+  // Alterações administrativas só são liberadas dentro do app instalado.
+  const VIEW_ONLY_PATHS = ["/dashboard", "/onboarding"];
+  const manageLocked =
+    !installed && !VIEW_ONLY_PATHS.some((p) => pathname.startsWith(p));
+
   const isSubscribed = subscription?.subscribed;
   const subLabel = isSubscribed ? "Ativo" : "Grátis";
   const subClass = isSubscribed ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground";
+
 
 
 
