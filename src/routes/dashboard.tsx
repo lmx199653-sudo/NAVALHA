@@ -27,6 +27,7 @@ import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { demoDashboardData } from "@/lib/demo-dashboard";
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
