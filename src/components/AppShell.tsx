@@ -160,7 +160,11 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">{children}</main>
+        <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
+          <InstallAppCta />
+          {children}
+        </main>
+
       </div>
 
       
