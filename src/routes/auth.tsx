@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -34,6 +34,25 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">("login");
+  const [checking, setChecking] = useState(true);
+
+  // Já logado: não fica preso na tela de login.
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (data.session) navigate({ to: "/dashboard", replace: true });
+      else setChecking(false);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard", replace: true });
+    });
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,6 +131,8 @@ function AuthPage() {
     if (error) { toast.error(error.message); return; }
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
+
+  if (checking) return <div className="min-h-screen bg-background" />;
 
   return (
     <div className="grid-noise flex min-h-screen items-center justify-center px-4 py-10">
