@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Scissors, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
-import { seedDemoData } from "@/lib/demo";
 import { slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,6 @@ function Onboarding() {
   const { userId } = useSession();
   const { data: shop, isSuccess } = useShop();
   const [loading, setLoading] = useState(false);
-  const [withDemo, setWithDemo] = useState(true);
   const [brand, setBrand] = useState<Brand>(() => emptyBrand());
   const [form, setForm] = useState({
     name: "",
@@ -70,7 +68,17 @@ function Onboarding() {
       .from("barbershop_members")
       .upsert({ barbershop_id: data.id, user_id: userId, role: "owner" }, { onConflict: "barbershop_id,user_id" });
 
-    if (withDemo) await seedDemoData(data.id);
+    // Barbearia começa vazia: o barbeiro cadastra serviços, preços e clientes.
+    await supabase.from("business_hours").upsert(
+      Array.from({ length: 7 }, (_, weekday) => ({
+        barbershop_id: data.id,
+        weekday,
+        open_time: "09:00",
+        close_time: weekday === 6 ? "18:00" : "20:00",
+        closed: weekday === 0,
+      })),
+      { onConflict: "barbershop_id,weekday" },
+    );
 
     await qc.invalidateQueries();
     setLoading(false);
@@ -142,21 +150,15 @@ function Onboarding() {
             <BrandStudio shopName={form.name} value={brand} onChange={setBrand} allowLogoUpload={false} />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setWithDemo(!withDemo)}
-            className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left text-sm transition-colors ${
-              withDemo ? "border-primary bg-primary/10" : "border-border"
-            }`}
-          >
+          <div className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left text-sm">
             <Sparkles className="size-4 text-primary" />
             <span>
-              Criar dados de demonstração
+              Sua barbearia começa do zero
               <span className="block text-xs text-muted-foreground">
-                Serviços, barbeiros, clientes e agendamentos para você testar o sistema.
+                Você cadastra seus serviços, preços, barbeiros e clientes do seu jeito.
               </span>
             </span>
-          </button>
+          </div>
 
           <Button className="w-full" size="lg" disabled={loading}>
             {loading ? "Criando..." : "Criar minha barbearia"}
