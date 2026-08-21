@@ -87,7 +87,7 @@ function Onboarding() {
     navigate({ to: "/dashboard", replace: true });
   }
 
-  if (!isSuccess || shop?.onboarding_done) return null;
+  if (shop?.onboarding_done) return null;
 
   return (
     <div className="grid-noise min-h-screen px-4 py-12">
