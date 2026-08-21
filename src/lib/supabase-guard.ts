@@ -29,10 +29,10 @@ function hasSession() {
   }
 }
 
-/** Alterações só são permitidas dentro do app instalado e com login. */
+/** Com login (app instalado ou navegador) as alterações são liberadas. */
 export function canManage() {
   if (typeof window === "undefined") return false;
-  return isStandalone() && hasSession();
+  return hasSession();
 }
 
 /** Mostra o aviso, evitando duplicar quando a própria tela também avisa. */
