@@ -99,6 +99,9 @@ function Dashboard() {
   const data = isDemo ? demo : liveData;
 
   const appts = (data?.appts ?? []) as Appt[];
+  const customers = (data?.customers ?? []) as { id: string; created_at: string }[];
+  const barbers = (data?.barbers ?? []) as { id: string; name: string }[];
+  const services = (data?.services ?? []) as { id: string; name: string }[];
   const today = new Date().toDateString();
 
   const now = Date.now();
@@ -120,16 +123,16 @@ function Dashboard() {
   const noShow = monthAppts.filter((a) => a.status === "no_show").length;
   const occupancy = Math.min(
     100,
-    Math.round((todays.length / Math.max(1, (data?.barbers.length ?? 1) * 12)) * 100),
+    Math.round((todays.length / Math.max(1, (barbers.length || 1) * 12)) * 100),
   );
-  const newCustomers = (data?.customers ?? []).filter(
+  const newCustomers = customers.filter(
     (c) => new Date(c.created_at as string) >= monthStart,
   ).length;
 
   const serviceName = (id: string | null) =>
-    data?.services.find((s) => s.id === id)?.name ?? "Serviço";
+    services.find((s) => s.id === id)?.name ?? "Serviço";
   const barberName = (id: string | null) =>
-    data?.barbers.find((b) => b.id === id)?.name ?? "Equipe";
+    barbers.find((b) => b.id === id)?.name ?? "Equipe";
 
   const topService = Object.entries(
     monthAppts.reduce<Record<string, number>>((acc, a) => {
@@ -180,7 +183,7 @@ function Dashboard() {
         <StatCard label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
         <StatCard label="Ticket médio" value={brl(ticket)} icon={Coins} />
         <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} />
-        <StatCard label="Base de clientes" value={data?.customers.length ?? 0} icon={Users} />
+        <StatCard label="Base de clientes" value={customers.length} icon={Users} />
         <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} />
         <StatCard
           label="Cancelamentos / faltas"
