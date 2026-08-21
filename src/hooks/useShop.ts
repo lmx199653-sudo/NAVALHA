@@ -57,15 +57,25 @@ export function useShop() {
     queryFn: async (): Promise<Shop | null> => {
       // Visitante sem login: barbearia de demonstração (somente visualização).
       if (!userId) return demoShop;
+      // A barbearia é localizada pelo vínculo de equipe (o dono recebe o vínculo
+      // automaticamente), evitando expor o identificador do proprietário.
+      const { data: memberships, error: memberError } = await supabase
+        .from("barbershop_members")
+        .select("barbershop_id")
+        .eq("user_id", userId);
+      if (memberError) throw memberError;
+      const ids = (memberships ?? []).map((m: { barbershop_id: string }) => m.barbershop_id);
+      if (ids.length === 0) return null;
+
       const { data, error } = await supabase
         .from("barbershops")
-        .select("*")
-        .eq("owner_id", userId)
+        .select(SHOP_COLUMNS)
+        .in("id", ids)
         .order("created_at")
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as Shop | null;
+      return (data ?? null) as Shop | null;
     },
   });
 }
