@@ -70,7 +70,17 @@ function Onboarding() {
       .from("barbershop_members")
       .upsert({ barbershop_id: data.id, user_id: userId, role: "owner" }, { onConflict: "barbershop_id,user_id" });
 
-    if (withDemo) await seedDemoData(data.id);
+    // Barbearia começa vazia: o barbeiro cadastra serviços, preços e clientes.
+    await supabase.from("business_hours").upsert(
+      Array.from({ length: 7 }, (_, weekday) => ({
+        barbershop_id: data.id,
+        weekday,
+        open_time: "09:00",
+        close_time: weekday === 6 ? "18:00" : "20:00",
+        closed: weekday === 0,
+      })),
+      { onConflict: "barbershop_id,weekday" },
+    );
 
     await qc.invalidateQueries();
     setLoading(false);
