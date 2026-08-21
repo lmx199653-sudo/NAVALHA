@@ -21,6 +21,7 @@ import {
 import { useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
+import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
 
