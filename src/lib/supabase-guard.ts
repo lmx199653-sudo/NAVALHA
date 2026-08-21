@@ -10,7 +10,7 @@
 import { toast } from "sonner";
 
 import { supabase as realClient } from "@/integrations/supabase/client";
-import { isStandalone } from "@/lib/pwa";
+
 import { demoTables } from "@/lib/demo-db";
 
 export const MANAGE_BLOCKED_MESSAGE =
@@ -29,10 +29,10 @@ function hasSession() {
   }
 }
 
-/** Alterações só são permitidas dentro do app instalado e com login. */
+/** Com login (app instalado ou navegador) as alterações são liberadas. */
 export function canManage() {
   if (typeof window === "undefined") return false;
-  return isStandalone() && hasSession();
+  return hasSession();
 }
 
 /** Mostra o aviso, evitando duplicar quando a própria tela também avisa. */
