@@ -31,7 +31,19 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
+/** Verifica se o usuário já tem barbearia (vínculo de equipe ou como dono). */
+async function hasShop(userId: string) {
+  const { data, error } = await supabase
+    .from("barbershop_members")
+    .select("barbershop_id")
+    .eq("user_id", userId)
+    .limit(1);
+  if (error) return false;
+  return (data ?? []).length > 0;
+}
+
 function AuthPage() {
+
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [checking, setChecking] = useState(true);
