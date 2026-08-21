@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Area,
   AreaChart,
@@ -22,13 +22,31 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useShop } from "@/hooks/useShop";
+import { useSession, useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { demoDashboardData } from "@/lib/demo-dashboard";
 
-export const Route = createFileRoute("/_authenticated/dashboard")({
+export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  head: () => {
+    const title = "Dashboard da barbearia — NAVALHA PRO";
+    const description =
+      "Acompanhe agenda, faturamento, clientes e desempenho da equipe da sua barbearia em um só painel.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
   component: Dashboard,
 });
 
@@ -44,13 +62,15 @@ type Appt = {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { userId, ready } = useSession();
   const { data: shop, isSuccess } = useShop();
+  const isDemo = ready && !userId;
 
   useEffect(() => {
-    if (isSuccess && !shop) navigate({ to: "/onboarding", replace: true });
-  }, [isSuccess, shop, navigate]);
+    if (userId && isSuccess && !shop) navigate({ to: "/onboarding", replace: true });
+  }, [userId, isSuccess, shop, navigate]);
 
-  const { data } = useQuery({
+  const { data: liveData } = useQuery({
     queryKey: ["dashboard", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -76,8 +96,15 @@ function Dashboard() {
     },
   });
 
-  const appts = data?.appts ?? [];
+  const demo = useMemo(() => (isDemo ? demoDashboardData() : null), [isDemo]);
+  const data = isDemo ? demo : liveData;
+
+  const appts = (data?.appts ?? []) as Appt[];
+  const customers = (data?.customers ?? []) as { id: string; created_at: string }[];
+  const barbers = (data?.barbers ?? []) as { id: string; name: string }[];
+  const services = (data?.services ?? []) as { id: string; name: string }[];
   const today = new Date().toDateString();
+
   const now = Date.now();
   const monthStart = new Date();
   monthStart.setDate(1);
@@ -97,16 +124,16 @@ function Dashboard() {
   const noShow = monthAppts.filter((a) => a.status === "no_show").length;
   const occupancy = Math.min(
     100,
-    Math.round((todays.length / Math.max(1, (data?.barbers.length ?? 1) * 12)) * 100),
+    Math.round((todays.length / Math.max(1, (barbers.length || 1) * 12)) * 100),
   );
-  const newCustomers = (data?.customers ?? []).filter(
+  const newCustomers = customers.filter(
     (c) => new Date(c.created_at as string) >= monthStart,
   ).length;
 
   const serviceName = (id: string | null) =>
-    data?.services.find((s) => s.id === id)?.name ?? "Serviço";
+    services.find((s) => s.id === id)?.name ?? "Serviço";
   const barberName = (id: string | null) =>
-    data?.barbers.find((b) => b.id === id)?.name ?? "Equipe";
+    barbers.find((b) => b.id === id)?.name ?? "Equipe";
 
   const topService = Object.entries(
     monthAppts.reduce<Record<string, number>>((acc, a) => {
@@ -149,15 +176,38 @@ function Dashboard() {
   return (
     <AppShell
       title="Dashboard"
-      subtitle={shop ? `${shop.name} · /barbearia/${shop.slug}` : "Carregando..."}
+      subtitle={
+        isDemo
+          ? "Visualização de demonstração · entre pelo app para ver seus dados"
+          : shop
+            ? `${shop.name} · /barbearia/${shop.slug}`
+            : "Carregando..."
+      }
     >
+      {isDemo && (
+        <div className="surface-card mb-4 flex flex-col gap-3 border-primary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Você está vendo um painel de <strong className="text-foreground">demonstração</strong>.
+            Para gerenciar sua barbearia, instale o app Navalha Pro e faça login por ele.
+          </p>
+          <div className="flex shrink-0 gap-2">
+            <Button asChild size="sm">
+              <Link to="/instalar-app">Instalar app</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/auth">Entrar</Link>
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+
         <StatCard label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" />
         <StatCard label="Faturamento do dia" value={brl(revToday)} icon={Coins} />
         <StatCard label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
         <StatCard label="Ticket médio" value={brl(ticket)} icon={Coins} />
         <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} />
-        <StatCard label="Base de clientes" value={data?.customers.length ?? 0} icon={Users} />
+        <StatCard label="Base de clientes" value={customers.length} icon={Users} />
         <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} />
         <StatCard
           label="Cancelamentos / faltas"
