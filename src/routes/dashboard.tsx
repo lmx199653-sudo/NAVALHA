@@ -64,12 +64,12 @@ type Appt = {
 function Dashboard() {
   const navigate = useNavigate();
   const { userId, ready } = useSession();
-  const { data: shop, isSuccess } = useShop();
+  const { data: shop, isSuccess, isError } = useShop();
   const isDemo = ready && !userId;
 
   useEffect(() => {
-    if (userId && isSuccess && !shop) navigate({ to: "/onboarding", replace: true });
-  }, [userId, isSuccess, shop, navigate]);
+    if (userId && (isSuccess || isError) && !shop) navigate({ to: "/onboarding", replace: true });
+  }, [userId, isSuccess, isError, shop, navigate]);
 
   const { data: liveData } = useQuery({
     queryKey: ["dashboard", shop?.id],
