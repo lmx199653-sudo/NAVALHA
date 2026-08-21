@@ -5,7 +5,6 @@ import { demoShop } from "@/lib/demo-db";
 
 export type Shop = {
   id: string;
-  owner_id: string;
   name: string;
   slug: string;
   description: string | null;
@@ -24,6 +23,9 @@ export type Shop = {
   template: string;
   onboarding_done: boolean;
 };
+
+const SHOP_COLUMNS =
+  "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family, brand_style, brand_symbol, template, onboarding_done";
 
 export function useSession() {
   const [userId, setUserId] = useState<string | null>(null);
