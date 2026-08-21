@@ -154,6 +154,11 @@ export function AppShell({
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              {!canManage() && (
+                <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground sm:inline">
+                  Somente visualização
+                </span>
+              )}
               {action}
               <Button
                 variant="ghost"
