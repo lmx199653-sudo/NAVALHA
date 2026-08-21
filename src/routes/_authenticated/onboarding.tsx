@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Scissors, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
-import { seedDemoData } from "@/lib/demo";
 import { slugify } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,6 @@ function Onboarding() {
   const { userId } = useSession();
   const { data: shop, isSuccess } = useShop();
   const [loading, setLoading] = useState(false);
-  const [withDemo, setWithDemo] = useState(true);
   const [brand, setBrand] = useState<Brand>(() => emptyBrand());
   const [form, setForm] = useState({
     name: "",
