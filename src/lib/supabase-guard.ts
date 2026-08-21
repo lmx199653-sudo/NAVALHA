@@ -40,6 +40,7 @@ export function notifyManageBlocked() {
 }
 
 function blockedResult() {
+  console.log("[guard] blocked write");
   notifyManageBlocked();
   const result = {
     data: null,

@@ -251,6 +251,7 @@ function ServicesPage() {
             className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
+              console.log("[qa] submit");
               save.mutate();
             }}
           >
