@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
-import { ManageLockNotice } from "@/components/ManageLockNotice";
+
 
 
 import { useBrand } from "@/lib/brand";
@@ -74,10 +74,8 @@ export function AppShell({
   const { installed } = usePwaInstall();
   useBrand(shop);
 
-  // Alterações administrativas só são liberadas dentro do app instalado.
-  const VIEW_ONLY_PATHS = ["/dashboard", "/onboarding"];
-  const manageLocked =
-    !installed && !VIEW_ONLY_PATHS.some((p) => pathname.startsWith(p));
+  // Acesso total pelo site: o app instalado é apenas uma recomendação.
+
 
   const isSubscribed = subscription?.subscribed;
   const subLabel = isSubscribed ? "Ativo" : "Grátis";
@@ -156,7 +154,7 @@ export function AppShell({
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {!manageLocked && action}
+              {action}
               <Button
                 variant="ghost"
                 size="icon"
@@ -172,7 +170,7 @@ export function AppShell({
 
         <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
           <InstallAppCta />
-          {manageLocked ? <ManageLockNotice /> : children}
+          {children}
         </main>
 
 
