@@ -35,8 +35,15 @@ export function canManage() {
   return isStandalone() && hasSession();
 }
 
+/** Mostra o aviso, evitando duplicar quando a própria tela também avisa. */
 export function notifyManageBlocked() {
-  if (typeof window !== "undefined") toast.error(MANAGE_BLOCKED_MESSAGE);
+  if (typeof window === "undefined") return;
+  window.setTimeout(() => {
+    const shown = Array.from(document.querySelectorAll("[data-sonner-toast]")).some((el) =>
+      (el.textContent ?? "").includes(MANAGE_BLOCKED_MESSAGE),
+    );
+    if (!shown) toast.error(MANAGE_BLOCKED_MESSAGE, { id: "manage-blocked" });
+  }, 350);
 }
 
 function blockedResult() {
