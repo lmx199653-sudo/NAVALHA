@@ -116,7 +116,7 @@ function AuthPage() {
   return (
     <div className="grid-noise flex min-h-screen items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
+        <Link to="/" className="mb-4 flex items-center justify-center gap-2">
           <img
             src={logoAsset.url}
             alt="NAVALHA PRO"
@@ -126,6 +126,10 @@ function AuthPage() {
             NAVALHA <span className="text-primary">PRO</span>
           </span>
         </Link>
+
+        <p className="mb-6 text-center text-sm font-medium text-primary">
+          Cadastre sua barbearia e comece grátis por 7 dias.
+        </p>
 
         <div className="surface-card p-6">
           <div>
