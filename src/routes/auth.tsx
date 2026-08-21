@@ -39,19 +39,25 @@ function AuthPage() {
   // Já logado: não fica preso na tela de login.
   useEffect(() => {
     let active = true;
+    const go = async (userId: string) => {
+      if (!active) return;
+      const to = (await hasShop(userId)) ? "/dashboard" : "/onboarding";
+      navigate({ to, replace: true });
+    };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) void go(data.session.user.id);
       else setChecking(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard", replace: true });
+      if (event === "SIGNED_IN" && session) void go(session.user.id);
     });
     return () => {
       active = false;
       sub.subscription.unsubscribe();
     };
   }, [navigate]);
+
 
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
