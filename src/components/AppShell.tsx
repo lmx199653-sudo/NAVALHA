@@ -172,8 +172,9 @@ export function AppShell({
 
         <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
           <InstallAppCta />
-          {children}
+          {manageLocked ? <ManageLockNotice /> : children}
         </main>
+
 
       </div>
 
