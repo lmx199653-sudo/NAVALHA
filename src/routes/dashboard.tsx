@@ -22,13 +22,30 @@ import {
   Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useShop } from "@/hooks/useShop";
+import { useSession, useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { demoDashboardData } from "@/lib/demo-dashboard";
 
 export const Route = createFileRoute("/dashboard")({
+  ssr: false,
+  head: () => {
+    const title = "Dashboard da barbearia — NAVALHA PRO";
+    const description =
+      "Acompanhe agenda, faturamento, clientes e desempenho da equipe da sua barbearia em um só painel.";
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    };
+  },
   component: Dashboard,
 });
 
@@ -44,13 +61,15 @@ type Appt = {
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { userId, ready } = useSession();
   const { data: shop, isSuccess } = useShop();
+  const isDemo = ready && !userId;
 
   useEffect(() => {
-    if (isSuccess && !shop) navigate({ to: "/onboarding", replace: true });
-  }, [isSuccess, shop, navigate]);
+    if (userId && isSuccess && !shop) navigate({ to: "/onboarding", replace: true });
+  }, [userId, isSuccess, shop, navigate]);
 
-  const { data } = useQuery({
+  const { data: liveData } = useQuery({
     queryKey: ["dashboard", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -76,8 +95,12 @@ function Dashboard() {
     },
   });
 
-  const appts = data?.appts ?? [];
+  const demo = useMemo(() => (isDemo ? demoDashboardData() : null), [isDemo]);
+  const data = isDemo ? demo : liveData;
+
+  const appts = (data?.appts ?? []) as Appt[];
   const today = new Date().toDateString();
+
   const now = Date.now();
   const monthStart = new Date();
   monthStart.setDate(1);
