@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
-import { ManageLockNotice } from "@/components/ManageLockNotice";
+
 
 
 import { useBrand } from "@/lib/brand";
