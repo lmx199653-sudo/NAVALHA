@@ -137,7 +137,11 @@ function PublicBooking() {
           .eq("active", true)
           .order("sort_order")
           .order("name"),
-        supabase.from("barbers").select("*").eq("barbershop_id", shop.id).eq("active", true),
+        supabase
+          .from("barbers")
+          .select("id, barbershop_id, name, bio, photo_url, work_days, start_time, end_time, active")
+          .eq("barbershop_id", shop.id)
+          .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
       ]);
