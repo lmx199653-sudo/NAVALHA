@@ -258,6 +258,16 @@ export function AppShell({
               })}
               {!installed && (
                 <Link
+                  to="/instalar-app"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex flex-col items-center gap-2 rounded-xl border border-primary/50 bg-secondary/40 px-2 py-4 text-center text-xs text-primary"
+                >
+                  <Smartphone className="size-5" />
+                  <span className="leading-tight">Instalar APP</span>
+                </Link>
+              )}
+              {!installed && (
+                <Link
                   to="/agendar"
                   onClick={() => setMenuOpen(false)}
                   className={cn(
@@ -267,16 +277,6 @@ export function AppShell({
                 >
                   <CalendarPlus className="size-5" />
                   <span className="leading-tight">Página do cliente</span>
-                </Link>
-              )}
-              {!installed && (
-                <Link
-                  to="/instalar-app"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-primary/50 bg-secondary/40 px-2 py-4 text-center text-xs text-primary"
-                >
-                  <Smartphone className="size-5" />
-                  <span className="leading-tight">Instalar APP</span>
                 </Link>
               )}
               <button
