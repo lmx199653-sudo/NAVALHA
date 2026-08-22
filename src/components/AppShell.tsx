@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
   CalendarDays,
+  CalendarPlus,
   Clock,
   Crown,
   CreditCard,
@@ -134,6 +135,18 @@ export function AppShell({
               </Link>
             );
           })}
+          {!installed && (
+            <Link
+              to="/agendar"
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                pathname.startsWith("/agendar") && "bg-sidebar-accent text-primary",
+              )}
+            >
+              <CalendarPlus className="size-4" />
+              Página do cliente
+            </Link>
+          )}
         </nav>
         <div className="space-y-2 border-t border-sidebar-border p-3">
           <button
@@ -243,6 +256,19 @@ export function AppShell({
                   </Link>
                 );
               })}
+              {!installed && (
+                <Link
+                  to="/agendar"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-foreground/80",
+                    pathname.startsWith("/agendar") && "border-primary/50 text-primary",
+                  )}
+                >
+                  <CalendarPlus className="size-5" />
+                  <span className="leading-tight">Página do cliente</span>
+                </Link>
+              )}
               {!installed && (
                 <Link
                   to="/instalar-app"
