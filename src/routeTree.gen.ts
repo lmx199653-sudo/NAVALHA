@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
@@ -36,6 +37,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendarRoute = AgendarRouteImport.update({
+  id: '/agendar',
+  path: '/agendar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -127,6 +133,7 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
@@ -169,6 +177,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agendar'
     | '/auth'
     | '/dashboard'
     | '/instalar-app'
@@ -211,6 +221,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agendar'
     | '/auth'
     | '/dashboard'
     | '/instalar-app'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/agendar'
     | '/auth'
     | '/dashboard'
     | '/instalar-app'
@@ -254,6 +266,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AgendarRoute: typeof AgendarRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   InstalarAppRoute: typeof InstalarAppRoute
@@ -275,6 +288,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agendar': {
+      id: '/agendar'
+      path: '/agendar'
+      fullPath: '/agendar'
+      preLoaderRoute: typeof AgendarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -435,6 +455,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AgendarRoute: AgendarRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   InstalarAppRoute: InstalarAppRoute,
