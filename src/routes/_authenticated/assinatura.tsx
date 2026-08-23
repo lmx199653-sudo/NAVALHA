@@ -50,7 +50,7 @@ function SubscriptionPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "1") {
-      toast.success("Assinatura iniciada! Período de teste de 7 dias ativado.");
+      toast.success("Assinatura iniciada! Período de teste de 60 dias ativado.");
       qc.invalidateQueries({ queryKey: ["subscription"] });
     }
     if (params.get("canceled") === "1") {
@@ -83,12 +83,12 @@ function SubscriptionPage() {
   return (
     <AppShell
       title="Assinatura"
-      subtitle="Acesso completo ao NAVALHA PRO com 7 dias grátis"
+      subtitle="Acesso completo ao NAVALHA PRO com 60 dias grátis"
     >
       <div className="mx-auto max-w-3xl">
         <Card className="overflow-hidden border-primary/20">
           <div className="bg-primary/10 px-6 py-3 text-center text-sm font-medium text-primary">
-            <Sparkles className="inline size-4" /> 7 dias grátis — cancele quando quiser
+            <Sparkles className="inline size-4" /> 60 dias grátis — cancele quando quiser
           </div>
           <CardHeader className="text-center">
             <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/15 text-primary">
@@ -164,7 +164,7 @@ function SubscriptionPage() {
                 ) : (
                   <Crown className="size-4" />
                 )}
-                Assinar com 7 dias grátis
+                Assinar com 60 dias grátis
               </Button>
             )}
           </CardContent>

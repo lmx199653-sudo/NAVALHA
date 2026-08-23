@@ -78,7 +78,7 @@ function InstallAppPage() {
         <div className="space-y-3">
           <h1 className="font-display text-4xl leading-tight sm:text-5xl">Seu app está pronto!</h1>
           <p className="text-sm font-medium text-primary">
-            Comece grátis por 7 dias — cadastre sua barbearia, faça login e gerencie tudo pelo celular.
+            Comece grátis por 60 dias — cadastre sua barbearia, faça login e gerencie tudo pelo celular.
           </p>
           <p className="text-sm text-muted-foreground">
             O app não está publicado na Google Play: a instalação é feita diretamente pelo
