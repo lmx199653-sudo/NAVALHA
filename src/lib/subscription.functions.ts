@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import Stripe from "stripe";
 
 const PRICE_ID = "price_1U6Vt7BchwKvWqF5wzKQnRsC";
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 60;
 
 function getStripe() {
   const key = process.env["STRIPE_SECRET_KEY"];

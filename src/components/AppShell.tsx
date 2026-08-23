@@ -239,6 +239,19 @@ export function AppShell({
               </SheetTitle>
             </SheetHeader>
             <div className="grid grid-cols-3 gap-2 px-4 pb-6">
+              {!installed && (
+                <Link
+                  to="/agendar"
+                  onClick={() => setMenuOpen(false)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-foreground/80",
+                    pathname.startsWith("/agendar") && "border-primary/50 text-primary",
+                  )}
+                >
+                  <CalendarPlus className="size-5" />
+                  <span className="leading-tight">Página do cliente</span>
+                </Link>
+              )}
               {NAV.map((item) => {
                 const active = pathname.startsWith(item.to);
                 return (
@@ -264,19 +277,6 @@ export function AppShell({
                 >
                   <Smartphone className="size-5" />
                   <span className="leading-tight">Instalar APP</span>
-                </Link>
-              )}
-              {!installed && (
-                <Link
-                  to="/agendar"
-                  onClick={() => setMenuOpen(false)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-foreground/80",
-                    pathname.startsWith("/agendar") && "border-primary/50 text-primary",
-                  )}
-                >
-                  <CalendarPlus className="size-5" />
-                  <span className="leading-tight">Página do cliente</span>
                 </Link>
               )}
               <button
