@@ -86,8 +86,18 @@ function demoRows(table: string) {
 
 function demoQuery(table: string) {
   let single = false;
+  const filters: Array<{ col: string; op: "eq" | "in"; value: unknown }> = [];
   const build = () => {
-    const rows = demoRows(table);
+    let rows = demoRows(table);
+    for (const f of filters) {
+      if (f.op === "eq") {
+        rows = rows.filter((r) => r[f.col] === f.value);
+      } else {
+        rows = rows.filter(
+          (r) => Array.isArray(f.value) && (f.value as unknown[]).includes(r[f.col]),
+        );
+      }
+    }
     if (single) return { data: rows[0] ?? null, error: null, count: rows.length, status: 200 };
     return { data: rows, error: null, count: rows.length, status: 200 };
   };
@@ -109,7 +119,13 @@ function demoQuery(table: string) {
         single = true;
         return () => proxy;
       }
-      if (typeof prop === "symbol") return () => proxy;
+      if (prop === "eq" || prop === "in") {
+        return (col: string, value: unknown) => {
+          filters.push({ col, op: prop as "eq" | "in", value });
+          return proxy;
+        };
+      }
+      if (prop === "abortSignal" || typeof prop === "symbol") return () => proxy;
       return () => proxy;
     },
   });
