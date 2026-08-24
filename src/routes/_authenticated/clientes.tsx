@@ -79,6 +79,7 @@ function CustomersPage() {
         name: form.name,
         phone: form.phone,
         email: form.email || null,
+        cpf: cpfDigits(form.cpf) || null,
         birth_date: form.birth_date || null,
         notes: form.notes || null,
       });
@@ -98,7 +99,7 @@ function CustomersPage() {
     const appts = data?.appts ?? [];
     return list
       .filter((c) =>
-        `${c.name} ${c.phone ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+        `${c.name} ${c.phone ?? ""} ${c.cpf ?? ""}`.toLowerCase().includes(search.toLowerCase()),
       )
       .map((c) => {
         const mine = appts.filter((a) => a.customer_id === c.id);
@@ -144,9 +145,9 @@ function CustomersPage() {
     >
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Buscar por nome ou telefone"
+          <Input
+            className="pl-9"
+            placeholder="Buscar por nome, telefone ou CPF"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
