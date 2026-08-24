@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Crown, Plus, Scissors, Trash2 } from "lucide-react";
+import { Crown, Loader2, Plus, Scissors, Search, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -29,13 +29,42 @@ type Plan = {
   active: boolean;
 };
 
+type Customer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  cpf: string | null;
+  points: number;
+};
+
 const EMPTY = { name: "", price: "", cuts: "4", beards: "0", benefits: "", active: true };
+const EMPTY_CUSTOMER = { name: "", phone: "" };
+
+function cpfDigits(value: string) {
+  return value.replace(/\D/g, "").slice(0, 11);
+}
+
+function cpfMask(value: string) {
+  const d = cpfDigits(value);
+  return d
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
 
 function PlansPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
+
+  // Assinatura de cliente em um plano
+  const [enrollPlan, setEnrollPlan] = useState<Plan | null>(null);
+  const [cpf, setCpf] = useState("");
+  const [found, setFound] = useState<Customer | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [newCustomer, setNewCustomer] = useState(EMPTY_CUSTOMER);
 
   const { data: plans } = useQuery({
     queryKey: ["plans", shop?.id],
@@ -80,6 +109,79 @@ function PlansPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
   });
 
+  const openEnroll = (plan: Plan) => {
+    setEnrollPlan(plan);
+    setCpf("");
+    setFound(null);
+    setNotFound(false);
+    setNewCustomer(EMPTY_CUSTOMER);
+  };
+
+  const lookup = useMutation({
+    mutationFn: async () => {
+      const digits = cpfDigits(cpf);
+      if (digits.length !== 11) throw new Error("Informe um CPF válido com 11 dígitos");
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, phone, email, cpf, points")
+        .eq("barbershop_id", shop!.id)
+        .eq("cpf", digits)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as Customer | null;
+    },
+    onSuccess: (customer) => {
+      setFound(customer);
+      setNotFound(!customer);
+      if (customer) toast.success(`Cliente encontrado: ${customer.name}`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const subscribe = useMutation({
+    mutationFn: async () => {
+      if (!enrollPlan) return;
+      let customerId = found?.id ?? "";
+
+      if (!customerId) {
+        const digits = cpfDigits(cpf);
+        if (digits.length !== 11) throw new Error("CPF inválido");
+        if (newCustomer.name.trim().length < 2) throw new Error("Informe o nome do cliente");
+        const { data, error } = await supabase
+          .from("customers")
+          .insert({
+            barbershop_id: shop!.id,
+            name: newCustomer.name.trim(),
+            phone: newCustomer.phone.trim() || null,
+            cpf: digits,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        customerId = data!.id as string;
+      }
+
+      const nextPayment = new Date();
+      nextPayment.setMonth(nextPayment.getMonth() + 1);
+
+      const { error } = await supabase.from("customer_subscriptions").insert({
+        barbershop_id: shop!.id,
+        customer_id: customerId,
+        plan_id: enrollPlan.id,
+        status: "active",
+        uses_left: enrollPlan.cuts_included + enrollPlan.beards_included,
+        next_payment: nextPayment.toISOString().slice(0, 10),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers"] });
+      setEnrollPlan(null);
+      toast.success("Assinatura registrada para o cliente");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   return (
     <AppShell
       title="Planos de assinatura"
@@ -117,14 +219,19 @@ function PlansPage() {
               </li>
               {p.benefits && <li className="pt-1">{p.benefits}</li>}
             </ul>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-5 text-destructive"
-              onClick={() => remove.mutate(p.id)}
-            >
-              <Trash2 className="size-4" /> Remover
-            </Button>
+            <div className="mt-5 flex items-center gap-2">
+              <Button size="sm" className="gap-1" onClick={() => openEnroll(p)}>
+                <UserPlus className="size-4" /> Assinar cliente
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive"
+                onClick={() => remove.mutate(p.id)}
+              >
+                <Trash2 className="size-4" /> Remover
+              </Button>
+            </div>
           </div>
         ))}
         {plans?.length === 0 && (
@@ -176,6 +283,94 @@ function PlansPage() {
               Salvar
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!enrollPlan} onOpenChange={(v) => !v && setEnrollPlan(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assinar cliente — {enrollPlan?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>CPF do cliente</Label>
+              <div className="flex gap-2">
+                <Input
+                  inputMode="numeric"
+                  placeholder="000.000.000-00"
+                  value={cpf}
+                  onChange={(e) => {
+                    setCpf(cpfMask(e.target.value));
+                    setFound(null);
+                    setNotFound(false);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="gap-1"
+                  onClick={() => lookup.mutate()}
+                  disabled={lookup.isPending || cpfDigits(cpf).length !== 11}
+                >
+                  {lookup.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Search className="size-4" />
+                  )}
+                  Buscar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Se o cliente já estiver cadastrado na barbearia, os dados dele aparecem aqui.
+              </p>
+            </div>
+
+            {found && (
+              <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <UserCheck className="size-4" /> Cliente cadastrado
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium">{found.name}</p>
+                  {found.phone && <p className="text-muted-foreground">{found.phone}</p>}
+                  {found.email && <p className="text-muted-foreground">{found.email}</p>}
+                  <p className="text-muted-foreground">CPF: {cpfMask(found.cpf ?? cpf)}</p>
+                  <p className="text-muted-foreground">{found.points} pontos de fidelidade</p>
+                </div>
+              </div>
+            )}
+
+            {notFound && (
+              <div className="space-y-3 rounded-lg border border-border p-4">
+                <p className="text-sm text-muted-foreground">
+                  Cliente não encontrado. Cadastre para registrar a assinatura:
+                </p>
+                <div className="space-y-2">
+                  <Label>Nome completo</Label>
+                  <Input
+                    value={newCustomer.name}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>WhatsApp / telefone</Label>
+                  <Input
+                    value={newCustomer.phone}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <Button
+              className="w-full"
+              disabled={subscribe.isPending || (!found && !notFound)}
+              onClick={() => subscribe.mutate()}
+            >
+              {subscribe.isPending && <Loader2 className="size-4 animate-spin" />}
+              Confirmar assinatura — {enrollPlan ? brl(enrollPlan.price_cents) : ""}/mês
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </AppShell>
