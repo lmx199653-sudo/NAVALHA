@@ -23,12 +23,25 @@ type Customer = {
   name: string;
   phone: string | null;
   email: string | null;
+  cpf: string | null;
   birth_date: string | null;
   notes: string | null;
   points: number;
 };
 
-const EMPTY = { name: "", phone: "", email: "", birth_date: "", notes: "" };
+const EMPTY = { name: "", phone: "", email: "", cpf: "", birth_date: "", notes: "" };
+
+function cpfDigits(value: string) {
+  return value.replace(/\D/g, "").slice(0, 11);
+}
+
+function cpfMask(value: string) {
+  const d = cpfDigits(value);
+  return d
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
 
 function CustomersPage() {
   const { data: shop } = useShop();
