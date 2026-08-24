@@ -97,7 +97,7 @@ const customers = CUSTOMER_NAMES.map((name, i) => ({
   name,
   phone: `1198${String(700000 + i * 137).slice(0, 6)}`,
   email: null,
-  cpf: null,
+  cpf: `${String(12345678900 + i * 111).slice(0, 11)}`,
   notes: null,
   birth_date: iso(-((i % 12) * 30) - 9000, 12).slice(0, 10),
   created_at: iso(-(i * 4 + 3), 10),

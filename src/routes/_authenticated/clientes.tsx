@@ -23,12 +23,25 @@ type Customer = {
   name: string;
   phone: string | null;
   email: string | null;
+  cpf: string | null;
   birth_date: string | null;
   notes: string | null;
   points: number;
 };
 
-const EMPTY = { name: "", phone: "", email: "", birth_date: "", notes: "" };
+const EMPTY = { name: "", phone: "", email: "", cpf: "", birth_date: "", notes: "" };
+
+function cpfDigits(value: string) {
+  return value.replace(/\D/g, "").slice(0, 11);
+}
+
+function cpfMask(value: string) {
+  const d = cpfDigits(value);
+  return d
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
 
 function CustomersPage() {
   const { data: shop } = useShop();
@@ -66,6 +79,7 @@ function CustomersPage() {
         name: form.name,
         phone: form.phone,
         email: form.email || null,
+        cpf: cpfDigits(form.cpf) || null,
         birth_date: form.birth_date || null,
         notes: form.notes || null,
       });
@@ -85,7 +99,7 @@ function CustomersPage() {
     const appts = data?.appts ?? [];
     return list
       .filter((c) =>
-        `${c.name} ${c.phone ?? ""}`.toLowerCase().includes(search.toLowerCase()),
+        `${c.name} ${c.phone ?? ""} ${c.cpf ?? ""}`.toLowerCase().includes(search.toLowerCase()),
       )
       .map((c) => {
         const mine = appts.filter((a) => a.customer_id === c.id);
@@ -131,9 +145,9 @@ function CustomersPage() {
     >
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Buscar por nome ou telefone"
+          <Input
+            className="pl-9"
+            placeholder="Buscar por nome, telefone ou CPF"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -194,6 +208,17 @@ function CustomersPage() {
                 <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
               <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input
+                  inputMode="numeric"
+                  placeholder="000.000.000-00"
+                  value={form.cpf}
+                  onChange={(e) => setForm({ ...form, cpf: cpfMask(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
                 <Label>Nascimento</Label>
                 <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </div>
@@ -222,6 +247,7 @@ function CustomersPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <Field label="WhatsApp" value={detailRow.customer.phone ?? "—"} />
+                <Field label="CPF" value={detailRow.customer.cpf ? cpfMask(detailRow.customer.cpf) : "—"} />
                 <Field label="E-mail" value={detailRow.customer.email ?? "—"} />
                 <Field
                   label="Último atendimento"
