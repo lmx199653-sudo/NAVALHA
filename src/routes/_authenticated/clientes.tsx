@@ -208,6 +208,17 @@ function CustomersPage() {
                 <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
               <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input
+                  inputMode="numeric"
+                  placeholder="000.000.000-00"
+                  value={form.cpf}
+                  onChange={(e) => setForm({ ...form, cpf: cpfMask(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
                 <Label>Nascimento</Label>
                 <Input type="date" value={form.birth_date} onChange={(e) => setForm({ ...form, birth_date: e.target.value })} />
               </div>
@@ -236,6 +247,7 @@ function CustomersPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <Field label="WhatsApp" value={detailRow.customer.phone ?? "—"} />
+                <Field label="CPF" value={detailRow.customer.cpf ? cpfMask(detailRow.customer.cpf) : "—"} />
                 <Field label="E-mail" value={detailRow.customer.email ?? "—"} />
                 <Field
                   label="Último atendimento"
