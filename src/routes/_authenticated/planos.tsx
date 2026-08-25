@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Crown, Loader2, Plus, Scissors, Search, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
@@ -65,6 +65,7 @@ function PlansPage() {
   const [found, setFound] = useState<Customer | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [newCustomer, setNewCustomer] = useState(EMPTY_CUSTOMER);
+  const [lookupPending, setLookupPending] = useState(false);
 
   const { data: plans } = useQuery({
     queryKey: ["plans", shop?.id],
@@ -117,35 +118,48 @@ function PlansPage() {
     setNewCustomer(EMPTY_CUSTOMER);
   };
 
-  const lookup = useMutation({
-    mutationFn: async () => {
-      const digits = cpfDigits(cpf);
-      if (digits.length !== 11) throw new Error("Informe um CPF válido com 11 dígitos");
+  const lookupCustomer = async (digits: string) => {
+    if (!shop?.id) return;
+    setLookupPending(true);
+    try {
       const { data, error } = await supabase
         .from("customers")
         .select("id, name, phone, email, cpf, points")
-        .eq("barbershop_id", shop!.id)
+        .eq("barbershop_id", shop.id)
         .eq("cpf", digits)
         .maybeSingle();
       if (error) throw error;
-      return (data ?? null) as Customer | null;
-    },
-    onSuccess: (customer) => {
+      const customer = (data ?? null) as Customer | null;
       setFound(customer);
       setNotFound(!customer);
       if (customer) toast.success(`Cliente encontrado: ${customer.name}`);
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Erro ao buscar cliente");
+    } finally {
+      setLookupPending(false);
+    }
+  };
+
+  // Busca automática por CPF quando 11 dígitos são informados
+  useEffect(() => {
+    const digits = cpfDigits(cpf);
+    if (digits.length !== 11) {
+      setFound(null);
+      setNotFound(false);
+      return;
+    }
+    const timer = window.setTimeout(() => lookupCustomer(digits), 500);
+    return () => window.clearTimeout(timer);
+  }, [cpf]);
 
   const subscribe = useMutation({
     mutationFn: async () => {
       if (!enrollPlan) return;
+      const digits = cpfDigits(cpf);
+      if (digits.length !== 11) throw new Error("Informe um CPF válido com 11 dígitos");
       let customerId = found?.id ?? "";
 
       if (!customerId) {
-        const digits = cpfDigits(cpf);
-        if (digits.length !== 11) throw new Error("CPF inválido");
         if (newCustomer.name.trim().length < 2) throw new Error("Informe o nome do cliente");
         const { data, error } = await supabase
           .from("customers")
@@ -299,20 +313,17 @@ function PlansPage() {
                   inputMode="numeric"
                   placeholder="000.000.000-00"
                   value={cpf}
-                  onChange={(e) => {
-                    setCpf(cpfMask(e.target.value));
-                    setFound(null);
-                    setNotFound(false);
-                  }}
+                  onChange={(e) => setCpf(cpfMask(e.target.value))}
+                  disabled={lookupPending}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   className="gap-1"
-                  onClick={() => lookup.mutate()}
-                  disabled={lookup.isPending || cpfDigits(cpf).length !== 11}
+                  onClick={() => lookupCustomer(cpfDigits(cpf))}
+                  disabled={lookupPending || cpfDigits(cpf).length !== 11}
                 >
-                  {lookup.isPending ? (
+                  {lookupPending ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : (
                     <Search className="size-4" />
@@ -321,7 +332,7 @@ function PlansPage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Se o cliente já estiver cadastrado na barbearia, os dados dele aparecem aqui.
+                Digite o CPF. Se o cliente já estiver cadastrado na barbearia, os dados dele aparecem automaticamente.
               </p>
             </div>
 
@@ -343,7 +354,7 @@ function PlansPage() {
             {notFound && (
               <div className="space-y-3 rounded-lg border border-border p-4">
                 <p className="text-sm text-muted-foreground">
-                  Cliente não encontrado. Cadastre para registrar a assinatura:
+                  Cliente não encontrado. Complete o cadastro para registrar a assinatura:
                 </p>
                 <div className="space-y-2">
                   <Label>Nome completo</Label>
@@ -364,7 +375,7 @@ function PlansPage() {
 
             <Button
               className="w-full"
-              disabled={subscribe.isPending || (!found && !notFound)}
+              disabled={subscribe.isPending || cpfDigits(cpf).length !== 11 || (!found && !notFound)}
               onClick={() => subscribe.mutate()}
             >
               {subscribe.isPending && <Loader2 className="size-4 animate-spin" />}
