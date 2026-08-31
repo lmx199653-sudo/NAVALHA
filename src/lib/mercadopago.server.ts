@@ -98,6 +98,9 @@ export async function createPreference(payload: PreferencePayload): Promise<MpPr
       notification_url: payload.notificationUrl,
       back_urls: { success: payload.backUrl, pending: payload.backUrl, failure: payload.backUrl },
       auto_return: "approved",
+      ...(payload.expiresAt
+        ? { expires: true, expiration_date_to: payload.expiresAt }
+        : {}),
       metadata: payload.metadata ?? {},
       ...(payload.marketplaceFee && payload.sellerToken
         ? { marketplace_fee: Number(payload.marketplaceFee) }
