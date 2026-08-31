@@ -553,9 +553,15 @@ function AgendaPage() {
                 >
                   <MessageCircle className="size-4" /> Avisar cliente
                 </Button>
-                <Button size="sm" onClick={() => setStatus.mutate({ id: selected.id, status: "done" })}>
+                <Button size="sm" onClick={() => setConfirmDone(selected.id)}>
                   <Check className="size-4" /> Concluir
                 </Button>
+                {selected.benefit_processed && (
+                  <Button size="sm" variant="outline" onClick={() => refund.mutate(selected.id)}>
+                    Estornar crédito
+                  </Button>
+                )}
+
                 <Button
                   size="sm"
                   variant="outline"
