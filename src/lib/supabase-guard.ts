@@ -81,26 +81,61 @@ function makeThenable(resolve: () => unknown): unknown {
 }
 
 function demoRows(table: string) {
-  return demoTables[table] ?? [];
+  if (!demoTables[table]) demoTables[table] = [];
+  return demoTables[table]!;
+}
+
+function demoId(table: string) {
+  return `demo-${table}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function demoQuery(table: string) {
   let single = false;
+  let mode: "select" | "insert" | "upsert" | "update" | "delete" = "select";
+  let payload: Record<string, unknown>[] = [];
   const filters: Array<{ col: string; op: "eq" | "in"; value: unknown }> = [];
+
+  const match = (r: Record<string, unknown>) =>
+    filters.every((f) =>
+      f.op === "eq"
+        ? r[f.col] === f.value
+        : Array.isArray(f.value) && (f.value as unknown[]).includes(r[f.col]),
+    );
+
   const build = () => {
-    let rows = demoRows(table);
-    for (const f of filters) {
-      if (f.op === "eq") {
-        rows = rows.filter((r) => r[f.col] === f.value);
-      } else {
-        rows = rows.filter(
-          (r) => Array.isArray(f.value) && (f.value as unknown[]).includes(r[f.col]),
-        );
+    const all = demoRows(table);
+    let rows: Record<string, unknown>[];
+
+    if (mode === "insert" || mode === "upsert") {
+      rows = payload.map((p) => {
+        const row = { id: demoId(table), created_at: new Date().toISOString(), ...p };
+        const idx = all.findIndex((r) => r["id"] === row["id"]);
+        if (idx >= 0) all[idx] = { ...all[idx], ...row };
+        else all.push(row);
+        return row;
+      });
+    } else if (mode === "update") {
+      rows = [];
+      for (let i = 0; i < all.length; i++) {
+        if (match(all[i]!)) {
+          all[i] = { ...all[i], ...(payload[0] ?? {}) };
+          rows.push(all[i]!);
+        }
       }
+    } else if (mode === "delete") {
+      rows = all.filter(match);
+      for (const r of rows) {
+        const idx = all.indexOf(r);
+        if (idx >= 0) all.splice(idx, 1);
+      }
+    } else {
+      rows = all.filter(match);
     }
+
     if (single) return { data: rows[0] ?? null, error: null, count: rows.length, status: 200 };
     return { data: rows, error: null, count: rows.length, status: 200 };
   };
+
   const chain: Record<string, unknown> = {};
   const proxy: unknown = new Proxy(chain, {
     get(_t, prop) {
@@ -114,7 +149,14 @@ function demoQuery(table: string) {
             prop as string
           ]!(fn);
       }
-      if (typeof prop === "string" && WRITE_METHODS.has(prop)) return () => blockedResult();
+      if (typeof prop === "string" && WRITE_METHODS.has(prop)) {
+        return (values?: unknown) => {
+          mode = prop as typeof mode;
+          const list = Array.isArray(values) ? values : values ? [values] : [];
+          payload = list as Record<string, unknown>[];
+          return proxy;
+        };
+      }
       if (prop === "single" || prop === "maybeSingle") {
         single = true;
         return () => proxy;
@@ -131,6 +173,7 @@ function demoQuery(table: string) {
   });
   return proxy;
 }
+
 
 function guardTable(table: string) {
   if (!canManage() && !hasSession()) return demoQuery(table);
