@@ -198,11 +198,13 @@ function guardStorageBucket(bucket: string) {
         ["upload", "remove", "move", "copy", "update", "createSignedUploadUrl"].includes(prop) &&
         !canManage()
       ) {
-        return async () => {
-          notifyManageBlocked();
-          return { data: null, error: { message: MANAGE_BLOCKED_MESSAGE } };
-        };
+        // Demonstração: simula sucesso sem enviar nada ao armazenamento real.
+        return async (path?: string) => ({
+          data: { path: typeof path === "string" ? path : "demo", id: "demo", fullPath: "demo" },
+          error: null,
+        });
       }
+
       const value = Reflect.get(target, prop, receiver);
       return typeof value === "function" ? value.bind(target) : value;
     },
