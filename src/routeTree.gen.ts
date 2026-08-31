@@ -25,6 +25,7 @@ import { Route as AuthenticatedHorariosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedLinkRouteImport } from './routes/_authenticated/link'
 import { Route as AuthenticatedMarketingRouteImport } from './routes/_authenticated/marketing'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedPagamentosRouteImport } from './routes/_authenticated/pagamentos'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
@@ -113,6 +114,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPagamentosRoute = AuthenticatedPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPlanosRoute = AuthenticatedPlanosRouteImport.update({
   id: '/planos',
   path: '/planos',
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/link': typeof AuthenticatedLinkRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/link': typeof AuthenticatedLinkRoute
   '/marketing': typeof AuthenticatedMarketingRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/pagamentos': typeof AuthenticatedPagamentosRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
@@ -210,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/link': typeof AuthenticatedLinkRoute
   '/_authenticated/marketing': typeof AuthenticatedMarketingRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/pagamentos': typeof AuthenticatedPagamentosRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/link'
     | '/marketing'
     | '/onboarding'
+    | '/pagamentos'
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
@@ -258,6 +268,7 @@ export interface FileRouteTypes {
     | '/link'
     | '/marketing'
     | '/onboarding'
+    | '/pagamentos'
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/_authenticated/link'
     | '/_authenticated/marketing'
     | '/_authenticated/onboarding'
+    | '/_authenticated/pagamentos'
     | '/_authenticated/planos'
     | '/_authenticated/servicos'
     | '/barbearia/$slug'
@@ -417,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pagamentos': {
+      id: '/_authenticated/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/pagamentos'
+      preLoaderRoute: typeof AuthenticatedPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/planos': {
       id: '/_authenticated/planos'
       path: '/planos'
@@ -473,6 +492,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLinkRoute: typeof AuthenticatedLinkRoute
   AuthenticatedMarketingRoute: typeof AuthenticatedMarketingRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPagamentosRoute: typeof AuthenticatedPagamentosRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
 }
@@ -488,6 +508,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLinkRoute: AuthenticatedLinkRoute,
   AuthenticatedMarketingRoute: AuthenticatedMarketingRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPagamentosRoute: AuthenticatedPagamentosRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
 }
