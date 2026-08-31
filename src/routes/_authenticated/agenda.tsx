@@ -94,6 +94,8 @@ function AgendaPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<string | null>(null);
+  const [confirmDone, setConfirmDone] = useState<string | null>(null);
+
   const notified = useRef<Set<string>>(new Set());
 
   const range = useMemo(() => {
