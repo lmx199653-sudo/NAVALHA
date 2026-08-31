@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Entrar | NAVALHA PRO — Agendamento para barbearias" },
@@ -28,16 +29,8 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: ClientAuthPage,
+  component: AuthPage,
 });
-
-function ClientAuthPage() {
-  return (
-    <ClientOnly fallback={<div className="min-h-screen bg-[#07080A]" />}>
-      <AuthPage />
-    </ClientOnly>
-  );
-}
 
 /** Verifica se o usuário já tem barbearia (vínculo de equipe ou como dono). */
 async function hasShop(userId: string) {
