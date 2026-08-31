@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { demoShop } from "@/lib/demo-db";
 
 export type Shop = {
   id: string;
@@ -55,8 +54,7 @@ export function useShop() {
     queryKey: ["shop", userId],
     enabled: ready,
     queryFn: async (): Promise<Shop | null> => {
-      // Visitante sem login: barbearia de demonstração (somente visualização).
-      if (!userId) return demoShop;
+      if (!userId) return null;
       // A barbearia é localizada pelo vínculo de equipe (o dono recebe o vínculo
       // automaticamente), evitando expor o identificador do proprietário.
       const { data: memberships, error: memberError } = await supabase
