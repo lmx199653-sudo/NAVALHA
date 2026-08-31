@@ -30,17 +30,38 @@ function money(value: unknown) {
   return Math.round(Number(value ?? 0) * 100) / 100;
 }
 
-async function assertMember(
-  supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }> },
-  shopId: string,
-) {
-  const { data, error } = await supabase.rpc("is_member", { _shop: shopId });
+type RpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+};
+
+async function assertMember(supabase: unknown, shopId: string) {
+  const client = supabase as unknown as RpcClient;
+  const { data, error } = await client.rpc("is_member", { _shop: shopId });
   if (error || data !== true) throw new Error("Sem permissão para esta barbearia.");
 }
 
 /* ------------------------------------------------------------------ */
 /* leitura                                                             */
 /* ------------------------------------------------------------------ */
+
+export type BillingSummary = {
+  usage_fee_amount: number;
+  pending_balance_warning: number;
+  subscription: {
+    id: string;
+    plan_id: string | null;
+    status: string;
+    price_amount: number;
+    subscription_next_billing_date: string | null;
+    subscription_start_date: string | null;
+  } | null;
+  plan: { id: string; name: string; monthly_price: number } | null;
+  completed_appointments: number;
+  fees_accrued: number;
+  fees_paid: number;
+  fees_pending: number;
+  last_payment: { id: string; amount: number; paid_at: string | null; type: string } | null;
+};
 
 export const getBillingSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -50,7 +71,7 @@ export const getBillingSummary = createServerFn({ method: "POST" })
       _shop: data.shopId,
     });
     if (error) throw new Error(error.message);
-    return summary as unknown as Record<string, unknown>;
+    return summary as unknown as BillingSummary;
   });
 
 export const getMercadoPagoStatus = createServerFn({ method: "POST" })
@@ -111,6 +132,7 @@ export const startPlatformSubscription = createServerFn({ method: "POST" })
       return { free: true, checkoutUrl: null as string | null };
     }
 
+    const payerEmail = (context.claims as { email?: string } | undefined)?.email;
     const reference = `sub:${data.shopId}:${plan.id}`;
     const preapproval = await createPreapproval({
       reason: `Navalha Pro — ${plan.name}`,
@@ -118,7 +140,7 @@ export const startPlatformSubscription = createServerFn({ method: "POST" })
       externalReference: reference,
       backUrl: `${origin()}/financeiro`,
       notificationUrl: notificationUrl(),
-      payerEmail: (context.claims as { email?: string } | undefined)?.email,
+      ...(payerEmail ? { payerEmail } : {}),
     });
 
     await supabaseAdmin.from("platform_subscriptions").upsert(
@@ -368,7 +390,8 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       notificationUrl: notificationUrl(),
       backUrl: `${origin()}/barbearia/${data.slug}`,
       metadata: { payment_id: payment.id, appointment_id: appointment.id, type: "customer_service" },
-      ...(sellerToken ? { sellerToken, marketplaceFee } : {}),
+      ...(sellerToken ? { sellerToken } : {}),
+      ...(sellerToken && marketplaceFee ? { marketplaceFee } : {}),
     });
 
     await supabaseAdmin
