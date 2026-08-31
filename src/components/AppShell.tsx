@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CalendarPlus,
   Clock,
+  CreditCard,
   Repeat,
   Crown,
   LayoutDashboard,
