@@ -131,7 +131,7 @@ function PublicBooking() {
         .eq("slug", slug)
         .maybeSingle();
       if (!shop) return null;
-      const [services, barbers, hours, breaks] = await Promise.all([
+      const [services, barbers, hours, breaks, payment] = await Promise.all([
         supabase
           .from("services")
           .select("*")
@@ -146,6 +146,7 @@ function PublicBooking() {
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
+        supabase.rpc("public_payment_enabled", { _shop: shop.id }),
       ]);
       return {
         shop: shop as Shop,
@@ -153,6 +154,7 @@ function PublicBooking() {
         barbers: (barbers.data ?? []) as Barber[],
         hours: (hours.data ?? []) as HoursRow[],
         breaks: (breaks.data ?? []) as BreakRow[],
+        paymentEnabled: (payment.data as boolean | null) ?? false,
       };
     },
   });
@@ -229,7 +231,7 @@ function PublicBooking() {
       );
 
       // Pagamento online: o valor e a divisão são calculados no servidor.
-      if (payOnline && createdIds[0]) {
+      if (payOnline && data?.paymentEnabled && createdIds[0]) {
         try {
           const checkout = await createServiceCheckout({
             data: { slug, appointmentId: createdIds[0] },
@@ -598,16 +600,18 @@ function PublicBooking() {
                 >
                   Pagar no local
                 </Button>
-                <Button
-                  type="button"
-                  variant={payOnline ? "default" : "outline"}
-                  className="h-12"
-                  onClick={() => setPayOnline(true)}
-                >
-                  Pagar online
-                </Button>
+                {data?.paymentEnabled && (
+                  <Button
+                    type="button"
+                    variant={payOnline ? "default" : "outline"}
+                    className="h-12"
+                    onClick={() => setPayOnline(true)}
+                  >
+                    Pagar online
+                  </Button>
+                )}
               </div>
-              {payOnline && (
+              {payOnline && data?.paymentEnabled && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Você será levado ao Mercado Pago (Pix, cartão ou boleto) após confirmar.
                 </p>
