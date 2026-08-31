@@ -72,7 +72,10 @@ export type PreferencePayload = {
   marketplaceFee?: MpMoney;
   /** Token do vendedor (barbeiro) quando o dinheiro deve ir para ele. */
   sellerToken?: string;
+  /** Validade do checkout (ISO). Após isso o horário é liberado. */
+  expiresAt?: string;
 };
+
 
 export type MpPreference = { id: string; init_point: string; sandbox_init_point?: string };
 
