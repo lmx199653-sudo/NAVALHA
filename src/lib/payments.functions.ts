@@ -502,7 +502,7 @@ export const getAppointmentPaymentStatus = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.rpc("expire_pending_payment_appointments", { _shop: undefined as never });
+    await supabaseAdmin.rpc("expire_pending_payment_appointments", {} as never);
     const { data: status, error } = await supabaseAdmin.rpc("appointment_payment_status", {
       _appointment_id: data.appointmentId,
     });
