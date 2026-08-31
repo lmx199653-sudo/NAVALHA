@@ -37,6 +37,28 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, STATUS_LABEL, timeLabel, toDayKey, WEEKDAYS } from "@/lib/format";
 import { breaksForDay, type BreakRow } from "@/lib/slots";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CpfCustomerLookup } from "@/components/CpfCustomerLookup";
+import {
+  BENEFIT_LABEL,
+  canUseBenefits,
+  completeAppointment,
+  creditsLeft,
+  friendlyError,
+  refundAppointmentBenefit,
+  type BenefitKind,
+  type CpfLookup,
+} from "@/lib/subscriptions";
+
 
 
 export const Route = createFileRoute("/_authenticated/agenda")({
@@ -72,6 +94,8 @@ function AgendaPage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<string | null>(null);
+  const [confirmDone, setConfirmDone] = useState<string | null>(null);
+
   const notified = useRef<Set<string>>(new Set());
 
   const range = useMemo(() => {
@@ -221,6 +245,35 @@ function AgendaPage() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  // Conclusão do atendimento: o consumo do crédito acontece no banco (idempotente).
+  const finish = useMutation({
+    mutationFn: (id: string) => completeAppointment(id),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      setConfirmDone(null);
+      setEditing(null);
+      if (result?.consumed) {
+        const label = result.benefit_kind ? BENEFIT_LABEL[result.benefit_kind].toLowerCase() : "benefício";
+        toast.success(`Atendimento concluído. 1 ${label} descontado.`, {
+          description: `Saldo restante: ${result.left}`,
+        });
+      } else {
+        toast.success("Atendimento concluído.");
+      }
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
+  const refund = useMutation({
+    mutationFn: (id: string) => refundAppointmentBenefit(id, "Correção do atendimento"),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      toast.success(r?.refunded ? "Crédito estornado para o cliente." : "Nenhum crédito a estornar.");
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
 
   const reschedule = useMutation({
     mutationFn: async ({ id, starts_at }: { id: string; starts_at: Date }) => {
@@ -500,9 +553,15 @@ function AgendaPage() {
                 >
                   <MessageCircle className="size-4" /> Avisar cliente
                 </Button>
-                <Button size="sm" onClick={() => setStatus.mutate({ id: selected.id, status: "done" })}>
+                <Button size="sm" onClick={() => setConfirmDone(selected.id)}>
                   <Check className="size-4" /> Concluir
                 </Button>
+                {selected.benefit_processed && (
+                  <Button size="sm" variant="outline" onClick={() => refund.mutate(selected.id)}>
+                    Estornar crédito
+                  </Button>
+                )}
+
                 <Button
                   size="sm"
                   variant="outline"
@@ -550,7 +609,46 @@ function AgendaPage() {
           )}
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!confirmDone} onOpenChange={(v) => !v && setConfirmDone(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar conclusão do atendimento?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1 text-sm">
+                {(() => {
+                  const appt = appts.find((a) => a.id === confirmDone);
+                  if (!appt) return null;
+                  const service = data?.services.find((s) => s.id === appt.service_id);
+                  return (
+                    <>
+                      <p>Cliente: {appt.customer_name}</p>
+                      <p>Serviço: {service?.name ?? "—"}</p>
+                      {appt.use_benefit && !appt.benefit_processed ? (
+                        <p className="text-primary">
+                          1 {BENEFIT_LABEL[(appt.benefit_kind ?? "cut") as BenefitKind].toLowerCase()} será
+                          descontado da assinatura.
+                        </p>
+                      ) : appt.benefit_processed ? (
+                        <p className="text-muted-foreground">Benefício já processado — não será descontado novamente.</p>
+                      ) : (
+                        <p className="text-muted-foreground">Atendimento avulso: {brl(appt.price_cents)}.</p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDone && finish.mutate(confirmDone)}>
+              Concluir atendimento
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
+
   );
 }
 
@@ -574,7 +672,13 @@ function AppointmentForm({
 }: {
   shopId: string | undefined;
   barbers: Array<{ id: string; name: string }>;
-  services: Array<{ id: string; name: string; price_cents: number; duration_min: number }>;
+  services: Array<{
+    id: string;
+    name: string;
+    price_cents: number;
+    duration_min: number;
+    benefit_kind?: string | null;
+  }>;
   customers: Array<{ id: string; name: string; phone: string | null }>;
   defaultDate: Date;
   appointment?: {
@@ -601,16 +705,33 @@ function AppointmentForm({
       : "10:00",
   );
   const [saving, setSaving] = useState(false);
+  const [lookup, setLookup] = useState<CpfLookup | null>(null);
+  const [useBenefit, setUseBenefit] = useState(true);
+
+  const service = services.find((s) => s.id === serviceId);
+  const benefitKind = (service?.benefit_kind ?? null) as BenefitKind | null;
+  const subscription = lookup?.subscription ?? null;
+  const balance = lookup?.balance ?? null;
+  const planActive = canUseBenefits(subscription, balance);
+  const left = benefitKind ? creditsLeft(balance, benefitKind) : 0;
+  const includedInPlan = planActive && !!benefitKind && creditsTotalOf(balance, benefitKind) > 0;
+  const canConsume = includedInPlan && left > 0 && useBenefit;
+
+  function creditsTotalOf(b: typeof balance, kind: BenefitKind) {
+    if (!b) return 0;
+    if (kind === "cut") return b.cuts_credits;
+    if (kind === "beard") return b.beards_credits;
+    return b.extras_credits;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!shopId) return;
-    const service = services.find((s) => s.id === serviceId);
     if (!service) {
       toast.error("Cadastre um serviço primeiro.");
       return;
     }
-    const chosen = customers.find((c) => c.id === customerId);
+    const chosen = lookup?.customer ?? customers.find((c) => c.id === customerId) ?? null;
     const starts = new Date(`${day}T${time}:00`);
     const payload = {
       barbershop_id: shopId,
@@ -621,7 +742,10 @@ function AppointmentForm({
       customer_phone: chosen?.phone ?? phone,
       starts_at: starts.toISOString(),
       ends_at: new Date(starts.getTime() + service.duration_min * 60000).toISOString(),
-      price_cents: service.price_cents,
+      price_cents: canConsume ? 0 : service.price_cents,
+      subscription_id: canConsume ? subscription!.id : null,
+      benefit_kind: canConsume ? benefitKind : null,
+      use_benefit: canConsume,
     };
     setSaving(true);
     const { error } = appointment
@@ -629,42 +753,56 @@ function AppointmentForm({
       : await supabase.from("appointments").insert(payload);
     setSaving(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error.message));
       return;
     }
     toast.success(appointment ? "Agendamento atualizado" : "Agendamento criado");
     onDone();
   }
 
+
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Cliente cadastrado</Label>
-        <Select value={customerId} onValueChange={setCustomerId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecionar cliente (opcional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {customers.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {!customerId && (
-        <div className="grid gap-3 sm:grid-cols-2">
+      <CpfCustomerLookup
+        shopId={shopId}
+        onResult={(r) => {
+          setLookup(r);
+          if (r?.customer) setCustomerId(r.customer.id);
+        }}
+      />
+
+      {!lookup?.customer && (
+        <>
           <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input required value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>Ou selecione um cliente cadastrado</Label>
+            <Select value={customerId} onValueChange={setCustomerId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecionar cliente (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-        </div>
+          {!customerId && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input required value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+            </div>
+          )}
+        </>
       )}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Serviço</Label>
@@ -705,7 +843,46 @@ function AppointmentForm({
           <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
       </div>
+      {subscription && service && (
+        <div className="rounded-xl border border-border p-3 text-sm">
+          {!planActive ? (
+            <p className="text-muted-foreground">
+              ⚫ Assinatura inativa ou expirada — atendimento cobrado normalmente ({brl(service.price_cents)}).
+            </p>
+          ) : !includedInPlan ? (
+            <p className="text-muted-foreground">
+              Este serviço não está incluído na assinatura. Valor: {brl(service.price_cents)}.
+            </p>
+          ) : left <= 0 ? (
+            <div className="space-y-2">
+              <p className="text-destructive">🔴 Limite de {BENEFIT_LABEL[benefitKind!].toLowerCase()}s atingido</p>
+              <p className="text-xs text-muted-foreground">
+                Este cliente já utilizou todos os créditos deste ciclo. Você pode continuar como atendimento
+                avulso ({brl(service.price_cents)}).
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-success">🟢 Incluso no plano — valor cobrado: {brl(0)}</p>
+              <p className="text-xs text-muted-foreground">
+                1 crédito de {BENEFIT_LABEL[benefitKind!].toLowerCase()} será utilizado somente após a conclusão do
+                atendimento ({left} disponível(is)).
+              </p>
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={useBenefit}
+                  onChange={(e) => setUseBenefit(e.target.checked)}
+                  className="size-4 accent-[hsl(var(--primary))]"
+                />
+                Usar benefício da assinatura
+              </label>
+            </div>
+          )}
+        </div>
+      )}
       <Button className="w-full" disabled={saving}>
+
         {appointment ? "Salvar alterações" : "Salvar agendamento"}
       </Button>
     </form>

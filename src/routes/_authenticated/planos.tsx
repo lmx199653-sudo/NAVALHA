@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Crown, Loader2, Plus, Scissors, Search, Trash2, UserCheck, UserPlus } from "lucide-react";
+import { Crown, Loader2, Pencil, Plus, Power, Trash2, UserPlus } from "lucide-react";
+
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -12,186 +13,184 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { brl } from "@/lib/format";
+import { CpfCustomerLookup } from "@/components/CpfCustomerLookup";
+import {
+  createSubscription,
+  friendlyError,
+  type CpfLookup,
+  type Plan,
+} from "@/lib/subscriptions";
 
 export const Route = createFileRoute("/_authenticated/planos")({
   component: PlansPage,
 });
 
-type Plan = {
-  id: string;
-  name: string;
-  price_cents: number;
-  cuts_included: number;
-  beards_included: number;
-  benefits: string | null;
-  active: boolean;
+const EMPTY = {
+  name: "",
+  price: "",
+  cuts: "4",
+  beards: "2",
+  extras: "0",
+  cycle: "30",
+  limit: "",
+  benefits: "",
+  active: true,
 };
 
-type Customer = {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  cpf: string | null;
-  points: number;
-};
-
-const EMPTY = { name: "", price: "", cuts: "4", beards: "0", benefits: "", active: true };
-const EMPTY_CUSTOMER = { name: "", phone: "" };
-
-function cpfDigits(value: string) {
-  return value.replace(/\D/g, "").slice(0, 11);
-}
-
-function cpfMask(value: string) {
-  const d = cpfDigits(value);
-  return d
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d)/, "$1.$2")
-    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-}
+type FormState = typeof EMPTY;
 
 function PlansPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(EMPTY);
+  const [editing, setEditing] = useState<Plan | null>(null);
+  const [form, setForm] = useState<FormState>(EMPTY);
+  const [confirmDelete, setConfirmDelete] = useState<Plan | null>(null);
 
-  // Assinatura de cliente em um plano
   const [enrollPlan, setEnrollPlan] = useState<Plan | null>(null);
-  const [cpf, setCpf] = useState("");
-  const [found, setFound] = useState<Customer | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [newCustomer, setNewCustomer] = useState(EMPTY_CUSTOMER);
-  const [lookupPending, setLookupPending] = useState(false);
+  const [lookup, setLookup] = useState<CpfLookup | null>(null);
 
-  const { data: plans } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["plans", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("barbershop_id", shop!.id)
-        .order("price_cents");
-      return (data ?? []) as Plan[];
+      const [plans, subs] = await Promise.all([
+        supabase.from("subscription_plans").select("*").eq("barbershop_id", shop!.id).order("price_cents"),
+        supabase
+          .from("customer_subscriptions")
+          .select("id, plan_id, status")
+          .eq("barbershop_id", shop!.id),
+      ]);
+      return {
+        plans: (plans.data ?? []) as Plan[],
+        subs: (subs.data ?? []) as Array<{ id: string; plan_id: string; status: string }>,
+      };
     },
   });
 
+  const plans = data?.plans ?? [];
+  const subscribersOf = (planId: string) => (data?.subs ?? []).filter((s) => s.plan_id === planId);
+
+  function openCreate() {
+    setEditing(null);
+    setForm(EMPTY);
+    setOpen(true);
+  }
+
+  function openEdit(plan: Plan) {
+    setEditing(plan);
+    setForm({
+      name: plan.name,
+      price: (plan.price_cents / 100).toFixed(2).replace(".", ","),
+      cuts: String(plan.cuts_included),
+      beards: String(plan.beards_included),
+      extras: String(plan.extras_included ?? 0),
+      cycle: String(plan.cycle_days ?? 30),
+      limit: plan.usage_limit ? String(plan.usage_limit) : "",
+      benefits: plan.benefits ?? "",
+      active: plan.active,
+    });
+    setOpen(true);
+  }
+
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("subscription_plans").insert({
+      const price = Math.round(Number(form.price.replace(/\./g, "").replace(",", ".")) * 100);
+      const cuts = Number(form.cuts);
+      const beards = Number(form.beards);
+      const extras = Number(form.extras);
+      const cycle = Number(form.cycle);
+      if (form.name.trim().length < 2) throw new Error("Informe o nome do plano.");
+      if (!Number.isFinite(price) || price <= 0) throw new Error("Informe um preço válido.");
+      for (const [label, v] of [["cortes", cuts], ["barbas", beards], ["extras", extras]] as const) {
+        if (!Number.isInteger(v) || v < 0) throw new Error(`Quantidade de ${label} inválida.`);
+      }
+      if (!Number.isInteger(cycle) || cycle < 1) throw new Error("Duração do ciclo inválida.");
+
+      const payload = {
         barbershop_id: shop!.id,
-        name: form.name,
-        price_cents: Math.round(Number(form.price.replace(",", ".")) * 100) || 0,
-        cuts_included: Number(form.cuts) || 0,
-        beards_included: Number(form.beards) || 0,
-        benefits: form.benefits || null,
+        name: form.name.trim(),
+        price_cents: price,
+        cuts_included: cuts,
+        beards_included: beards,
+        extras_included: extras,
+        cycle_days: cycle,
+        usage_limit: form.limit ? Number(form.limit) : null,
+        benefits: form.benefits.trim() || null,
         active: form.active,
-      });
-      if (error) throw error;
+      };
+      const { error } = editing
+        ? await supabase.from("subscription_plans").update(payload).eq("id", editing.id)
+        : await supabase.from("subscription_plans").insert(payload);
+      if (error) throw new Error(friendlyError(error.message));
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["plans"] });
       setOpen(false);
       setForm(EMPTY);
-      toast.success("Plano criado");
+      setEditing(null);
+      toast.success(editing ? "Plano atualizado" : "Plano criado");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const toggleActive = useMutation({
+    mutationFn: async (plan: Plan) => {
+      const { error } = await supabase
+        .from("subscription_plans")
+        .update({ active: !plan.active })
+        .eq("id", plan.id);
+      if (error) throw new Error(friendlyError(error.message));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      toast.success("Status do plano atualizado");
     },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("subscription_plans").delete().eq("id", id);
-      if (error) throw error;
+    mutationFn: async (plan: Plan) => {
+      if (subscribersOf(plan.id).length > 0)
+        throw new Error("Este plano possui clientes vinculados. Use a opção Desativar.");
+      const { error } = await supabase.from("subscription_plans").delete().eq("id", plan.id);
+      if (error) throw new Error(friendlyError(error.message));
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["plans"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      setConfirmDelete(null);
+      toast.success("Plano excluído");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
-
-  const openEnroll = (plan: Plan) => {
-    setEnrollPlan(plan);
-    setCpf("");
-    setFound(null);
-    setNotFound(false);
-    setNewCustomer(EMPTY_CUSTOMER);
-  };
-
-  const lookupCustomer = async (digits: string) => {
-    if (!shop?.id) return;
-    setLookupPending(true);
-    try {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("id, name, phone, email, cpf, points")
-        .eq("barbershop_id", shop.id)
-        .eq("cpf", digits)
-        .maybeSingle();
-      if (error) throw error;
-      const customer = (data ?? null) as Customer | null;
-      setFound(customer);
-      setNotFound(!customer);
-      if (customer) toast.success(`Cliente encontrado: ${customer.name}`);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Erro ao buscar cliente");
-    } finally {
-      setLookupPending(false);
-    }
-  };
-
-  // Busca automática por CPF quando 11 dígitos são informados
-  useEffect(() => {
-    const digits = cpfDigits(cpf);
-    if (digits.length !== 11) {
-      setFound(null);
-      setNotFound(false);
-      return;
-    }
-    const timer = window.setTimeout(() => lookupCustomer(digits), 500);
-    return () => window.clearTimeout(timer);
-  }, [cpf]);
 
   const subscribe = useMutation({
     mutationFn: async () => {
-      if (!enrollPlan) return;
-      const digits = cpfDigits(cpf);
-      if (digits.length !== 11) throw new Error("Informe um CPF válido com 11 dígitos");
-      let customerId = found?.id ?? "";
-
-      if (!customerId) {
-        if (newCustomer.name.trim().length < 2) throw new Error("Informe o nome do cliente");
-        const { data, error } = await supabase
-          .from("customers")
-          .insert({
-            barbershop_id: shop!.id,
-            name: newCustomer.name.trim(),
-            phone: newCustomer.phone.trim() || null,
-            cpf: digits,
-          })
-          .select("id")
-          .single();
-        if (error) throw error;
-        customerId = data!.id as string;
-      }
-
-      const nextPayment = new Date();
-      nextPayment.setMonth(nextPayment.getMonth() + 1);
-
-      const { error } = await supabase.from("customer_subscriptions").insert({
-        barbershop_id: shop!.id,
-        customer_id: customerId,
-        plan_id: enrollPlan.id,
-        status: "active",
-        uses_left: enrollPlan.cuts_included + enrollPlan.beards_included,
-        next_payment: nextPayment.toISOString().slice(0, 10),
-      });
-      if (error) throw error;
+      if (!enrollPlan) throw new Error("Selecione um plano.");
+      const customerId = lookup?.customer?.id;
+      if (!customerId) throw new Error("Busque o cliente pelo CPF antes de assinar.");
+      await createSubscription(shop!.id, customerId, enrollPlan.id);
     },
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["plans"] });
+      qc.invalidateQueries({ queryKey: ["subscriptions"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
       setEnrollPlan(null);
-      toast.success("Assinatura registrada para o cliente");
+      setLookup(null);
+      toast.success("Assinatura criada com sucesso");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -199,191 +198,222 @@ function PlansPage() {
   return (
     <AppShell
       title="Planos de assinatura"
-      subtitle="Receita recorrente: clientes pagam por mês e voltam sempre"
+      subtitle="Crie planos recorrentes e vincule clientes"
       action={
-        <Button size="sm" onClick={() => setOpen(true)}>
+        <Button size="sm" onClick={openCreate}>
           <Plus className="size-4" /> Novo plano
         </Button>
       }
     >
-      <div className="grid gap-4 md:grid-cols-3">
-        {(plans ?? []).map((p, i) => (
-          <div
-            key={p.id}
-            className={`surface-card relative p-6 ${
-              i === 1 ? "border-primary/60 shadow-[0_0_40px_-20px_oklch(0.78_0.13_85)]" : ""
-            }`}
-          >
-            {i === 1 && (
-              <Badge className="absolute right-4 top-4 gap-1">
-                <Crown className="size-3" /> Destaque
-              </Badge>
-            )}
-            <h3 className="font-display text-3xl">{p.name}</h3>
-            <p className="mt-2">
-              <span className="font-display text-4xl text-primary">{brl(p.price_cents)}</span>
-              <span className="text-xs text-muted-foreground"> /mês</span>
-            </p>
-            <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Scissors className="size-4 text-primary" /> {p.cuts_included} cortes por mês
-              </li>
-              <li className="flex items-center gap-2">
-                <Scissors className="size-4 text-primary" /> {p.beards_included} barbas por mês
-              </li>
-              {p.benefits && <li className="pt-1">{p.benefits}</li>}
-            </ul>
-            <div className="mt-5 flex items-center gap-2">
-              <Button size="sm" className="gap-1" onClick={() => openEnroll(p)}>
-                <UserPlus className="size-4" /> Assinar cliente
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive"
-                onClick={() => remove.mutate(p.id)}
-              >
-                <Trash2 className="size-4" /> Remover
-              </Button>
-            </div>
-          </div>
-        ))}
-        {plans?.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            Nenhum plano criado. Assinaturas são a forma mais rápida de estabilizar o faturamento.
+      {isLoading && (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-44 rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && plans.length === 0 && (
+        <div className="surface-card flex flex-col items-center gap-3 p-10 text-center">
+          <Crown className="size-8 text-primary" />
+          <p className="font-display text-2xl">Nenhum plano cadastrado</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Crie planos mensais com cortes e barbas inclusos para fidelizar seus clientes.
           </p>
-        )}
+          <Button onClick={openCreate}>
+            <Plus className="size-4" /> Criar primeiro plano
+          </Button>
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {plans.map((plan) => {
+          const active = subscribersOf(plan.id).filter((s) => s.status === "active").length;
+          return (
+            <div key={plan.id} className="surface-card space-y-3 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="font-display text-2xl">{plan.name}</p>
+                  <p className="text-sm text-primary">
+                    {brl(plan.price_cents)}
+                    <span className="text-muted-foreground"> / {plan.cycle_days} dias</span>
+                  </p>
+                </div>
+                <Badge variant={plan.active ? "default" : "outline"}>
+                  {plan.active ? "Ativo" : "Inativo"}
+                </Badge>
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>{plan.cuts_included} corte(s) inclusos</li>
+                <li>{plan.beards_included} barba(s) inclusas</li>
+                {plan.extras_included > 0 && <li>{plan.extras_included} extra(s)</li>}
+                {plan.benefits && <li className="text-foreground/80">{plan.benefits}</li>}
+              </ul>
+              <p className="text-xs text-muted-foreground">{active} assinante(s) ativo(s)</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={!plan.active}
+                  onClick={() => {
+                    setEnrollPlan(plan);
+                    setLookup(null);
+                  }}
+                >
+                  <UserPlus className="size-4" /> Assinar cliente
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => openEdit(plan)}>
+                  <Pencil className="size-4" /> Editar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => toggleActive.mutate(plan)}>
+                  <Power className="size-4" /> {plan.active ? "Desativar" : "Ativar"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(plan)}>
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
+      {/* criar/editar plano */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Novo plano</DialogTitle>
+            <DialogTitle>{editing ? "Editar plano" : "Novo plano"}</DialogTitle>
           </DialogHeader>
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              save.mutate();
-            }}
-          >
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Label>Nome do plano</Label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Preço (R$)</Label>
-                <Input required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+                <Label>Preço mensal (R$)</Label>
+                <Input
+                  inputMode="decimal"
+                  placeholder="59,90"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
-                <Label>Cortes</Label>
-                <Input type="number" value={form.cuts} onChange={(e) => setForm({ ...form, cuts: e.target.value })} />
+                <Label>Duração do ciclo (dias)</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={form.cycle}
+                  onChange={(e) => setForm({ ...form, cycle: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
-                <Label>Barbas</Label>
-                <Input type="number" value={form.beards} onChange={(e) => setForm({ ...form, beards: e.target.value })} />
+                <Label>Cortes inclusos</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.cuts}
+                  onChange={(e) => setForm({ ...form, cuts: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Barbas inclusas</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.beards}
+                  onChange={(e) => setForm({ ...form, beards: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Outros benefícios (qtd.)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.extras}
+                  onChange={(e) => setForm({ ...form, extras: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Limite total de usos (opcional)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.limit}
+                  onChange={(e) => setForm({ ...form, limit: e.target.value })}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Benefícios</Label>
-              <Textarea rows={2} value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} />
+              <Label>Benefícios / serviços incluídos</Label>
+              <Textarea
+                rows={3}
+                placeholder="Ex.: 1 acabamento por semana, 10% de desconto em produtos"
+                value={form.benefits}
+                onChange={(e) => setForm({ ...form, benefits: e.target.value })}
+              />
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
-              <Label>Ativo</Label>
+              <div>
+                <p className="text-sm font-medium">Plano ativo</p>
+                <p className="text-xs text-muted-foreground">Planos inativos não recebem novas assinaturas.</p>
+              </div>
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
-            <Button className="w-full" disabled={save.isPending}>
-              Salvar
+            <Button className="w-full" disabled={save.isPending} onClick={() => save.mutate()}>
+              {save.isPending && <Loader2 className="size-4 animate-spin" />} Salvar plano
             </Button>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
+      {/* assinar cliente */}
       <Dialog open={!!enrollPlan} onOpenChange={(v) => !v && setEnrollPlan(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Assinar cliente — {enrollPlan?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>CPF do cliente</Label>
-              <div className="flex gap-2">
-                <Input
-                  inputMode="numeric"
-                  placeholder="000.000.000-00"
-                  value={cpf}
-                  onChange={(e) => setCpf(cpfMask(e.target.value))}
-                  disabled={lookupPending}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="gap-1"
-                  onClick={() => lookupCustomer(cpfDigits(cpf))}
-                  disabled={lookupPending || cpfDigits(cpf).length !== 11}
-                >
-                  {lookupPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <Search className="size-4" />
-                  )}
-                  Buscar
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Digite o CPF. Se o cliente já estiver cadastrado na barbearia, os dados dele aparecem automaticamente.
+            <CpfCustomerLookup shopId={shop?.id} onResult={(r) => setLookup(r)} />
+            {lookup?.subscription?.status === "active" && (
+              <p className="text-xs text-destructive">
+                Este cliente já possui uma assinatura ativa. Cancele a atual antes de criar outra.
               </p>
-            </div>
-
-            {found && (
-              <div className="space-y-2 rounded-lg border border-primary/40 bg-primary/5 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                  <UserCheck className="size-4" /> Cliente cadastrado
-                </div>
-                <div className="text-sm">
-                  <p className="font-medium">{found.name}</p>
-                  {found.phone && <p className="text-muted-foreground">{found.phone}</p>}
-                  {found.email && <p className="text-muted-foreground">{found.email}</p>}
-                  <p className="text-muted-foreground">CPF: {cpfMask(found.cpf ?? cpf)}</p>
-                  <p className="text-muted-foreground">{found.points} pontos de fidelidade</p>
-                </div>
-              </div>
             )}
-
-            {notFound && (
-              <div className="space-y-3 rounded-lg border border-border p-4">
-                <p className="text-sm text-muted-foreground">
-                  Cliente não encontrado. Complete o cadastro para registrar a assinatura:
-                </p>
-                <div className="space-y-2">
-                  <Label>Nome completo</Label>
-                  <Input
-                    value={newCustomer.name}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>WhatsApp / telefone</Label>
-                  <Input
-                    value={newCustomer.phone}
-                    onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                  />
-                </div>
-              </div>
-            )}
-
             <Button
               className="w-full"
-              disabled={subscribe.isPending || cpfDigits(cpf).length !== 11 || (!found && !notFound)}
+              disabled={!lookup?.customer || subscribe.isPending}
               onClick={() => subscribe.mutate()}
             >
-              {subscribe.isPending && <Loader2 className="size-4 animate-spin" />}
-              Confirmar assinatura — {enrollPlan ? brl(enrollPlan.price_cents) : ""}/mês
+              {subscribe.isPending && <Loader2 className="size-4 animate-spin" />} Confirmar assinatura
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(v) => !v && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir plano?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmDelete && subscribersOf(confirmDelete.id).length > 0
+                ? "Este plano possui clientes vinculados e não pode ser excluído. Você pode apenas desativá-lo."
+                : "Esta ação não pode ser desfeita."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            {confirmDelete && subscribersOf(confirmDelete.id).length > 0 ? (
+              <AlertDialogAction onClick={() => toggleActive.mutate(confirmDelete)}>
+                Desativar plano
+              </AlertDialogAction>
+            ) : (
+              <AlertDialogAction onClick={() => confirmDelete && remove.mutate(confirmDelete)}>
+                Excluir
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

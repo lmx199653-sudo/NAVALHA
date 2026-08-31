@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
 import { Route as AuthenticatedBarbeirosRouteImport } from './routes/_authenticated/barbeiros'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -62,6 +63,12 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAssinaturasRoute =
+  AuthenticatedAssinaturasRouteImport.update({
+    id: '/assinaturas',
+    path: '/assinaturas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBarbeirosRoute = AuthenticatedBarbeirosRouteImport.update({
   id: '/barbeiros',
   path: '/barbeiros',
@@ -126,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -166,6 +175,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/instalar-app': typeof InstalarAppRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/_authenticated/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/instalar-app'
     | '/agenda'
+    | '/assinaturas'
     | '/barbeiros'
     | '/clientes'
     | '/configuracoes'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/instalar-app'
     | '/agenda'
+    | '/assinaturas'
     | '/barbeiros'
     | '/clientes'
     | '/configuracoes'
@@ -226,6 +238,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/instalar-app'
     | '/_authenticated/agenda'
+    | '/_authenticated/assinaturas'
     | '/_authenticated/barbeiros'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       path: '/agenda'
       fullPath: '/agenda'
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assinaturas': {
+      id: '/_authenticated/assinaturas'
+      path: '/assinaturas'
+      fullPath: '/assinaturas'
+      preLoaderRoute: typeof AuthenticatedAssinaturasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/barbeiros': {
@@ -382,6 +402,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAssinaturasRoute: typeof AuthenticatedAssinaturasRoute
   AuthenticatedBarbeirosRoute: typeof AuthenticatedBarbeirosRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -396,6 +417,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAssinaturasRoute: AuthenticatedAssinaturasRoute,
   AuthenticatedBarbeirosRoute: AuthenticatedBarbeirosRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,

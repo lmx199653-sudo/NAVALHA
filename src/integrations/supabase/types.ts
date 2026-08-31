@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           barber_id: string | null
           barbershop_id: string
+          benefit_kind: string | null
+          benefit_processed: boolean
           created_at: string
           customer_cpf: string | null
           customer_id: string | null
@@ -31,10 +33,14 @@ export type Database = {
           source: string
           starts_at: string
           status: string
+          subscription_id: string | null
+          use_benefit: boolean
         }
         Insert: {
           barber_id?: string | null
           barbershop_id: string
+          benefit_kind?: string | null
+          benefit_processed?: boolean
           created_at?: string
           customer_cpf?: string | null
           customer_id?: string | null
@@ -48,10 +54,14 @@ export type Database = {
           source?: string
           starts_at: string
           status?: string
+          subscription_id?: string | null
+          use_benefit?: boolean
         }
         Update: {
           barber_id?: string | null
           barbershop_id?: string
+          benefit_kind?: string | null
+          benefit_processed?: boolean
           created_at?: string
           customer_cpf?: string | null
           customer_id?: string | null
@@ -65,6 +75,8 @@ export type Database = {
           source?: string
           starts_at?: string
           status?: string
+          subscription_id?: string | null
+          use_benefit?: boolean
         }
         Relationships: [
           {
@@ -93,6 +105,57 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          after_data: Json | null
+          barbershop_id: string
+          before_data: Json | null
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          after_data?: Json | null
+          barbershop_id: string
+          before_data?: Json | null
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          after_data?: Json | null
+          barbershop_id?: string
+          before_data?: Json | null
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
         ]
@@ -324,32 +387,53 @@ export type Database = {
       customer_subscriptions: {
         Row: {
           barbershop_id: string
+          cancel_reason: string | null
+          cancelled_at: string | null
           created_at: string
           customer_id: string
           id: string
+          last_payment_at: string | null
           next_payment: string | null
+          payment_status: string
           plan_id: string
+          price_cents: number
+          started_on: string
           status: string
+          updated_at: string
           uses_left: number
         }
         Insert: {
           barbershop_id: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           customer_id: string
           id?: string
+          last_payment_at?: string | null
           next_payment?: string | null
+          payment_status?: string
           plan_id: string
+          price_cents?: number
+          started_on?: string
           status?: string
+          updated_at?: string
           uses_left?: number
         }
         Update: {
           barbershop_id?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           created_at?: string
           customer_id?: string
           id?: string
+          last_payment_at?: string | null
           next_payment?: string | null
+          payment_status?: string
           plan_id?: string
+          price_cents?: number
+          started_on?: string
           status?: string
+          updated_at?: string
           uses_left?: number
         }
         Relationships: [
@@ -584,6 +668,7 @@ export type Database = {
         Row: {
           active: boolean
           barbershop_id: string
+          benefit_kind: string | null
           created_at: string
           description: string | null
           duration_min: number
@@ -596,6 +681,7 @@ export type Database = {
         Insert: {
           active?: boolean
           barbershop_id: string
+          benefit_kind?: string | null
           created_at?: string
           description?: string | null
           duration_min?: number
@@ -608,6 +694,7 @@ export type Database = {
         Update: {
           active?: boolean
           barbershop_id?: string
+          benefit_kind?: string | null
           created_at?: string
           description?: string | null
           duration_min?: number
@@ -627,6 +714,137 @@ export type Database = {
           },
         ]
       }
+      subscription_cycles: {
+        Row: {
+          barbershop_id: string
+          beards_credits: number
+          created_at: string
+          cuts_credits: number
+          extras_credits: number
+          id: string
+          period_end: string
+          period_start: string
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          barbershop_id: string
+          beards_credits?: number
+          created_at?: string
+          cuts_credits?: number
+          extras_credits?: number
+          id?: string
+          period_end: string
+          period_start?: string
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          barbershop_id?: string
+          beards_credits?: number
+          created_at?: string
+          cuts_credits?: number
+          extras_credits?: number
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_cycles_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount_cents: number
+          barbershop_id: string
+          created_at: string
+          cycle_id: string | null
+          due_date: string | null
+          id: string
+          method: string | null
+          paid_at: string | null
+          status: string
+          subscription_id: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          barbershop_id: string
+          created_at?: string
+          cycle_id?: string | null
+          due_date?: string | null
+          id?: string
+          method?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          barbershop_id?: string
+          created_at?: string
+          cycle_id?: string | null
+          due_date?: string | null
+          id?: string
+          method?: string | null
+          paid_at?: string | null
+          status?: string
+          subscription_id?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_cycle_balances"
+            referencedColumns: ["cycle_id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           active: boolean
@@ -635,9 +853,13 @@ export type Database = {
           benefits: string | null
           created_at: string
           cuts_included: number
+          cycle_days: number
+          extras_included: number
           id: string
           name: string
           price_cents: number
+          updated_at: string
+          usage_limit: number | null
         }
         Insert: {
           active?: boolean
@@ -646,9 +868,13 @@ export type Database = {
           benefits?: string | null
           created_at?: string
           cuts_included?: number
+          cycle_days?: number
+          extras_included?: number
           id?: string
           name: string
           price_cents?: number
+          updated_at?: string
+          usage_limit?: number | null
         }
         Update: {
           active?: boolean
@@ -657,9 +883,13 @@ export type Database = {
           benefits?: string | null
           created_at?: string
           cuts_included?: number
+          cycle_days?: number
+          extras_included?: number
           id?: string
           name?: string
           price_cents?: number
+          updated_at?: string
+          usage_limit?: number | null
         }
         Relationships: [
           {
@@ -667,6 +897,114 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscription_usages: {
+        Row: {
+          appointment_id: string | null
+          barber_id: string | null
+          barbershop_id: string
+          benefit_kind: string
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          cycle_id: string
+          id: string
+          kind: string
+          quantity: number
+          reason: string | null
+          service_id: string | null
+          subscription_id: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          barber_id?: string | null
+          barbershop_id: string
+          benefit_kind: string
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          cycle_id: string
+          id?: string
+          kind?: string
+          quantity?: number
+          reason?: string | null
+          service_id?: string | null
+          subscription_id: string
+        }
+        Update: {
+          appointment_id?: string | null
+          barber_id?: string | null
+          barbershop_id?: string
+          benefit_kind?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          cycle_id?: string
+          id?: string
+          kind?: string
+          quantity?: number
+          reason?: string | null
+          service_id?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_usages_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_barber_id_fkey"
+            columns: ["barber_id"]
+            isOneToOne: false
+            referencedRelation: "barbers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_cycle_balances"
+            referencedColumns: ["cycle_id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_usages_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
             referencedColumns: ["id"]
           },
         ]
@@ -712,7 +1050,41 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      subscription_cycle_balances: {
+        Row: {
+          barbershop_id: string | null
+          beards_credits: number | null
+          beards_left: number | null
+          beards_used: number | null
+          cuts_credits: number | null
+          cuts_left: number | null
+          cuts_used: number | null
+          cycle_id: string | null
+          cycle_status: string | null
+          extras_credits: number | null
+          extras_left: number | null
+          extras_used: number | null
+          period_end: string | null
+          period_start: string | null
+          subscription_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_cycles_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "customer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       book_appointment: {
@@ -734,7 +1106,40 @@ export type Database = {
           starts_at: string
         }[]
       }
+      cancel_subscription: {
+        Args: { _reason?: string; _subscription_id: string }
+        Returns: Json
+      }
+      complete_appointment: { Args: { _appointment_id: string }; Returns: Json }
+      create_subscription: {
+        Args: { _customer_id: string; _plan_id: string; _shop: string }
+        Returns: Json
+      }
+      customer_by_cpf: { Args: { _cpf: string; _shop: string }; Returns: Json }
+      ensure_subscription_cycle: {
+        Args: { _subscription_id: string }
+        Returns: {
+          barbershop_id: string
+          beards_credits: number
+          created_at: string
+          cuts_credits: number
+          extras_credits: number
+          id: string
+          period_end: string
+          period_start: string
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "subscription_cycles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       is_member: { Args: { _shop: string }; Returns: boolean }
+      is_shop_admin: { Args: { _shop: string }; Returns: boolean }
       public_breaks: {
         Args: { _slug: string }
         Returns: {
@@ -746,6 +1151,10 @@ export type Database = {
           start_time: string
           weekdays: number[]
         }[]
+      }
+      refund_appointment_benefit: {
+        Args: { _appointment_id: string; _reason?: string }
+        Returns: Json
       }
     }
     Enums: {
