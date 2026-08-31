@@ -27,7 +27,6 @@ import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-import { demoDashboardData } from "@/lib/demo-dashboard";
 import { requireLoginInApp } from "@/lib/app-auth";
 
 export const Route = createFileRoute("/dashboard")({
@@ -65,7 +64,6 @@ function Dashboard() {
   const navigate = useNavigate();
   const { userId, ready } = useSession();
   const { data: shop, isSuccess, isError } = useShop();
-  const isDemo = ready && !userId;
 
   useEffect(() => {
     if (userId && (isSuccess || isError) && !shop) navigate({ to: "/onboarding", replace: true });
@@ -97,8 +95,7 @@ function Dashboard() {
     },
   });
 
-  const demo = useMemo(() => (isDemo ? demoDashboardData() : null), [isDemo]);
-  const data = isDemo ? demo : liveData;
+  const data = liveData;
 
   const appts = (data?.appts ?? []) as Appt[];
   const customers = (data?.customers ?? []) as { id: string; created_at: string }[];
