@@ -13,8 +13,7 @@ import { supabase as realClient } from "@/integrations/supabase/client";
 
 import { demoTables } from "@/lib/demo-db";
 
-export const MANAGE_BLOCKED_MESSAGE =
-  "Para fazer alterações, instale o App e faça login.";
+export const MANAGE_BLOCKED_MESSAGE = "Para fazer alterações, instale o App e faça login.";
 
 const WRITE_METHODS = new Set(["insert", "update", "upsert", "delete"]);
 
@@ -81,26 +80,61 @@ function makeThenable(resolve: () => unknown): unknown {
 }
 
 function demoRows(table: string) {
-  return demoTables[table] ?? [];
+  if (!demoTables[table]) demoTables[table] = [];
+  return demoTables[table]!;
+}
+
+function demoId(table: string) {
+  return `demo-${table}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function demoQuery(table: string) {
   let single = false;
+  let mode: "select" | "insert" | "upsert" | "update" | "delete" = "select";
+  let payload: Record<string, unknown>[] = [];
   const filters: Array<{ col: string; op: "eq" | "in"; value: unknown }> = [];
+
+  const match = (r: Record<string, unknown>) =>
+    filters.every((f) =>
+      f.op === "eq"
+        ? r[f.col] === f.value
+        : Array.isArray(f.value) && (f.value as unknown[]).includes(r[f.col]),
+    );
+
   const build = () => {
-    let rows = demoRows(table);
-    for (const f of filters) {
-      if (f.op === "eq") {
-        rows = rows.filter((r) => r[f.col] === f.value);
-      } else {
-        rows = rows.filter(
-          (r) => Array.isArray(f.value) && (f.value as unknown[]).includes(r[f.col]),
-        );
+    const all = demoRows(table);
+    let rows: Record<string, unknown>[];
+
+    if (mode === "insert" || mode === "upsert") {
+      rows = payload.map((p) => {
+        const row = { id: demoId(table), created_at: new Date().toISOString(), ...p };
+        const idx = all.findIndex((r) => r["id"] === row["id"]);
+        if (idx >= 0) all[idx] = { ...all[idx], ...row };
+        else all.push(row);
+        return row;
+      });
+    } else if (mode === "update") {
+      rows = [];
+      for (let i = 0; i < all.length; i++) {
+        if (match(all[i]!)) {
+          all[i] = { ...all[i], ...(payload[0] ?? {}) };
+          rows.push(all[i]!);
+        }
       }
+    } else if (mode === "delete") {
+      rows = all.filter(match);
+      for (const r of rows) {
+        const idx = all.indexOf(r);
+        if (idx >= 0) all.splice(idx, 1);
+      }
+    } else {
+      rows = all.filter(match);
     }
+
     if (single) return { data: rows[0] ?? null, error: null, count: rows.length, status: 200 };
     return { data: rows, error: null, count: rows.length, status: 200 };
   };
+
   const chain: Record<string, unknown> = {};
   const proxy: unknown = new Proxy(chain, {
     get(_t, prop) {
@@ -114,7 +148,14 @@ function demoQuery(table: string) {
             prop as string
           ]!(fn);
       }
-      if (typeof prop === "string" && WRITE_METHODS.has(prop)) return () => blockedResult();
+      if (typeof prop === "string" && WRITE_METHODS.has(prop)) {
+        return (values?: unknown) => {
+          mode = prop as typeof mode;
+          const list = Array.isArray(values) ? values : values ? [values] : [];
+          payload = list as Record<string, unknown>[];
+          return proxy;
+        };
+      }
       if (prop === "single" || prop === "maybeSingle") {
         single = true;
         return () => proxy;
@@ -155,19 +196,21 @@ function guardStorageBucket(bucket: string) {
         ["upload", "remove", "move", "copy", "update", "createSignedUploadUrl"].includes(prop) &&
         !canManage()
       ) {
-        return async () => {
-          notifyManageBlocked();
-          return { data: null, error: { message: MANAGE_BLOCKED_MESSAGE } };
-        };
+        // Demonstração: simula sucesso sem enviar nada ao armazenamento real.
+        return async (path?: string) => ({
+          data: { path: typeof path === "string" ? path : "demo", id: "demo", fullPath: "demo" },
+          error: null,
+        });
       }
+
       const value = Reflect.get(target, prop, receiver);
       return typeof value === "function" ? value.bind(target) : value;
     },
   });
 }
 
-/** Cliente com as mesmas assinaturas do Supabase, porém somente leitura no site. */
-/** Funções do banco que alteram dados — bloqueadas sem login. */
+/** Cliente com as mesmas assinaturas do Supabase. Sem login tudo roda em modo
+ *  demonstração (dados em memória), permitindo testar todas as funcionalidades. */
 const WRITE_RPCS = new Set([
   "complete_appointment",
   "refund_appointment_benefit",
@@ -181,7 +224,14 @@ export const supabase = new Proxy(realClient as unknown as Record<string, unknow
     if (prop === "from") return (table: string) => guardTable(table);
     if (prop === "rpc") {
       return (fn: string, args?: unknown) => {
-        if (WRITE_RPCS.has(fn) && !canManage()) return blockedResult();
+        if (!canManage() && WRITE_RPCS.has(fn)) {
+          // Demonstração: responde como sucesso, sem tocar no banco real.
+          return makeThenable(() => ({
+            data: { demo: true, consumed: false, refunded: false, cancelled: true },
+            error: null,
+            status: 200,
+          }));
+        }
         return (realClient.rpc as unknown as (f: string, a?: unknown) => unknown)(fn, args);
       };
     }
