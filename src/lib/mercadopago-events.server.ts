@@ -75,7 +75,20 @@ async function handlePayment(resourceId: string) {
     .eq("id", paymentId)
     .maybeSingle();
   if (!payment) return;
-  if (payment.status === "approved" && status === "approved") return; // já baixado
+  if (payment.status === "approved" && status === "approved") return; // já baixado (webhook duplicado)
+
+  // O valor pago tem de bater com o valor gerado internamente.
+  const expected = Math.round(Number(payment.amount) * 100);
+  const received = Math.round(Number(mpPayment.transaction_amount ?? 0) * 100);
+  if (status === "approved" && received > 0 && received !== expected) {
+    console.error("[MercadoPago] valor divergente", { paymentId: payment.id, expected, received });
+    await audit(payment.barbershop_id, "payment.amount_mismatch", "payments", payment.id, {
+      expected,
+      received,
+      mercado_pago_payment_id: String(mpPayment.id),
+    });
+    return;
+  }
 
   const paidAt = status === "approved" ? (mpPayment.date_approved ?? new Date().toISOString()) : null;
 
