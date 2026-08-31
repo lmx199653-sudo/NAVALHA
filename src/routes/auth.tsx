@@ -214,10 +214,10 @@ function AuthPage() {
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 
-  if (checking) return <div className="min-h-screen bg-[#08090B]" />;
+  if (checking) return <div className="min-h-screen bg-[#07080A]" />;
 
   const inputCls =
-    "h-[52px] rounded-[13px] border-[#292D32] bg-[#0B0D0F] pl-11 text-[15px] text-white placeholder:text-[#5B6168] transition-all duration-200 hover:border-[#363B41] focus-visible:border-[oklch(0.78_0.13_85/0.7)] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_oklch(0.78_0.13_85/0.12),0_0_24px_-6px_oklch(0.78_0.13_85/0.25)]";
+    "h-[50px] rounded-[12px] border-[#24282D] bg-[#0C0E10] pl-11 text-[14.5px] tracking-[0.01em] text-[#EDEFF1] placeholder:text-[#4E545A] transition-all duration-200 hover:border-[#33383E] focus-visible:border-[oklch(0.78_0.13_85/0.55)] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_oklch(0.78_0.13_85/0.10),0_0_20px_-8px_oklch(0.78_0.13_85/0.22)]";
 
   return (
     <div className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08090B] px-4 py-10">
