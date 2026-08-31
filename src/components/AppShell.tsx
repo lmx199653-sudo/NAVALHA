@@ -6,7 +6,6 @@ import {
   CalendarPlus,
   Clock,
   Crown,
-  CreditCard,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -29,7 +28,6 @@ import { InstallAppCta } from "@/components/InstallAppCta";
 
 
 import { useBrand } from "@/lib/brand";
-import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -48,7 +46,6 @@ const NAV = [
   { to: "/financeiro", label: "Financeiro", icon: BarChart3 },
   { to: "/planos", label: "Planos de assinatura", icon: Crown },
   { to: "/marketing", label: "Marketing", icon: Megaphone },
-  { to: "/assinatura", label: "Assinatura", icon: CreditCard },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
@@ -68,7 +65,6 @@ export function AppShell({
   children: ReactNode;
 }) {
   const { data: shop } = useShop();
-  const { data: subscription } = useSubscription();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -79,9 +75,6 @@ export function AppShell({
   // Acesso total pelo site: o app instalado é apenas uma recomendação.
 
 
-  const isSubscribed = subscription?.subscribed;
-  const subLabel = isSubscribed ? "Ativo" : "Grátis";
-  const subClass = isSubscribed ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground";
 
 
 
@@ -107,16 +100,9 @@ export function AppShell({
           </span>
         </div>
         <div className="px-5 pb-3">
-          <Link
-            to="/assinatura"
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-              subClass,
-              !isSubscribed && "hover:text-foreground",
-            )}
-          >
-            <Crown className="size-3" /> {subLabel}
-          </Link>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+            <Crown className="size-3" /> 100% grátis
+          </span>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {NAV.map((item) => {
