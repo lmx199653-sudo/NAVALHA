@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Mail, Lock, Eye, EyeOff, Loader2, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
@@ -43,7 +45,6 @@ async function hasShop(userId: string) {
 }
 
 function AuthPage() {
-
   const navigate = useNavigate();
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [checking, setChecking] = useState(true);
@@ -70,11 +71,13 @@ function AuthPage() {
     };
   }, [navigate]);
 
-
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [fieldError, setFieldError] = useState<string | null>(null);
 
   function traduzErro(msg: string) {
     const m = msg.toLowerCase();
@@ -96,18 +99,26 @@ function AuthPage() {
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+    setFieldError(null);
     setLoading(true);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) { toast.error(traduzErro(error.message)); return; }
+    if (error) {
+      const msg = traduzErro(error.message);
+      setFieldError(msg);
+      toast.error(msg);
+      return;
+    }
     const userId = data.session?.user.id;
     const to = userId && (await hasShop(userId)) ? "/dashboard" : "/onboarding";
     navigate({ to, replace: true });
-
   }
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
+    setFieldError(null);
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -119,7 +130,12 @@ function AuthPage() {
       },
     });
     setLoading(false);
-    if (error) { toast.error(traduzErro(error.message)); return; }
+    if (error) {
+      const msg = traduzErro(error.message);
+      setFieldError(msg);
+      toast.error(msg);
+      return;
+    }
 
     if (!data.session) {
       setTab("login");
@@ -132,6 +148,7 @@ function AuthPage() {
   }
 
   async function signInWithGoogle() {
+    if (loading) return;
     setLoading(true);
     try {
       await lovable.auth.signInWithOAuth("google", {
@@ -156,98 +173,265 @@ function AuthPage() {
   if (checking) return <div className="min-h-screen bg-background" />;
 
   return (
-    <div className="grid-noise flex min-h-screen items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md">
-        <Link to="/" className="mb-4 flex items-center justify-center gap-2">
-          <img
-            src={logoAsset.url}
-            alt="NAVALHA PRO"
-            className="size-8 shrink-0 object-contain"
-          />
-          <span className="font-display text-3xl">
-            NAVALHA <span className="text-primary">PRO</span>
-          </span>
-        </Link>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
+      {/* Fundo: gradiente sutil + brilhos discretos */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(160deg, oklch(from var(--background) l c h) 0%, oklch(from var(--muted) l c h / 0.5) 55%, oklch(from var(--background) l c h) 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-96 w-[42rem] max-w-[120vw] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+        style={{ background: "radial-gradient(closest-side, var(--primary), transparent)" }}
+      />
 
-        <p className="mb-6 text-center text-sm font-medium text-primary">
-          Cadastre sua barbearia. O app é 100% grátis.
-        </p>
+      <div
+        className="relative w-full max-w-md"
+        style={{ animation: "auth-card-in .55s cubic-bezier(.22,1,.36,1) both" }}
+      >
+        {/* Cabeçalho */}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Link to="/" className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-[1.02]">
+            <img
+              src={logoAsset.url}
+              alt="NAVALHA PRO"
+              className="size-10 shrink-0 object-contain drop-shadow-sm"
+            />
+            <span className="font-display text-3xl tracking-tight">
+              NAVALHA <span className="text-primary">PRO</span>
+            </span>
+          </Link>
+          <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
+            Bem-vindo de volta
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Entre na sua conta para continuar.
+          </p>
+        </div>
 
-        <div className="surface-card p-6">
-          <div>
-            <div className="grid w-full grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+        {/* Card */}
+        <div
+          className="rounded-2xl border border-border/60 bg-card/90 p-6 shadow-[0_20px_60px_-20px_oklch(0_0_0/0.35)] backdrop-blur-sm sm:p-8"
+        >
+          {/* Tabs */}
+          <div className="grid w-full grid-cols-2 gap-1 rounded-xl bg-muted/70 p-1">
+            {(["login", "signup"] as const).map((t) => (
               <button
+                key={t}
                 type="button"
-                onClick={() => setTab("login")}
+                onClick={() => { setTab(t); setFieldError(null); }}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  tab === "login" ? "bg-background text-foreground shadow" : "text-muted-foreground",
+                  "rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                  tab === t
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                Entrar
+                {t === "login" ? "Entrar" : "Criar conta"}
               </button>
-              <button
-                type="button"
-                onClick={() => setTab("signup")}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-                  tab === "signup" ? "bg-background text-foreground shadow" : "text-muted-foreground",
-                )}
-              >
-                Criar conta
-              </button>
-            </div>
-
-            {tab === "login" && (
-              <form onSubmit={signIn} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <Button className="w-full" disabled={loading}>
-                  Entrar
-                </Button>
-                <button type="button" onClick={resetPassword} className="w-full text-xs text-muted-foreground hover:text-primary">
-                  Esqueci minha senha
-                </button>
-              </form>
-            )}
-
-            {tab === "signup" && (
-              <form onSubmit={signUp} className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Seu nome</Label>
-                  <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email2">E-mail</Label>
-                  <Input id="email2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password2">Senha</Label>
-                  <Input id="password2" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
-                </div>
-                <Button className="w-full" disabled={loading}>
-                  Começar grátis
-                </Button>
-              </form>
-            )}
+            ))}
           </div>
 
-          <div className="my-5 flex items-center gap-3">
-            <span className="h-px flex-1 bg-border" />
-            <span className="text-xs uppercase tracking-wide text-muted-foreground">ou</span>
-            <span className="h-px flex-1 bg-border" />
+          {tab === "login" && (
+            <form onSubmit={signIn} className="space-y-4 pt-6" key="login">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
+                <div className="group relative">
+                  <Mail className={cn(
+                    "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                    email ? "text-primary" : "text-muted-foreground group-focus-within:text-primary",
+                  )} />
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    placeholder="voce@exemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 rounded-xl pl-10 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px_oklch(from_var(--primary)_l_c_h_/0.12)]"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
+                <div className="group relative">
+                  <Lock className={cn(
+                    "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                    password ? "text-primary" : "text-muted-foreground group-focus-within:text-primary",
+                  )} />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 rounded-xl pl-10 pr-11 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px_oklch(from_var(--primary)_l_c_h_/0.12)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-90"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="remember" className="flex cursor-pointer select-none items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+                  <Checkbox
+                    id="remember"
+                    checked={remember}
+                    onCheckedChange={(v) => setRemember(v === true)}
+                  />
+                  Lembrar de mim
+                </label>
+                <button
+                  type="button"
+                  onClick={resetPassword}
+                  className="text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline underline-offset-4"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
+
+              {fieldError && (
+                <p
+                  className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive"
+                  style={{ animation: "auth-card-in .3s ease both" }}
+                >
+                  {fieldError}
+                </p>
+              )}
+
+              <Button
+                className="h-11 w-full rounded-xl text-[15px] font-semibold shadow-[0_8px_24px_-8px_oklch(from_var(--primary)_l_c_h/0.6)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_12px_28px_-8px_oklch(from_var(--primary)_l_c_h/0.7)] active:translate-y-0 active:scale-[0.99]"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Entrando...
+                  </span>
+                ) : (
+                  "Entrar"
+                )}
+              </Button>
+            </form>
+          )}
+
+          {tab === "signup" && (
+            <form onSubmit={signUp} className="space-y-4 pt-6" key="signup">
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm font-medium">Seu nome</Label>
+                <div className="group relative">
+                  <User className={cn(
+                    "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                    name ? "text-primary" : "text-muted-foreground group-focus-within:text-primary",
+                  )} />
+                  <Input
+                    id="name"
+                    required
+                    autoComplete="name"
+                    placeholder="Como podemos te chamar?"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="h-11 rounded-xl pl-10 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px_oklch(from_var(--primary)_l_c_h_/0.12)]"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email2" className="text-sm font-medium">E-mail</Label>
+                <div className="group relative">
+                  <Mail className={cn(
+                    "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                    email ? "text-primary" : "text-muted-foreground group-focus-within:text-primary",
+                  )} />
+                  <Input
+                    id="email2"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    placeholder="voce@exemplo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 rounded-xl pl-10 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px_oklch(from_var(--primary)_l_c_h_/0.12)]"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password2" className="text-sm font-medium">Senha</Label>
+                <div className="group relative">
+                  <Lock className={cn(
+                    "pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                    password ? "text-primary" : "text-muted-foreground group-focus-within:text-primary",
+                  )} />
+                  <Input
+                    id="password2"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 rounded-xl pl-10 pr-11 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px_oklch(from_var(--primary)_l_c_h_/0.12)]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-muted-foreground transition-all duration-200 hover:bg-muted hover:text-foreground active:scale-90"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {fieldError && (
+                <p
+                  className="rounded-lg bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive"
+                  style={{ animation: "auth-card-in .3s ease both" }}
+                >
+                  {fieldError}
+                </p>
+              )}
+
+              <Button
+                className="h-11 w-full rounded-xl text-[15px] font-semibold shadow-[0_8px_24px_-8px_oklch(from_var(--primary)_l_c_h/0.6)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_12px_28px_-8px_oklch(from_var(--primary)_l_c_h/0.7)] active:translate-y-0 active:scale-[0.99]"
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin" />
+                    Criando conta...
+                  </span>
+                ) : (
+                  "Começar grátis"
+                )}
+              </Button>
+            </form>
+          )}
+
+          <div className="my-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border/80" />
+            <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">ou</span>
+            <span className="h-px flex-1 bg-border/80" />
           </div>
 
           <Button
             type="button"
             variant="outline"
-            className="w-full gap-2"
+            className="h-11 w-full gap-2.5 rounded-xl transition-all duration-200 hover:-translate-y-px hover:shadow-md active:translate-y-0"
             disabled={loading}
             onClick={signInWithGoogle}
           >
@@ -259,8 +443,30 @@ function AuthPage() {
             </svg>
             Continuar com Google
           </Button>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Ainda não tem uma conta?{" "}
+            <button
+              type="button"
+              onClick={() => { setTab("signup"); setFieldError(null); }}
+              className="font-semibold text-primary transition-colors hover:text-primary/80 hover:underline underline-offset-4"
+            >
+              Criar conta
+            </button>
+          </p>
         </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground/80">
+          100% grátis para barbearias · Sem cartão de crédito
+        </p>
       </div>
+
+      <style>{`
+        @keyframes auth-card-in {
+          from { opacity: 0; transform: translateY(14px) scale(.985); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </div>
   );
 }
