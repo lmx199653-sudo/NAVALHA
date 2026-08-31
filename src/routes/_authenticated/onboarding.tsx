@@ -69,7 +69,6 @@ function Onboarding() {
       .from("barbershop_members")
       .upsert({ barbershop_id: data.id, user_id: userId, role: "owner" }, { onConflict: "barbershop_id,user_id" });
 
-    // Barbearia começa vazia: o barbeiro cadastra serviços, preços e clientes.
     await supabase.from("business_hours").upsert(
       Array.from({ length: 7 }, (_, weekday) => ({
         barbershop_id: data.id,
@@ -80,6 +79,32 @@ function Onboarding() {
       })),
       { onConflict: "barbershop_id,weekday" },
     );
+
+    // Conta nova já vem com serviços e barbeiros de exemplo salvos no banco;
+    // o barbeiro pode editar, excluir ou adicionar os próprios normalmente.
+    if (!shop) {
+      const [{ count: servicesCount }, { count: barbersCount }] = await Promise.all([
+        supabase.from("services").select("id", { count: "exact", head: true }).eq("barbershop_id", data.id),
+        supabase.from("barbers").select("id", { count: "exact", head: true }).eq("barbershop_id", data.id),
+      ]);
+
+      if (!servicesCount) {
+        await supabase.from("services").insert([
+          { barbershop_id: data.id, name: "Corte masculino", price_cents: 4500, duration_min: 40, sort_order: 1, benefit_kind: "cut", description: "Corte na tesoura ou máquina, com finalização." },
+          { barbershop_id: data.id, name: "Barba", price_cents: 3000, duration_min: 30, sort_order: 2, benefit_kind: "beard", description: "Barba feita na navalha com toalha quente." },
+          { barbershop_id: data.id, name: "Corte + Barba", price_cents: 7000, duration_min: 70, sort_order: 3, benefit_kind: "cut", description: "Combo completo." },
+          { barbershop_id: data.id, name: "Sobrancelha", price_cents: 1500, duration_min: 15, sort_order: 4, benefit_kind: "extra", description: "Design de sobrancelha masculina." },
+        ]);
+      }
+
+      if (!barbersCount) {
+        await supabase.from("barbers").insert([
+          { barbershop_id: data.id, name: "Barbeiro 1", commission_pct: 50, work_days: [1, 2, 3, 4, 5, 6], start_time: "09:00", end_time: "20:00", bio: "Especialista em cortes clássicos." },
+          { barbershop_id: data.id, name: "Barbeiro 2", commission_pct: 50, work_days: [1, 2, 3, 4, 5], start_time: "10:00", end_time: "19:00", bio: "Fade, degradê e barba." },
+        ]);
+      }
+    }
+
 
     await qc.invalidateQueries();
     setLoading(false);
