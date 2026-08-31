@@ -231,7 +231,7 @@ function PublicBooking() {
       );
 
       // Pagamento online: o valor e a divisão são calculados no servidor.
-      if (payOnline && createdIds[0]) {
+      if (payOnline && data?.paymentEnabled && createdIds[0]) {
         try {
           const checkout = await createServiceCheckout({
             data: { slug, appointmentId: createdIds[0] },
