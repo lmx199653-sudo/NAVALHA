@@ -244,6 +244,35 @@ function AgendaPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Conclusão do atendimento: o consumo do crédito acontece no banco (idempotente).
+  const finish = useMutation({
+    mutationFn: (id: string) => completeAppointment(id),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      setConfirmDone(null);
+      setEditing(null);
+      if (result?.consumed) {
+        const label = result.benefit_kind ? BENEFIT_LABEL[result.benefit_kind].toLowerCase() : "benefício";
+        toast.success(`Atendimento concluído. 1 ${label} descontado.`, {
+          description: `Saldo restante: ${result.left}`,
+        });
+      } else {
+        toast.success("Atendimento concluído.");
+      }
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
+  const refund = useMutation({
+    mutationFn: (id: string) => refundAppointmentBenefit(id, "Correção do atendimento"),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ["agenda"] });
+      toast.success(r?.refunded ? "Crédito estornado para o cliente." : "Nenhum crédito a estornar.");
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
+
   const reschedule = useMutation({
     mutationFn: async ({ id, starts_at }: { id: string; starts_at: Date }) => {
       const appt = appts.find((a) => a.id === id);
