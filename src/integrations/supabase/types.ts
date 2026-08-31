@@ -1500,6 +1500,7 @@ export type Database = {
           weekdays: number[]
         }[]
       }
+      public_payment_enabled: { Args: { _shop: string }; Returns: boolean }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
