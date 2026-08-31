@@ -214,63 +214,69 @@ function AuthPage() {
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 
-  if (checking) return <div className="min-h-screen bg-[#08090B]" />;
+  if (checking) return <div className="min-h-screen bg-[#07080A]" />;
 
   const inputCls =
-    "h-[52px] rounded-[13px] border-[#292D32] bg-[#0B0D0F] pl-11 text-[15px] text-white placeholder:text-[#5B6168] transition-all duration-200 hover:border-[#363B41] focus-visible:border-[oklch(0.78_0.13_85/0.7)] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_oklch(0.78_0.13_85/0.12),0_0_24px_-6px_oklch(0.78_0.13_85/0.25)]";
+    "h-[50px] rounded-[12px] border-[#24282D] bg-[#0C0E10] pl-11 text-[14.5px] tracking-[0.01em] text-[#EDEFF1] placeholder:text-[#4E545A] transition-all duration-200 hover:border-[#33383E] focus-visible:border-[oklch(0.78_0.13_85/0.55)] focus-visible:ring-0 focus-visible:shadow-[0_0_0_3px_oklch(0.78_0.13_85/0.10),0_0_20px_-8px_oklch(0.78_0.13_85/0.22)]";
 
   return (
-    <div className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-[#08090B] px-4 py-10">
+    <div className="auth-page relative flex min-h-screen items-center justify-center overflow-hidden bg-[#07080A] px-4 py-12">
       {/* Glow radial dourado sutil ao redor do card */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[560px] w-[720px] max-w-[140vw] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.10] blur-3xl"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[540px] w-[680px] max-w-[140vw] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-[0.07] blur-3xl"
         style={{ background: "radial-gradient(closest-side, oklch(0.78 0.13 85), transparent)" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[36rem] max-w-[120vw] -translate-x-1/2 rounded-full opacity-[0.07] blur-3xl"
+        className="pointer-events-none absolute -top-40 left-1/2 h-64 w-[32rem] max-w-[120vw] -translate-x-1/2 rounded-full opacity-[0.05] blur-3xl"
         style={{ background: "radial-gradient(closest-side, oklch(0.78 0.13 85), transparent)" }}
       />
+      {/* Vinheta sutil nas bordas para profundidade */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{ background: "radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.5) 100%)" }}
+      />
 
-      <div className="auth-card relative w-full max-w-[440px]">
+      <div className="auth-card relative w-full max-w-[420px]">
         {/* Logo + identidade */}
-        <div className="auth-logo mb-8 flex flex-col items-center text-center">
+        <div className="auth-logo mb-9 flex flex-col items-center text-center">
           <Link to="/" className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-[1.02]">
             <img
               src={logoAsset.url}
               alt="NAVALHA PRO"
-              className="size-10 shrink-0 object-contain drop-shadow-[0_0_12px_oklch(0.78_0.13_85/0.3)]"
+              className="size-9 shrink-0 object-contain drop-shadow-[0_0_14px_oklch(0.78_0.13_85/0.35)]"
             />
-            <span className="font-display text-[32px] leading-none tracking-tight text-white">
-              NAVALHA <span className="text-[oklch(0.78_0.13_85)]">PRO</span>
+            <span className="font-display text-[27px] leading-none tracking-tight text-white">
+              NAVALHA <span className="bg-gradient-to-b from-[oklch(0.86_0.12_85)] to-[oklch(0.72_0.13_85)] bg-clip-text text-transparent">PRO</span>
             </span>
           </Link>
-          <h1 className="mt-7 text-[26px] font-semibold tracking-tight text-white">
+          <h1 className="mt-8 text-[24px] font-semibold leading-tight tracking-[-0.01em] text-[#F2F3F4]">
             Bem-vindo de volta
           </h1>
-          <p className="mt-2 text-sm text-[#8A9097]">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[#767D84]">
             Entre na sua conta para continuar.
           </p>
         </div>
 
         {/* Card premium dark glass */}
         <div
-          className="relative rounded-[20px] border border-white/[0.06] bg-[#111315]/95 p-6 shadow-[0_32px_80px_-24px_rgba(0,0,0,0.8)] backdrop-blur-md sm:p-8"
+          className="relative rounded-[22px] border border-white/[0.05] bg-[#101214]/90 p-7 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_40px_90px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:p-9"
         >
           {/* brilho dourado sutil no topo */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-10 top-0 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.55), transparent)" }}
+            className="pointer-events-none absolute inset-x-14 top-0 h-px"
+            style={{ background: "linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.45), transparent)" }}
           />
 
           {/* Tabs segmented control */}
-          <div className="relative grid grid-cols-2 rounded-xl border border-white/[0.05] bg-[#0B0D0F] p-1">
+          <div className="relative grid grid-cols-2 rounded-[12px] border border-white/[0.04] bg-[#0A0C0E] p-1 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
             <span
               aria-hidden
               className={cn(
-                "absolute inset-y-1 w-[calc(50%-4px)] rounded-lg bg-[#181B1E] shadow-[0_0_16px_-2px_oklch(0.78_0.13_85/0.35),inset_0_0_0_1px_oklch(0.78_0.13_85/0.25)] transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]",
+                "absolute inset-y-1 w-[calc(50%-4px)] rounded-[9px] bg-[#1A1D20] shadow-[0_2px_8px_rgba(0,0,0,0.45),inset_0_0_0_1px_oklch(0.78_0.13_85/0.22),inset_0_1px_0_rgba(255,255,255,0.05)] transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)]",
                 tab === "signup" && "translate-x-full",
               )}
               style={{ left: 4 }}
@@ -281,8 +287,8 @@ function AuthPage() {
                 type="button"
                 onClick={() => { setTab(t); setFieldError(null); }}
                 className={cn(
-                  "relative z-10 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200",
-                  tab === t ? "text-white" : "text-[#7A8188] hover:text-[#B9BFC5]",
+                  "relative z-10 rounded-[9px] px-3 py-2.5 text-[13.5px] font-medium tracking-[0.01em] transition-colors duration-200",
+                  tab === t ? "text-[#F2F3F4]" : "text-[#6B7278] hover:text-[#AEB4BA]",
                 )}
               >
                 {t === "login" ? "Entrar" : "Criar conta"}
