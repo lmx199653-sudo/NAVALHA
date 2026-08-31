@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -62,7 +62,7 @@ type Appt = {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const { userId, ready } = useSession();
+  const { userId } = useSession();
   const { data: shop, isSuccess, isError } = useShop();
 
   useEffect(() => {
