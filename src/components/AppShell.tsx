@@ -45,6 +45,7 @@ const NAV = [
   { to: "/horarios", label: "Horários", icon: Clock },
   { to: "/financeiro", label: "Financeiro", icon: BarChart3 },
   { to: "/planos", label: "Planos de assinatura", icon: Crown },
+  { to: "/assinaturas", label: "Assinaturas", icon: Repeat },
   { to: "/marketing", label: "Marketing", icon: Megaphone },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
