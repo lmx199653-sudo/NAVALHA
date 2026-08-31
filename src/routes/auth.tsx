@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
+  // A página de login é renderizada apenas no cliente para evitar hidratação
+  // causada pelo carregamento lazy da rota e pelo estado de sessão.
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Entrar | NAVALHA PRO — Agendamento para barbearias" },
