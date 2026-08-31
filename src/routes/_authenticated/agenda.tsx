@@ -763,33 +763,46 @@ function AppointmentForm({
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Cliente cadastrado</Label>
-        <Select value={customerId} onValueChange={setCustomerId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecionar cliente (opcional)" />
-          </SelectTrigger>
-          <SelectContent>
-            {customers.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {!customerId && (
-        <div className="grid gap-3 sm:grid-cols-2">
+      <CpfCustomerLookup
+        shopId={shopId}
+        onResult={(r) => {
+          setLookup(r);
+          if (r?.customer) setCustomerId(r.customer.id);
+        }}
+      />
+
+      {!lookup?.customer && (
+        <>
           <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input required value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>Ou selecione um cliente cadastrado</Label>
+            <Select value={customerId} onValueChange={setCustomerId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecionar cliente (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Telefone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-        </div>
+          {!customerId && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input required value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+            </div>
+          )}
+        </>
       )}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Serviço</Label>
