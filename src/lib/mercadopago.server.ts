@@ -46,7 +46,7 @@ async function mpFetch<T>(
   const response = await fetch(`${MP_API}${path}`, {
     method: init.method ?? "GET",
     headers,
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    ...(init.body === undefined ? {} : { body: JSON.stringify(init.body) }),
   });
 
   const text = await response.text();
