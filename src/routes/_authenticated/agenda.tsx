@@ -843,7 +843,46 @@ function AppointmentForm({
           <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </div>
       </div>
+      {subscription && service && (
+        <div className="rounded-xl border border-border p-3 text-sm">
+          {!planActive ? (
+            <p className="text-muted-foreground">
+              ⚫ Assinatura inativa ou expirada — atendimento cobrado normalmente ({brl(service.price_cents)}).
+            </p>
+          ) : !includedInPlan ? (
+            <p className="text-muted-foreground">
+              Este serviço não está incluído na assinatura. Valor: {brl(service.price_cents)}.
+            </p>
+          ) : left <= 0 ? (
+            <div className="space-y-2">
+              <p className="text-destructive">🔴 Limite de {BENEFIT_LABEL[benefitKind!].toLowerCase()}s atingido</p>
+              <p className="text-xs text-muted-foreground">
+                Este cliente já utilizou todos os créditos deste ciclo. Você pode continuar como atendimento
+                avulso ({brl(service.price_cents)}).
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-success">🟢 Incluso no plano — valor cobrado: {brl(0)}</p>
+              <p className="text-xs text-muted-foreground">
+                1 crédito de {BENEFIT_LABEL[benefitKind!].toLowerCase()} será utilizado somente após a conclusão do
+                atendimento ({left} disponível(is)).
+              </p>
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={useBenefit}
+                  onChange={(e) => setUseBenefit(e.target.checked)}
+                  className="size-4 accent-[hsl(var(--primary))]"
+                />
+                Usar benefício da assinatura
+              </label>
+            </div>
+          )}
+        </div>
+      )}
       <Button className="w-full" disabled={saving}>
+
         {appointment ? "Salvar alterações" : "Salvar agendamento"}
       </Button>
     </form>
