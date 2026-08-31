@@ -600,16 +600,18 @@ function PublicBooking() {
                 >
                   Pagar no local
                 </Button>
-                <Button
-                  type="button"
-                  variant={payOnline ? "default" : "outline"}
-                  className="h-12"
-                  onClick={() => setPayOnline(true)}
-                >
-                  Pagar online
-                </Button>
+                {data?.paymentEnabled && (
+                  <Button
+                    type="button"
+                    variant={payOnline ? "default" : "outline"}
+                    className="h-12"
+                    onClick={() => setPayOnline(true)}
+                  >
+                    Pagar online
+                  </Button>
+                )}
               </div>
-              {payOnline && (
+              {payOnline && data?.paymentEnabled && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   Você será levado ao Mercado Pago (Pix, cartão ou boleto) após confirmar.
                 </p>
