@@ -131,7 +131,7 @@ function PublicBooking() {
         .eq("slug", slug)
         .maybeSingle();
       if (!shop) return null;
-      const [services, barbers, hours, breaks] = await Promise.all([
+      const [services, barbers, hours, breaks, payment] = await Promise.all([
         supabase
           .from("services")
           .select("*")
@@ -146,6 +146,7 @@ function PublicBooking() {
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
+        supabase.rpc("public_payment_enabled", { _shop: shop.id }),
       ]);
       return {
         shop: shop as Shop,
@@ -153,6 +154,7 @@ function PublicBooking() {
         barbers: (barbers.data ?? []) as Barber[],
         hours: (hours.data ?? []) as HoursRow[],
         breaks: (breaks.data ?? []) as BreakRow[],
+        paymentEnabled: (payment.data as boolean | null) ?? false,
       };
     },
   });
