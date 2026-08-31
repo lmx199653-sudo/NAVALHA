@@ -13,8 +13,7 @@ import { supabase as realClient } from "@/integrations/supabase/client";
 
 import { demoTables } from "@/lib/demo-db";
 
-export const MANAGE_BLOCKED_MESSAGE =
-  "Para fazer alterações, instale o App e faça login.";
+export const MANAGE_BLOCKED_MESSAGE = "Para fazer alterações, instale o App e faça login.";
 
 const WRITE_METHODS = new Set(["insert", "update", "upsert", "delete"]);
 
@@ -174,7 +173,6 @@ function demoQuery(table: string) {
   return proxy;
 }
 
-
 function guardTable(table: string) {
   if (!canManage() && !hasSession()) return demoQuery(table);
   const builder = realClient.from(table as never) as unknown as Record<string, unknown>;
@@ -237,7 +235,6 @@ export const supabase = new Proxy(realClient as unknown as Record<string, unknow
         return (realClient.rpc as unknown as (f: string, a?: unknown) => unknown)(fn, args);
       };
     }
-
 
     if (prop === "storage") {
       const storage = Reflect.get(target, prop, receiver) as Record<string, unknown>;
