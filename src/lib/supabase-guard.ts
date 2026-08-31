@@ -209,8 +209,8 @@ function guardStorageBucket(bucket: string) {
   });
 }
 
-/** Cliente com as mesmas assinaturas do Supabase, porém somente leitura no site. */
-/** Funções do banco que alteram dados — bloqueadas sem login. */
+/** Cliente com as mesmas assinaturas do Supabase. Sem login tudo roda em modo
+ *  demonstração (dados em memória), permitindo testar todas as funcionalidades. */
 const WRITE_RPCS = new Set([
   "complete_appointment",
   "refund_appointment_benefit",
@@ -224,10 +224,18 @@ export const supabase = new Proxy(realClient as unknown as Record<string, unknow
     if (prop === "from") return (table: string) => guardTable(table);
     if (prop === "rpc") {
       return (fn: string, args?: unknown) => {
-        if (WRITE_RPCS.has(fn) && !canManage()) return blockedResult();
+        if (!canManage() && WRITE_RPCS.has(fn)) {
+          // Demonstração: responde como sucesso, sem tocar no banco real.
+          return makeThenable(() => ({
+            data: { demo: true, consumed: false, refunded: false, cancelled: true },
+            error: null,
+            status: 200,
+          }));
+        }
         return (realClient.rpc as unknown as (f: string, a?: unknown) => unknown)(fn, args);
       };
     }
+
 
     if (prop === "storage") {
       const storage = Reflect.get(target, prop, receiver) as Record<string, unknown>;
