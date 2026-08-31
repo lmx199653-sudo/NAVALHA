@@ -672,7 +672,13 @@ function AppointmentForm({
 }: {
   shopId: string | undefined;
   barbers: Array<{ id: string; name: string }>;
-  services: Array<{ id: string; name: string; price_cents: number; duration_min: number }>;
+  services: Array<{
+    id: string;
+    name: string;
+    price_cents: number;
+    duration_min: number;
+    benefit_kind?: string | null;
+  }>;
   customers: Array<{ id: string; name: string; phone: string | null }>;
   defaultDate: Date;
   appointment?: {
@@ -699,16 +705,33 @@ function AppointmentForm({
       : "10:00",
   );
   const [saving, setSaving] = useState(false);
+  const [lookup, setLookup] = useState<CpfLookup | null>(null);
+  const [useBenefit, setUseBenefit] = useState(true);
+
+  const service = services.find((s) => s.id === serviceId);
+  const benefitKind = (service?.benefit_kind ?? null) as BenefitKind | null;
+  const subscription = lookup?.subscription ?? null;
+  const balance = lookup?.balance ?? null;
+  const planActive = canUseBenefits(subscription, balance);
+  const left = benefitKind ? creditsLeft(balance, benefitKind) : 0;
+  const includedInPlan = planActive && !!benefitKind && creditsTotalOf(balance, benefitKind) > 0;
+  const canConsume = includedInPlan && left > 0 && useBenefit;
+
+  function creditsTotalOf(b: typeof balance, kind: BenefitKind) {
+    if (!b) return 0;
+    if (kind === "cut") return b.cuts_credits;
+    if (kind === "beard") return b.beards_credits;
+    return b.extras_credits;
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!shopId) return;
-    const service = services.find((s) => s.id === serviceId);
     if (!service) {
       toast.error("Cadastre um serviço primeiro.");
       return;
     }
-    const chosen = customers.find((c) => c.id === customerId);
+    const chosen = lookup?.customer ?? customers.find((c) => c.id === customerId) ?? null;
     const starts = new Date(`${day}T${time}:00`);
     const payload = {
       barbershop_id: shopId,
@@ -719,7 +742,10 @@ function AppointmentForm({
       customer_phone: chosen?.phone ?? phone,
       starts_at: starts.toISOString(),
       ends_at: new Date(starts.getTime() + service.duration_min * 60000).toISOString(),
-      price_cents: service.price_cents,
+      price_cents: canConsume ? 0 : service.price_cents,
+      subscription_id: canConsume ? subscription!.id : null,
+      benefit_kind: canConsume ? benefitKind : null,
+      use_benefit: canConsume,
     };
     setSaving(true);
     const { error } = appointment
@@ -727,12 +753,13 @@ function AppointmentForm({
       : await supabase.from("appointments").insert(payload);
     setSaving(false);
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyError(error.message));
       return;
     }
     toast.success(appointment ? "Agendamento atualizado" : "Agendamento criado");
     onDone();
   }
+
 
   return (
     <form onSubmit={submit} className="space-y-4">
