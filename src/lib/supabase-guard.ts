@@ -167,9 +167,25 @@ function guardStorageBucket(bucket: string) {
 }
 
 /** Cliente com as mesmas assinaturas do Supabase, porém somente leitura no site. */
+/** Funções do banco que alteram dados — bloqueadas sem login. */
+const WRITE_RPCS = new Set([
+  "complete_appointment",
+  "refund_appointment_benefit",
+  "create_subscription",
+  "cancel_subscription",
+  "ensure_subscription_cycle",
+]);
+
 export const supabase = new Proxy(realClient as unknown as Record<string, unknown>, {
   get(target, prop, receiver) {
     if (prop === "from") return (table: string) => guardTable(table);
+    if (prop === "rpc") {
+      return (fn: string, args?: unknown) => {
+        if (WRITE_RPCS.has(fn) && !canManage()) return blockedResult();
+        return (realClient.rpc as unknown as (f: string, a?: unknown) => unknown)(fn, args);
+      };
+    }
+
     if (prop === "storage") {
       const storage = Reflect.get(target, prop, receiver) as Record<string, unknown>;
       return new Proxy(storage, {
