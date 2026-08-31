@@ -98,6 +98,27 @@ async function handlePayment(resourceId: string) {
         .eq("payment_id", payment.id)
         .neq("status", "paid");
     }
+    if (payment.type === "customer_service" && payment.appointment_id) {
+      if (["rejected", "cancelled", "refunded", "charged_back"].includes(status)) {
+        // Pagamento recusado: libera o horário imediatamente.
+        await db
+          .from("appointments")
+          .update({
+            payment_state: "rejected",
+            payment_expires_at: null,
+            status: "cancelled",
+          })
+          .eq("id", payment.appointment_id)
+          .neq("payment_state", "paid");
+      } else {
+        // pending / in_process / authorized: segue aguardando confirmação.
+        await db
+          .from("appointments")
+          .update({ payment_state: "payment_pending" })
+          .eq("id", payment.appointment_id)
+          .neq("payment_state", "paid");
+      }
+    }
     await audit(payment.barbershop_id, `payment.${status}`, "payments", payment.id, {
       mercado_pago_payment_id: String(mpPayment.id),
       type: payment.type,
@@ -114,11 +135,18 @@ async function handlePayment(resourceId: string) {
   }
 
   if (payment.type === "customer_service" && payment.appointment_id) {
+    // Somente com pagamento aprovado o agendamento passa a confirmado.
     await db
       .from("appointments")
-      .update({ payment_state: "paid", paid_at: paidAt, status: "confirmed" })
+      .update({
+        payment_state: "paid",
+        paid_at: paidAt,
+        status: "confirmed",
+        payment_expires_at: null,
+      })
       .eq("id", payment.appointment_id);
   }
+
 
   if (payment.type === "subscription" && payment.barbershop_id) {
     await db
