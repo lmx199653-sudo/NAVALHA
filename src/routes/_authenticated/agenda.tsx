@@ -609,7 +609,46 @@ function AgendaPage() {
           )}
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!confirmDone} onOpenChange={(v) => !v && setConfirmDone(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar conclusão do atendimento?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1 text-sm">
+                {(() => {
+                  const appt = appts.find((a) => a.id === confirmDone);
+                  if (!appt) return null;
+                  const service = data?.services.find((s) => s.id === appt.service_id);
+                  return (
+                    <>
+                      <p>Cliente: {appt.customer_name}</p>
+                      <p>Serviço: {service?.name ?? "—"}</p>
+                      {appt.use_benefit && !appt.benefit_processed ? (
+                        <p className="text-primary">
+                          1 {BENEFIT_LABEL[(appt.benefit_kind ?? "cut") as BenefitKind].toLowerCase()} será
+                          descontado da assinatura.
+                        </p>
+                      ) : appt.benefit_processed ? (
+                        <p className="text-muted-foreground">Benefício já processado — não será descontado novamente.</p>
+                      ) : (
+                        <p className="text-muted-foreground">Atendimento avulso: {brl(appt.price_cents)}.</p>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => confirmDone && finish.mutate(confirmDone)}>
+              Concluir atendimento
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
+
   );
 }
 
