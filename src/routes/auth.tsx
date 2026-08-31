@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Entrar | NAVALHA PRO — Agendamento para barbearias" },
