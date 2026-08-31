@@ -37,6 +37,28 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, STATUS_LABEL, timeLabel, toDayKey, WEEKDAYS } from "@/lib/format";
 import { breaksForDay, type BreakRow } from "@/lib/slots";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CpfCustomerLookup } from "@/components/CpfCustomerLookup";
+import {
+  BENEFIT_LABEL,
+  canUseBenefits,
+  completeAppointment,
+  creditsLeft,
+  friendlyError,
+  refundAppointmentBenefit,
+  type BenefitKind,
+  type CpfLookup,
+} from "@/lib/subscriptions";
+
 
 
 export const Route = createFileRoute("/_authenticated/agenda")({
