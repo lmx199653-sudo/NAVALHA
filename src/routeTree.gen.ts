@@ -28,6 +28,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
+import { Route as ApiPublicMercadoPagoWebhookRouteImport } from './routes/api/public/mercado-pago.webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,6 +126,12 @@ const BarbeariaSlugRoute = BarbeariaSlugRouteImport.update({
   path: '/barbearia/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMercadoPagoWebhookRoute =
+  ApiPublicMercadoPagoWebhookRouteImport.update({
+    id: '/api/public/mercado-pago/webhook',
+    path: '/api/public/mercado-pago/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -165,6 +173,7 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -187,6 +196,7 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -209,6 +219,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/api/public/mercado-pago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/api/public/mercado-pago/webhook'
   id:
     | '__root__'
     | '/'
@@ -250,6 +262,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/servicos'
     | '/barbearia/$slug'
+    | '/api/public/mercado-pago/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -260,6 +273,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   InstalarAppRoute: typeof InstalarAppRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
+  ApiPublicMercadoPagoWebhookRoute: typeof ApiPublicMercadoPagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -397,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BarbeariaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercado-pago/webhook': {
+      id: '/api/public/mercado-pago/webhook'
+      path: '/api/public/mercado-pago/webhook'
+      fullPath: '/api/public/mercado-pago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadoPagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -441,6 +462,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   InstalarAppRoute: InstalarAppRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
+  ApiPublicMercadoPagoWebhookRoute: ApiPublicMercadoPagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
