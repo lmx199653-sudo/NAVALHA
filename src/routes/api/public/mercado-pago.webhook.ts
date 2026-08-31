@@ -84,7 +84,7 @@ export const Route = createFileRoute("/api/public/mercado-pago/webhook")({
             event_id: eventId,
             type,
             resource_id: resourceId ?? null,
-            payload: notification as unknown as Record<string, unknown>,
+            payload: notification as never,
           })
           .select("id")
           .maybeSingle();
