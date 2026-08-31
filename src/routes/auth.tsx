@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, ClientOnly } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, Loader2, User, AlertCircle } from "lucide-react";
@@ -11,9 +11,6 @@ import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
-  // A página de login é renderizada apenas no cliente para evitar hidratação
-  // causada pelo carregamento lazy da rota e pelo estado de sessão.
-  ssr: false,
   head: () => ({
     meta: [
       { title: "Entrar | NAVALHA PRO — Agendamento para barbearias" },
@@ -31,8 +28,16 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: AuthPage,
+  component: ClientAuthPage,
 });
+
+function ClientAuthPage() {
+  return (
+    <ClientOnly fallback={<div className="min-h-screen bg-[#07080A]" />}>
+      <AuthPage />
+    </ClientOnly>
+  );
+}
 
 /** Verifica se o usuário já tem barbearia (vínculo de equipe ou como dono). */
 async function hasShop(userId: string) {
