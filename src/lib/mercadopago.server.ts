@@ -72,7 +72,10 @@ export type PreferencePayload = {
   marketplaceFee?: MpMoney;
   /** Token do vendedor (barbeiro) quando o dinheiro deve ir para ele. */
   sellerToken?: string;
+  /** Validade do checkout (ISO). Após isso o horário é liberado. */
+  expiresAt?: string;
 };
+
 
 export type MpPreference = { id: string; init_point: string; sandbox_init_point?: string };
 
@@ -95,6 +98,9 @@ export async function createPreference(payload: PreferencePayload): Promise<MpPr
       notification_url: payload.notificationUrl,
       back_urls: { success: payload.backUrl, pending: payload.backUrl, failure: payload.backUrl },
       auto_return: "approved",
+      ...(payload.expiresAt
+        ? { expires: true, expiration_date_to: payload.expiresAt }
+        : {}),
       metadata: payload.metadata ?? {},
       ...(payload.marketplaceFee && payload.sellerToken
         ? { marketplace_fee: Number(payload.marketplaceFee) }

@@ -29,6 +29,7 @@ export type Database = {
           id: string
           notes: string | null
           paid_at: string | null
+          payment_expires_at: string | null
           payment_method: string
           payment_state: string
           price_cents: number
@@ -53,6 +54,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_expires_at?: string | null
           payment_method?: string
           payment_state?: string
           price_cents?: number
@@ -77,6 +79,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_at?: string | null
+          payment_expires_at?: string | null
           payment_method?: string
           payment_state?: string
           price_cents?: number
@@ -1383,48 +1386,6 @@ export type Database = {
           },
         ]
       }
-      user_subscriptions: {
-        Row: {
-          created_at: string
-          current_period_end: string | null
-          id: string
-          legacy_provider: string
-          status: string
-          stripe_customer_id: string | null
-          stripe_price_id: string | null
-          stripe_subscription_id: string | null
-          trial_end: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_period_end?: string | null
-          id?: string
-          legacy_provider?: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_period_end?: string | null
-          id?: string
-          legacy_provider?: string
-          status?: string
-          stripe_customer_id?: string | null
-          stripe_price_id?: string | null
-          stripe_subscription_id?: string | null
-          trial_end?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       subscription_cycle_balances: {
@@ -1464,6 +1425,10 @@ export type Database = {
       }
     }
     Functions: {
+      appointment_payment_status: {
+        Args: { _appointment_id: string }
+        Returns: Json
+      }
       barbershop_billing_summary: { Args: { _shop: string }; Returns: Json }
       book_appointment: {
         Args: {
@@ -1515,6 +1480,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      expire_pending_payment_appointments: {
+        Args: { _shop?: string }
+        Returns: number
       }
       is_member: { Args: { _shop: string }; Returns: boolean }
       is_shop_admin: { Args: { _shop: string }; Returns: boolean }

@@ -28,6 +28,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
+import { Route as PagamentoAppointmentIdRouteImport } from './routes/pagamento.$appointmentId'
 import { Route as ApiPublicMercadoPagoOauthCallbackRouteImport } from './routes/api/public/mercado-pago.oauth-callback'
 import { Route as ApiPublicMercadoPagoWebhookRouteImport } from './routes/api/public/mercado-pago.webhook'
 
@@ -127,6 +128,11 @@ const BarbeariaSlugRoute = BarbeariaSlugRouteImport.update({
   path: '/barbearia/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PagamentoAppointmentIdRoute = PagamentoAppointmentIdRouteImport.update({
+  id: '/pagamento/$appointmentId',
+  path: '/pagamento/$appointmentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMercadoPagoOauthCallbackRoute =
   ApiPublicMercadoPagoOauthCallbackRouteImport.update({
     id: '/api/public/mercado-pago/oauth-callback',
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/pagamento/$appointmentId': typeof PagamentoAppointmentIdRoute
   '/api/public/mercado-pago/oauth-callback': typeof ApiPublicMercadoPagoOauthCallbackRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/pagamento/$appointmentId': typeof PagamentoAppointmentIdRoute
   '/api/public/mercado-pago/oauth-callback': typeof ApiPublicMercadoPagoOauthCallbackRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/pagamento/$appointmentId': typeof PagamentoAppointmentIdRoute
   '/api/public/mercado-pago/oauth-callback': typeof ApiPublicMercadoPagoOauthCallbackRoute
   '/api/public/mercado-pago/webhook': typeof ApiPublicMercadoPagoWebhookRoute
 }
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/pagamento/$appointmentId'
     | '/api/public/mercado-pago/oauth-callback'
     | '/api/public/mercado-pago/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -251,6 +261,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/pagamento/$appointmentId'
     | '/api/public/mercado-pago/oauth-callback'
     | '/api/public/mercado-pago/webhook'
   id:
@@ -274,6 +285,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/servicos'
     | '/barbearia/$slug'
+    | '/pagamento/$appointmentId'
     | '/api/public/mercado-pago/oauth-callback'
     | '/api/public/mercado-pago/webhook'
   fileRoutesById: FileRoutesById
@@ -286,6 +298,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   InstalarAppRoute: typeof InstalarAppRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
+  PagamentoAppointmentIdRoute: typeof PagamentoAppointmentIdRoute
   ApiPublicMercadoPagoOauthCallbackRoute: typeof ApiPublicMercadoPagoOauthCallbackRoute
   ApiPublicMercadoPagoWebhookRoute: typeof ApiPublicMercadoPagoWebhookRoute
 }
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BarbeariaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pagamento/$appointmentId': {
+      id: '/pagamento/$appointmentId'
+      path: '/pagamento/$appointmentId'
+      fullPath: '/pagamento/$appointmentId'
+      preLoaderRoute: typeof PagamentoAppointmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/mercado-pago/oauth-callback': {
       id: '/api/public/mercado-pago/oauth-callback'
       path: '/api/public/mercado-pago/oauth-callback'
@@ -483,6 +503,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   InstalarAppRoute: InstalarAppRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
+  PagamentoAppointmentIdRoute: PagamentoAppointmentIdRoute,
   ApiPublicMercadoPagoOauthCallbackRoute:
     ApiPublicMercadoPagoOauthCallbackRoute,
   ApiPublicMercadoPagoWebhookRoute: ApiPublicMercadoPagoWebhookRoute,

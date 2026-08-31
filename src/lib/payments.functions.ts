@@ -318,8 +318,15 @@ export const disconnectMercadoPago = createServerFn({ method: "POST" })
 /* pagamento online do cliente                                         */
 /* ------------------------------------------------------------------ */
 
+/** Minutos de validade do checkout antes de liberar o horário. */
+const CHECKOUT_TTL_MIN = 20;
+
 export const createServiceCheckout = createServerFn({ method: "POST" })
-  .inputValidator((input: { slug: string; appointmentId: string }) => input)
+  .inputValidator((input: { slug: string; appointmentId: string }) => {
+    if (!input?.slug || !input?.appointmentId) throw new Error("Dados incompletos.");
+    if (!/^[0-9a-f-]{36}$/i.test(input.appointmentId)) throw new Error("Agendamento inválido.");
+    return input;
+  })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createPreference } = await import("@/lib/mercadopago.server");
@@ -331,9 +338,14 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!shop) throw new Error("Barbearia não encontrada.");
 
+    // Libera horários com pagamento vencido antes de qualquer validação.
+    await supabaseAdmin.rpc("expire_pending_payment_appointments", { _shop: shop.id });
+
     const { data: appointment } = await supabaseAdmin
       .from("appointments")
-      .select("id, barbershop_id, customer_id, price_cents, status, payment_state, service_id")
+      .select(
+        "id, barbershop_id, barber_id, customer_id, price_cents, status, payment_state, payment_expires_at, service_id, starts_at, ends_at",
+      )
       .eq("id", data.appointmentId)
       .maybeSingle();
     if (!appointment || appointment.barbershop_id !== shop.id) {
@@ -343,10 +355,43 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
     if (!["scheduled", "confirmed"].includes(appointment.status)) {
       throw new Error("Agendamento não disponível para pagamento.");
     }
+    if (new Date(appointment.starts_at).getTime() < Date.now()) {
+      throw new Error("Horário já passou.");
+    }
 
-    // Valor real vem do banco, nunca do navegador.
+    // Serviço e valor são revalidados no banco — nunca vindos do navegador.
+    const { data: service } = await supabaseAdmin
+      .from("services")
+      .select("id, barbershop_id, price_cents, active")
+      .eq("id", appointment.service_id ?? "")
+      .maybeSingle();
+    if (!service || service.barbershop_id !== shop.id || !service.active) {
+      throw new Error("Serviço indisponível.");
+    }
+    if (service.price_cents !== appointment.price_cents) {
+      throw new Error("Valor do serviço mudou. Refaça o agendamento.");
+    }
+
     const amount = money(appointment.price_cents / 100);
     if (amount <= 0) throw new Error("Serviço sem valor para pagamento online.");
+
+    // Duplo clique / reabertura: reaproveita o checkout ainda válido.
+    const { data: existing } = await supabaseAdmin
+      .from("payments")
+      .select("id, mercado_pago_preference_id, metadata, status")
+      .eq("appointment_id", appointment.id)
+      .eq("type", "customer_service")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const existingUrl = (existing?.metadata as { init_point?: string } | null)?.init_point;
+    const stillValid =
+      appointment.payment_expires_at != null &&
+      new Date(appointment.payment_expires_at).getTime() > Date.now();
+    if (existing && existingUrl && stillValid) {
+      return { checkoutUrl: existingUrl, amount, reused: true };
+    }
 
     const { data: settings } = await supabaseAdmin
       .from("platform_settings")
@@ -364,6 +409,8 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
           Number(settings?.marketplace_fee_fixed ?? 0),
       ) || undefined;
 
+    const expiresAt = new Date(Date.now() + CHECKOUT_TTL_MIN * 60_000).toISOString();
+
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from("payments")
       .insert({
@@ -374,7 +421,7 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
         amount,
         status: "pending",
         payment_method: "mercado_pago",
-        metadata: { marketplace_fee: marketplaceFee ?? 0 },
+        metadata: { marketplace_fee: marketplaceFee ?? 0, expires_at: expiresAt },
       })
       .select("id")
       .single();
@@ -388,7 +435,8 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       amount,
       externalReference: `service:${payment.id}`,
       notificationUrl: notificationUrl(),
-      backUrl: `${origin()}/barbearia/${data.slug}`,
+      backUrl: `${origin()}/pagamento/${appointment.id}`,
+      expiresAt,
       metadata: { payment_id: payment.id, appointment_id: appointment.id, type: "customer_service" },
       ...(sellerToken ? { sellerToken } : {}),
       ...(sellerToken && marketplaceFee ? { marketplaceFee } : {}),
@@ -396,13 +444,68 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("payments")
-      .update({ mercado_pago_preference_id: preference.id })
+      .update({
+        mercado_pago_preference_id: preference.id,
+        metadata: {
+          marketplace_fee: marketplaceFee ?? 0,
+          expires_at: expiresAt,
+          init_point: preference.init_point,
+        },
+      })
       .eq("id", payment.id);
 
     await supabaseAdmin
       .from("appointments")
-      .update({ payment_method: "mercado_pago", payment_state: "pending" })
+      .update({
+        payment_method: "mercado_pago",
+        payment_state: "payment_pending",
+        payment_expires_at: expiresAt,
+        status: "scheduled",
+      })
       .eq("id", appointment.id);
 
-    return { checkoutUrl: preference.init_point, amount };
+    return { checkoutUrl: preference.init_point, amount, reused: false };
+  });
+
+/* ------------------------------------------------------------------ */
+/* situação do pagamento (tela de retorno)                             */
+/* ------------------------------------------------------------------ */
+
+export type AppointmentPaymentStatus = {
+  found: boolean;
+  appointment_id?: string;
+  /** approved | pending | rejected | expired | none */
+  payment_status?: string;
+  appointment_status?: string;
+  starts_at?: string;
+  ends_at?: string;
+  price_cents?: number;
+  customer_name?: string;
+  service_name?: string | null;
+  shop_name?: string | null;
+  shop_slug?: string | null;
+  shop_whatsapp?: string | null;
+  payment_amount?: number | null;
+  payment_state?: string | null;
+};
+
+/**
+ * Verdade do pagamento vem sempre do banco (alimentado pelo webhook oficial),
+ * nunca dos parâmetros da URL de retorno do Mercado Pago.
+ */
+export const getAppointmentPaymentStatus = createServerFn({ method: "POST" })
+  .inputValidator((input: { appointmentId: string }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(input?.appointmentId ?? "")) {
+      throw new Error("Agendamento inválido.");
+    }
+    return input;
+  })
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.rpc("expire_pending_payment_appointments", {} as never);
+    const { data: status, error } = await supabaseAdmin.rpc("appointment_payment_status", {
+      _appointment_id: data.appointmentId,
+    });
+    if (error) throw new Error(error.message);
+    return status as unknown as AppointmentPaymentStatus;
   });
