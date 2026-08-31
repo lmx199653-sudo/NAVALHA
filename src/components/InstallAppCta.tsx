@@ -35,7 +35,7 @@ export function InstallAppCta() {
         <div>
           <p className="font-display text-xl leading-tight">Gerencie pelo celular</p>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Instale o Navalha Pro na tela inicial e comece grátis por 60 dias. Abre mais rápido,
+            Instale o Navalha Pro na tela inicial. É 100% grátis. Abre mais rápido,
             funciona em tela cheia e recebe avisos de novos agendamentos. Você pode continuar
             usando pelo navegador.
           </p>

@@ -170,7 +170,7 @@ function AuthPage() {
         </Link>
 
         <p className="mb-6 text-center text-sm font-medium text-primary">
-          Cadastre sua barbearia e comece grátis por 60 dias.
+          Cadastre sua barbearia. O app é 100% grátis.
         </p>
 
         <div className="surface-card p-6">
