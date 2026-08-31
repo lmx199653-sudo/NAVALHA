@@ -96,7 +96,7 @@ function Onboarding() {
           <Scissors className="mx-auto size-6 text-primary" />
           <h1 className="mt-3 font-display text-4xl">Configure sua barbearia</h1>
           <p className="mt-2 text-sm font-medium text-primary">
-            Comece grátis por 60 dias. Cadastre sua barbearia e faça login no app.
+            100% grátis. Cadastre sua barbearia e faça login no app.
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Leva menos de 1 minuto. Você pode ajustar tudo depois.
