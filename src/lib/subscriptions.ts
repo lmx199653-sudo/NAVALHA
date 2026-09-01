@@ -178,7 +178,7 @@ export type LocalPaymentMethod = "pix" | "card" | "cash";
 export async function completeAppointment(appointmentId: string, paymentMethod?: LocalPaymentMethod) {
   const { data, error } = await supabase.rpc("complete_appointment", {
     _appointment_id: appointmentId,
-    _payment_method: paymentMethod ?? null,
+    ...(paymentMethod ? { _payment_method: paymentMethod } : {}),
   });
   if (error) throw new Error(friendlyError(error.message));
   return data as unknown as {
