@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, LogOut, QrCode } from "lucide-react";
+import { AlertCircle, CheckCircle2, Copy, ExternalLink, LogOut, QrCode } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -16,7 +16,9 @@ import { WEEKDAYS } from "@/lib/format";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import { DEFAULT_BRAND, type Brand } from "@/lib/brand";
 import { PixKeyCard } from "@/components/PixKeyCard";
-import { PIX_KEY_TYPES } from "@/lib/pix";
+import { PixQrCard } from "@/components/PixQrCard";
+import { detectPixKey, pixTypeLabel } from "@/lib/pix";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: SettingsPage,
@@ -141,27 +143,27 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const [pix, setPix] = useState({ key: "", type: "cpf", holder: "" });
+  const [pix, setPix] = useState({ key: "", holder: "" });
   useEffect(() => {
     if (shop) {
-      setPix({
-        key: shop.pix_key ?? "",
-        type: shop.pix_key_type ?? "cpf",
-        holder: shop.pix_holder_name ?? "",
-      });
+      setPix({ key: shop.pix_key ?? "", holder: shop.pix_holder_name ?? "" });
     }
   }, [shop]);
+  const detected = pix.key.trim() ? detectPixKey(pix.key) : null;
 
   const savePix = useMutation({
     mutationFn: async (clear?: boolean) => {
+      if (!clear) {
+        if (!detected || !detected.ok) throw new Error(detected?.reason ?? "Informe a chave Pix.");
+      }
       const { error } = await supabase
         .from("barbershops")
         .update(
-          clear
+          clear || !detected?.ok
             ? { pix_key: null, pix_key_type: null, pix_holder_name: null }
             : {
-                pix_key: pix.key.trim() || null,
-                pix_key_type: pix.key.trim() ? pix.type : null,
+                pix_key: detected.normalized,
+                pix_key_type: detected.type,
                 pix_holder_name: pix.holder.trim() || null,
               },
         )
@@ -170,7 +172,7 @@ function SettingsPage() {
     },
     onSuccess: (_, clear) => {
       qc.invalidateQueries({ queryKey: ["shop"] });
-      toast.success(clear ? "Chave Pix removida" : "Chave Pix salva");
+      toast.success(clear ? "Chave Pix removida" : `Chave Pix (${pixTypeLabel(detected?.ok ? detected.type : null)}) salva`);
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
@@ -290,8 +292,8 @@ function SettingsPage() {
               <h3 className="font-display text-2xl">Pix — receba direto na sua conta</h3>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Sua chave aparece para o cliente ao agendar online e na conclusão do atendimento. O pagamento
-              cai direto para você, sem intermediários.
+              Sua chave aparece para o cliente ao agendar online e na conclusão do atendimento — como chave
+              para copiar ou QR Code. O pagamento cai direto para você, sem intermediários.
             </p>
             <form
               className="mt-4 space-y-3"
@@ -300,37 +302,37 @@ function SettingsPage() {
                 savePix.mutate(false);
               }}
             >
-              <div className="grid grid-cols-[minmax(0,140px)_1fr] gap-3">
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <select
-                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
-                    value={pix.type}
-                    onChange={(e) => setPix({ ...pix, type: e.target.value })}
+              <div className="space-y-2">
+                <Label>Chave Pix</Label>
+                <Input
+                  value={pix.key}
+                  onChange={(e) => setPix({ ...pix, key: e.target.value })}
+                  placeholder="CPF, CNPJ, celular, e-mail ou chave aleatória"
+                  autoComplete="off"
+                />
+                {detected && (
+                  <p
+                    className={cn(
+                      "flex items-center gap-1.5 text-xs",
+                      detected.ok ? "text-primary" : "text-destructive",
+                    )}
                   >
-                    {PIX_KEY_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Chave Pix</Label>
-                  <Input
-                    value={pix.key}
-                    onChange={(e) => setPix({ ...pix, key: e.target.value })}
-                    placeholder={
-                      pix.type === "email"
-                        ? "voce@email.com"
-                        : pix.type === "phone"
-                          ? "(11) 99999-9999"
-                          : pix.type === "random"
-                            ? "Chave aleatória do seu banco"
-                            : "Somente números"
-                    }
-                  />
-                </div>
+                    {detected.ok ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                    {detected.ok ? (
+                      <>
+                        Tipo identificado: <strong>{pixTypeLabel(detected.type)}</strong>
+                        <span className="text-muted-foreground"> · {detected.normalized}</span>
+                      </>
+                    ) : (
+                      detected.reason
+                    )}
+                  </p>
+                )}
+                {!detected && (
+                  <p className="text-xs text-muted-foreground">
+                    O tipo da chave é identificado automaticamente ao digitar.
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Nome do titular (opcional)</Label>
@@ -341,7 +343,7 @@ function SettingsPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button disabled={savePix.isPending || !pix.key.trim()}>Salvar chave Pix</Button>
+                <Button disabled={savePix.isPending || !detected?.ok}>Salvar chave Pix</Button>
                 {shop?.pix_key && (
                   <Button
                     type="button"
@@ -355,13 +357,20 @@ function SettingsPage() {
               </div>
             </form>
             {shop?.pix_key && (
-              <PixKeyCard
-                compact
-                className="mt-4"
-                pixKey={shop.pix_key}
-                pixKeyType={shop.pix_key_type}
-                holderName={shop.pix_holder_name}
-              />
+              <div className="mt-4 space-y-3">
+                <PixKeyCard
+                  compact
+                  pixKey={shop.pix_key}
+                  pixKeyType={shop.pix_key_type}
+                  holderName={shop.pix_holder_name}
+                />
+                <PixQrCard
+                  compact
+                  pixKey={shop.pix_key}
+                  pixKeyType={shop.pix_key_type}
+                  holderName={shop.pix_holder_name}
+                />
+              </div>
             )}
           </div>
 
