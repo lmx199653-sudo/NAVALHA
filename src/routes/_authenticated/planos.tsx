@@ -192,7 +192,7 @@ function PlansPage() {
       setLookup(null);
       toast.success("Assinatura criada com sucesso");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   return (
