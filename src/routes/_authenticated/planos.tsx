@@ -159,7 +159,7 @@ function PlansPage() {
       qc.invalidateQueries({ queryKey: ["plans"] });
       toast.success("Status do plano atualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const remove = useMutation({
