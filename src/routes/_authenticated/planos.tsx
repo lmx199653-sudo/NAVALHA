@@ -144,7 +144,7 @@ function PlansPage() {
       setEditing(null);
       toast.success(editing ? "Plano atualizado" : "Plano criado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const toggleActive = useMutation({
