@@ -527,6 +527,12 @@ function AgendaPage() {
                   value={data?.services.find((s) => s.id === selected.service_id)?.name ?? "—"}
                 />
                 <Info label="Telefone" value={selected.customer_phone ?? "—"} />
+                <Info
+                  label="Pagamento"
+                  value={`${PAYMENT_METHOD_LABEL[selected.payment_method] ?? "—"}${
+                    selected.payment_state === "paid" ? " · pago" : ""
+                  }`}
+                />
                 <div>
                   <p className="text-xs text-muted-foreground">Status</p>
                   <Badge className="mt-1">{STATUS_LABEL[selected.status]}</Badge>
