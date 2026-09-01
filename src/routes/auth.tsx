@@ -476,7 +476,7 @@ function AuthPage() {
                     Criando conta...
                   </span>
                 ) : (
-                  "Começar grátis"
+                  "Criar conta"
                 )}
               </Button>
             </form>
@@ -511,13 +511,13 @@ function AuthPage() {
               onClick={() => { setTab("signup"); setFieldError(null); }}
               className="font-semibold text-[oklch(0.78_0.13_85)] transition-colors duration-200 hover:text-[oklch(0.84_0.12_85)] hover:underline underline-offset-4"
             >
-              Crie sua conta gratuitamente
+              Crie sua conta
             </button>
           </p>
         </div>
 
         <p className="mt-6 text-center text-xs text-[#5B6168]">
-          100% grátis para barbearias · Sem cartão de crédito
+          Sem cartão de crédito
         </p>
       </div>
 
