@@ -66,7 +66,7 @@ export function CpfCustomerLookup({
         setCreating(!found.found);
         onResult(found, digits);
       } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : "Erro ao buscar cliente");
+        toast.error(e instanceof Error ? friendlyError(e.message) : "Erro ao buscar cliente");
       } finally {
         if (latest.current === id) setLoading(false);
       }

@@ -152,7 +152,7 @@ function CustomersPage() {
       setForm(EMPTY);
       toast.success("Cliente cadastrado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const rows = useMemo(() => {

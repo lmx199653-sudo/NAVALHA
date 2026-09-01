@@ -243,7 +243,7 @@ function AgendaPage() {
       qc.invalidateQueries({ queryKey: ["agenda"] });
       toast.success("Agendamento atualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   // Conclusão do atendimento: o consumo do crédito acontece no banco (idempotente).
@@ -293,7 +293,7 @@ function AgendaPage() {
       qc.invalidateQueries({ queryKey: ["agenda"] });
       toast.success("Agendamento reagendado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const remove = useMutation({

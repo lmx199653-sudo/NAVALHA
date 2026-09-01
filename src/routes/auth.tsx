@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/errors";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -199,7 +200,7 @@ function AuthPage() {
         redirect_uri: window.location.origin,
       });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao entrar com Google");
+      toast.error(err instanceof Error ? friendlyError(err.message) : "Falha ao entrar com Google");
     } finally {
       setLoading(false);
     }
@@ -210,7 +211,7 @@ function AuthPage() {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth`,
     });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(friendlyError(error.message)); return; }
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 

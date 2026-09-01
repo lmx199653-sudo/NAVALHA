@@ -1,3 +1,4 @@
+import { friendlyError } from "@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -90,7 +91,7 @@ function BarbersPage() {
       setForm(EMPTY);
       toast.success("Barbeiro salvo");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const remove = useMutation({

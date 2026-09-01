@@ -144,7 +144,7 @@ function PlansPage() {
       setEditing(null);
       toast.success(editing ? "Plano atualizado" : "Plano criado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const toggleActive = useMutation({
@@ -159,7 +159,7 @@ function PlansPage() {
       qc.invalidateQueries({ queryKey: ["plans"] });
       toast.success("Status do plano atualizado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const remove = useMutation({
@@ -174,7 +174,7 @@ function PlansPage() {
       setConfirmDelete(null);
       toast.success("Plano excluído");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const subscribe = useMutation({
@@ -192,7 +192,7 @@ function PlansPage() {
       setLookup(null);
       toast.success("Assinatura criada com sucesso");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   return (
