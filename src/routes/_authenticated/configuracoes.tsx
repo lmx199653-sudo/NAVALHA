@@ -285,6 +285,87 @@ function SettingsPage() {
           </div>
 
           <div className="surface-card p-4">
+            <div className="flex items-center gap-2">
+              <QrCode className="size-5 text-primary" />
+              <h3 className="font-display text-2xl">Pix — receba direto na sua conta</h3>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Sua chave aparece para o cliente ao agendar online e na conclusão do atendimento. O pagamento
+              cai direto para você, sem intermediários.
+            </p>
+            <form
+              className="mt-4 space-y-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                savePix.mutate(false);
+              }}
+            >
+              <div className="grid grid-cols-[minmax(0,140px)_1fr] gap-3">
+                <div className="space-y-2">
+                  <Label>Tipo</Label>
+                  <select
+                    className="h-10 w-full rounded-lg border border-input bg-background px-3 text-sm"
+                    value={pix.type}
+                    onChange={(e) => setPix({ ...pix, type: e.target.value })}
+                  >
+                    {PIX_KEY_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Chave Pix</Label>
+                  <Input
+                    value={pix.key}
+                    onChange={(e) => setPix({ ...pix, key: e.target.value })}
+                    placeholder={
+                      pix.type === "email"
+                        ? "voce@email.com"
+                        : pix.type === "phone"
+                          ? "(11) 99999-9999"
+                          : pix.type === "random"
+                            ? "Chave aleatória do seu banco"
+                            : "Somente números"
+                    }
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Nome do titular (opcional)</Label>
+                <Input
+                  value={pix.holder}
+                  onChange={(e) => setPix({ ...pix, holder: e.target.value })}
+                  placeholder="Como aparece no banco"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button disabled={savePix.isPending || !pix.key.trim()}>Salvar chave Pix</Button>
+                {shop?.pix_key && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={savePix.isPending}
+                    onClick={() => savePix.mutate(true)}
+                  >
+                    Remover
+                  </Button>
+                )}
+              </div>
+            </form>
+            {shop?.pix_key && (
+              <PixKeyCard
+                compact
+                className="mt-4"
+                pixKey={shop.pix_key}
+                pixKeyType={shop.pix_key_type}
+                holderName={shop.pix_holder_name}
+              />
+            )}
+          </div>
+
+          <div className="surface-card p-4">
             <h3 className="font-display text-2xl">Horário de funcionamento</h3>
             <div className="mt-3 space-y-2">
               {(localHours ?? []).map((h, i) => (
