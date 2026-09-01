@@ -29,6 +29,7 @@ import { availableSlots, dayKey, type BreakRow, type HoursRow } from "@/lib/slot
 import { cn } from "@/lib/utils";
 import { hasPix } from "@/lib/pix";
 import { PixKeyCard } from "@/components/PixKeyCard";
+import { PixQrCard } from "@/components/PixQrCard";
 
 const DEMO_SHOP: Shop = {
   id: "demo-shop-001",
@@ -127,7 +128,7 @@ type Shop = {
   pix_holder_name?: string | null;
 };
 
-type PaymentChoice = "pix" | "on_site";
+type PaymentChoice = "pix" | "pix_qr" | "on_site";
 
 type Service = {
   id: string;
@@ -654,13 +655,19 @@ function PublicBooking() {
               <p className="text-sm text-muted-foreground">Forma de pagamento</p>
               {shopHasPix ? (
                 <>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <PaymentOption
                       active={paymentChoice === "pix"}
                       title="Pix"
-                      hint="Direto para o barbeiro"
+                      hint="Copiar chave"
                       badge="Recomendado"
                       onClick={() => setPayment("pix")}
+                    />
+                    <PaymentOption
+                      active={paymentChoice === "pix_qr"}
+                      title="QR Code"
+                      hint="Escanear Pix"
+                      onClick={() => setPayment("pix_qr")}
                     />
                     <PaymentOption
                       active={paymentChoice === "on_site"}
@@ -683,6 +690,21 @@ function PublicBooking() {
                       </p>
                     </>
                   )}
+                  {paymentChoice === "pix_qr" && (
+                    <>
+                      <PixQrCard
+                        pixKey={shop.pix_key!}
+                        pixKeyType={shop.pix_key_type}
+                        holderName={shop.pix_holder_name}
+                        amountCents={service.price_cents}
+                        description={service.name}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Escaneie o QR Code no app do seu banco — o valor de {brl(service.price_cents)} já vem
+                        preenchido — e confirme o agendamento. Leve o comprovante no dia.
+                      </p>
+                    </>
+                  )}
                 </>
               ) : (
                 <p className="text-sm">Pagamento realizado no local, direto com a barbearia.</p>
@@ -695,7 +717,7 @@ function PublicBooking() {
             >
               {book.isPending
                 ? "Confirmando…"
-                : paymentChoice === "pix"
+                : paymentChoice === "pix" || paymentChoice === "pix_qr"
                   ? "Já fiz o Pix — confirmar agendamento"
                   : "Confirmar agendamento"}
             </Button>
@@ -889,7 +911,8 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
-  const paidByPix = payment === "pix" && hasPix(shop);
+  const paidByPix = (payment === "pix" || payment === "pix_qr") && hasPix(shop);
+  const byQr = payment === "pix_qr";
 
   const whatsappMessage = [
     `✅ *Agendamento confirmado* — ${shop.name}`,
@@ -934,7 +957,13 @@ function SuccessScreen({
             <SummaryRow
               icon={QrCode}
               label="Pagamento"
-              value={paidByPix ? "Pix direto ao barbeiro" : "No local (Pix, cartão ou dinheiro)"}
+              value={
+                paidByPix
+                  ? byQr
+                    ? "Pix QR Code direto ao barbeiro"
+                    : "Pix direto ao barbeiro"
+                  : "No local (Pix, cartão ou dinheiro)"
+              }
             />
             <div className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-muted-foreground">Valor</span>
@@ -944,16 +973,27 @@ function SuccessScreen({
           <div className="space-y-3 p-5">
             {paidByPix && (
               <>
-                <PixKeyCard
-                  compact
-                  pixKey={shop.pix_key!}
-                  pixKeyType={shop.pix_key_type}
-                  holderName={shop.pix_holder_name ?? null}
-                  amountCents={service.price_cents}
-                />
+                {byQr ? (
+                  <PixQrCard
+                    compact
+                    pixKey={shop.pix_key!}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name ?? null}
+                    amountCents={service.price_cents}
+                    description={service.name}
+                  />
+                ) : (
+                  <PixKeyCard
+                    compact
+                    pixKey={shop.pix_key!}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name ?? null}
+                    amountCents={service.price_cents}
+                  />
+                )}
                 <p className="text-xs text-muted-foreground">
-                  Ainda não pagou? Copie a chave acima e faça o Pix. Envie o comprovante pelo WhatsApp
-                  para agilizar a confirmação.
+                  Ainda não pagou? {byQr ? "Escaneie o QR Code acima" : "Copie a chave acima"} e faça o Pix.
+                  Envie o comprovante pelo WhatsApp para agilizar a confirmação.
                 </p>
               </>
             )}

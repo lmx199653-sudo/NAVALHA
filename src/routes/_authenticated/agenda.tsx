@@ -60,6 +60,7 @@ import {
   type LocalPaymentMethod,
 } from "@/lib/subscriptions";
 import { PixKeyCard } from "@/components/PixKeyCard";
+import { PixQrCard } from "@/components/PixQrCard";
 import { hasPix, PAYMENT_METHOD_LABEL } from "@/lib/pix";
 
 
@@ -568,7 +569,13 @@ function AgendaPage() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    setPayMethod(selected.payment_method === "card" || selected.payment_method === "cash" ? selected.payment_method : "pix");
+                    setPayMethod(
+                      selected.payment_method === "card" ||
+                        selected.payment_method === "cash" ||
+                        selected.payment_method === "pix_qr"
+                        ? selected.payment_method
+                        : "pix",
+                    );
                     setConfirmDone(selected.id);
                   }}
                 >
@@ -655,8 +662,8 @@ function AgendaPage() {
                             <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
                               Como o cliente pagou?
                             </p>
-                            <div className="grid grid-cols-3 gap-2">
-                              {(["pix", "card", "cash"] as LocalPaymentMethod[]).map((m) => (
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                              {(["pix", "pix_qr", "card", "cash"] as LocalPaymentMethod[]).map((m) => (
                                 <button
                                   key={m}
                                   type="button"
@@ -681,16 +688,29 @@ function AgendaPage() {
                                 amountCents={appt.price_cents}
                               />
                             )}
-                            {payMethod === "pix" && !hasPix(shop) && (
+                            {payMethod === "pix_qr" && hasPix(shop) && (
+                              <PixQrCard
+                                compact
+                                className="mt-3"
+                                pixKey={shop!.pix_key!}
+                                pixKeyType={shop!.pix_key_type}
+                                holderName={shop!.pix_holder_name}
+                                amountCents={appt.price_cents}
+                                description={service?.name}
+                              />
+                            )}
+                            {(payMethod === "pix" || payMethod === "pix_qr") && !hasPix(shop) && (
                               <p className="mt-2 text-xs text-muted-foreground">
                                 Cadastre sua chave Pix em Configurações para mostrá-la aqui ao cliente.
                               </p>
                             )}
-                            {appt.payment_method === "pix" && appt.source === "online" && (
-                              <p className="mt-2 text-xs text-primary">
-                                Cliente escolheu pagar via Pix ao agendar — confira o comprovante.
-                              </p>
-                            )}
+                            {(appt.payment_method === "pix" || appt.payment_method === "pix_qr") &&
+                              appt.source === "online" && (
+                                <p className="mt-2 text-xs text-primary">
+                                  Cliente escolheu pagar via {PAYMENT_METHOD_LABEL[appt.payment_method]} ao
+                                  agendar — confira o comprovante.
+                                </p>
+                              )}
                           </div>
                         </>
                       )}

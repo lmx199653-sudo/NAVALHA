@@ -173,7 +173,7 @@ export async function lookupCustomerByCpf(shopId: string, cpf: string): Promise<
   return (data ?? { found: false }) as unknown as CpfLookup;
 }
 
-export type LocalPaymentMethod = "pix" | "card" | "cash";
+export type LocalPaymentMethod = "pix" | "pix_qr" | "card" | "cash";
 
 export async function completeAppointment(appointmentId: string, paymentMethod?: LocalPaymentMethod) {
   const { data, error } = await supabase.rpc("complete_appointment", {
