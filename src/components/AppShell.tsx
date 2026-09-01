@@ -7,7 +7,7 @@ import {
   Clock,
   CreditCard,
   Repeat,
-  Crown,
+  
   LayoutDashboard,
   Link2,
   LogOut,
@@ -101,11 +101,6 @@ export function AppShell({
           />
           <span className="break-words font-display text-2xl leading-tight tracking-wide">
             {shop?.name ? shop.name.toUpperCase() : <>NAVALHA <span className="text-primary">PRO</span></>}
-          </span>
-        </div>
-        <div className="px-5 pb-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
-            <Crown className="size-3" /> 100% grátis
           </span>
         </div>
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3">
