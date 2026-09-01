@@ -215,8 +215,4 @@ export async function renewCycle(subscriptionId: string) {
 
 export { friendlyError } from "@/lib/errors";
 
-/** Traduz erros técnicos do banco em mensagens claras em português. */
-export function friendlyError(message: string) {
-  return _friendlyError(message);
-}
 
