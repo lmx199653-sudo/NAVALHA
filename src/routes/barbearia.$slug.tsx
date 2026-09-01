@@ -42,6 +42,9 @@ const DEMO_SHOP: Shop = {
   secondary_color: "#C08A2E",
   bg_color: "#0D0D10",
   font_family: "Bebas Neue",
+  pix_key: "demo@navalhapro.app",
+  pix_key_type: "email",
+  pix_holder_name: "Barbearia Demo",
 };
 
 const DEMO_SERVICES: Service[] = [
