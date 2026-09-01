@@ -21,10 +21,13 @@ export type Shop = {
   brand_symbol: string | null;
   template: string;
   onboarding_done: boolean;
+  pix_key: string | null;
+  pix_key_type: string | null;
+  pix_holder_name: string | null;
 };
 
 const SHOP_COLUMNS =
-  "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family, brand_style, brand_symbol, template, onboarding_done";
+  "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family, brand_style, brand_symbol, template, onboarding_done, pix_key, pix_key_type, pix_holder_name";
 
 export function useSession() {
   const [userId, setUserId] = useState<string | null>(null);
