@@ -827,6 +827,39 @@ function SummaryRow({
   );
 }
 
+function PaymentOption({
+  active,
+  title,
+  hint,
+  badge,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  hint: string;
+  badge?: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative rounded-xl border p-3 text-left transition-colors",
+        active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+      )}
+    >
+      {badge && (
+        <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">
+          {badge}
+        </span>
+      )}
+      <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+    </button>
+  );
+}
+
 function SuccessScreen({
   shop,
   service,
@@ -835,6 +868,7 @@ function SuccessScreen({
   name,
   phone,
   whatsappLink,
+  payment,
 }: {
   shop: Shop;
   service: Service;
@@ -843,6 +877,7 @@ function SuccessScreen({
   name: string;
   phone: string;
   whatsappLink: string | null;
+  payment: PaymentChoice;
 }) {
   const start = new Date(slot);
   const end = new Date(start.getTime() + service.duration_min * 60000);
@@ -853,6 +888,8 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
+  const paidByPix = payment === "pix" && hasPix(shop);
+
   const whatsappMessage = [
     `✅ *Agendamento confirmado* — ${shop.name}`,
     "",
@@ -862,6 +899,7 @@ function SuccessScreen({
     `Dia: ${WEEKDAYS[start.getDay()]}, ${start.toLocaleDateString("pt-BR")}`,
     `Horário: ${timeLabel(slot)}`,
     `Valor: ${brl(service.price_cents)}`,
+    `Pagamento: ${paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
     `Telefone: ${phone}`,
   ].join("\n");
   const whatsappConfirmLink = whatsappLink
@@ -892,16 +930,37 @@ function SuccessScreen({
             />
             <SummaryRow icon={Clock} label="Horário" value={timeLabel(slot)} />
             <SummaryRow icon={MessageCircle} label="Seu WhatsApp" value={phone} />
+            <SummaryRow
+              icon={QrCode}
+              label="Pagamento"
+              value={paidByPix ? "Pix direto ao barbeiro" : "No local (Pix, cartão ou dinheiro)"}
+            />
             <div className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-muted-foreground">Valor</span>
               <span className="font-display text-3xl text-primary">{brl(service.price_cents)}</span>
             </div>
           </div>
           <div className="space-y-3 p-5">
+            {paidByPix && (
+              <>
+                <PixKeyCard
+                  compact
+                  pixKey={shop.pix_key!}
+                  pixKeyType={shop.pix_key_type}
+                  holderName={shop.pix_holder_name ?? null}
+                  amountCents={service.price_cents}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ainda não pagou? Copie a chave acima e faça o Pix. Envie o comprovante pelo WhatsApp
+                  para agilizar a confirmação.
+                </p>
+              </>
+            )}
             {whatsappConfirmLink && (
               <Button className="h-14 w-full text-base font-semibold shadow-lg" size="lg" asChild>
                 <a href={whatsappConfirmLink} target="_blank" rel="noreferrer">
-                  <MessageCircle className="size-5" /> CONFIRMAR COM BARBEARIA
+                  <MessageCircle className="size-5" />
+                  {paidByPix ? "ENVIAR COMPROVANTE NO WHATSAPP" : "CONFIRMAR COM BARBEARIA"}
                 </a>
               </Button>
             )}
