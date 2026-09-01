@@ -174,7 +174,7 @@ function PlansPage() {
       setConfirmDelete(null);
       toast.success("Plano excluído");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const subscribe = useMutation({
