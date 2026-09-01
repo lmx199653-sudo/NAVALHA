@@ -189,7 +189,7 @@ function PublicBooking() {
       const { data: shop } = await supabase
         .from("barbershops")
         .select(
-          "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family",
+          "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family, pix_key, pix_key_type, pix_holder_name",
         )
         .eq("slug", slug)
         .maybeSingle();
