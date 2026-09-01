@@ -259,6 +259,7 @@ export type Database = {
           brand_style: string | null
           brand_symbol: string | null
           cover_url: string | null
+          cpf_cnpj: string | null
           created_at: string
           description: string | null
           font_family: string
@@ -281,6 +282,7 @@ export type Database = {
           brand_style?: string | null
           brand_symbol?: string | null
           cover_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           description?: string | null
           font_family?: string
@@ -303,6 +305,7 @@ export type Database = {
           brand_style?: string | null
           brand_symbol?: string | null
           cover_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           description?: string | null
           font_family?: string
