@@ -274,6 +274,9 @@ function PublicBooking() {
     [],
   );
 
+  const shopHasPix = hasPix(data?.shop);
+  const paymentChoice: PaymentChoice = shopHasPix ? payment : "on_site";
+
   const book = useMutation({
     mutationFn: async () => {
       if (isDemo(slug)) {
@@ -293,6 +296,7 @@ function PublicBooking() {
           _name: name,
           _phone: phone,
           _cpf: cpf.replace(/\D/g, ""),
+          _payment_method: paymentChoice,
         });
         if (error) throw error;
         const id = (created as { id?: string } | null)?.id;
@@ -345,6 +349,7 @@ function PublicBooking() {
         name={name}
         phone={phone}
         whatsappLink={whatsappLink}
+        payment={paymentChoice}
       />
     );
   }
