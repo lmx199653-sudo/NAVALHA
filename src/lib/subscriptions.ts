@@ -4,8 +4,10 @@
  * aqui ficam apenas formatação, tipos e chamadas às funções do servidor.
  */
 import { supabase } from "@/lib/supabase-guard";
+import { friendlyError } from "@/lib/errors";
 
 export type BenefitKind = "cut" | "beard" | "extra";
+
 
 export const BENEFIT_LABEL: Record<BenefitKind, string> = {
   cut: "Corte",
