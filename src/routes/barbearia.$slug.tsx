@@ -18,7 +18,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { serviceImages } from "@/lib/service-images";
 import { notifyNewAppointment } from "@/lib/notify.functions";
-import { createServiceCheckout, getPublicPaymentAvailability } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,7 +158,6 @@ function PublicBooking() {
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [done, setDone] = useState(false);
-  const [payOnline, setPayOnline] = useState(false);
 
   /** Serviços selecionados combinados em um "serviço" único para agenda/resumo. */
   const service = useMemo<Service | null>(() => {
@@ -193,11 +191,10 @@ function PublicBooking() {
           barbers: DEMO_BARBERS,
           hours: DEMO_HOURS,
           breaks: DEMO_BREAKS,
-          paymentEnabled: false,
         };
       }
       if (!shop) return null;
-      const [services, barbers, hours, breaks, payment] = await Promise.all([
+      const [services, barbers, hours, breaks] = await Promise.all([
         supabase
           .from("services")
           .select("*")
@@ -212,7 +209,6 @@ function PublicBooking() {
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
-        getPublicPaymentAvailability({ data: { slug } }),
       ]);
       return {
         shop: shop as Shop,
@@ -220,7 +216,6 @@ function PublicBooking() {
         barbers: (barbers.data ?? []) as Barber[],
         hours: (hours.data ?? []) as HoursRow[],
         breaks: (breaks.data ?? []) as BreakRow[],
-        paymentEnabled: payment,
       };
     },
   });
@@ -275,7 +270,7 @@ function PublicBooking() {
       if (isDemo(slug)) {
         await new Promise((r) => setTimeout(r, 600));
         toast.success("Agendamento de demonstração confirmado!");
-        return { checkoutUrl: null as string | null };
+        return;
       }
       // Um agendamento por serviço, em sequência, a partir do horário escolhido.
       let cursor = new Date(slot!).getTime();
@@ -301,31 +296,8 @@ function PublicBooking() {
           notifyNewAppointment({ data: { appointmentId } }).catch(() => null),
         ),
       );
-
-      // Pagamento online: o valor e a divisão são calculados no servidor.
-      if (payOnline && data?.paymentEnabled && createdIds[0]) {
-        try {
-          const checkout = await createServiceCheckout({
-            data: { slug, appointmentId: createdIds[0] },
-          });
-          if (checkout?.checkoutUrl) return { checkoutUrl: checkout.checkoutUrl };
-        } catch (error) {
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Não foi possível abrir o pagamento online. Pague no local.",
-          );
-        }
-      }
-      return { checkoutUrl: null as string | null };
     },
-    onSuccess: (result) => {
-      if (result?.checkoutUrl) {
-        window.location.href = result.checkoutUrl;
-        return;
-      }
-      setDone(true);
-    },
+    onSuccess: () => setDone(true),
     onError: (e: Error) => toast.error(friendlyError(e.message) || "Horário indisponível"),
   });
 
@@ -663,42 +635,14 @@ function PublicBooking() {
             </div>
             <div className="surface-card p-4">
               <p className="text-sm text-muted-foreground">Forma de pagamento</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant={payOnline ? "outline" : "default"}
-                  className="h-12"
-                  onClick={() => setPayOnline(false)}
-                >
-                  Pagar no local
-                </Button>
-                {data?.paymentEnabled && (
-                  <Button
-                    type="button"
-                    variant={payOnline ? "default" : "outline"}
-                    className="h-12"
-                    onClick={() => setPayOnline(true)}
-                  >
-                    Pagar online
-                  </Button>
-                )}
-              </div>
-              {payOnline && data?.paymentEnabled && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Você será levado ao Mercado Pago (Pix, cartão ou boleto) após confirmar.
-                </p>
-              )}
+              <p className="mt-1 text-sm">Pagamento realizado no local, direto com a barbearia.</p>
             </div>
             <Button
               className="h-14 w-full text-base"
               disabled={book.isPending}
               onClick={() => book.mutate()}
             >
-              {book.isPending
-                ? "Confirmando…"
-                : payOnline
-                  ? "Confirmar e pagar"
-                  : "Confirmar agendamento"}
+              {book.isPending ? "Confirmando…" : "Confirmar agendamento"}
             </Button>
           </section>
         )}

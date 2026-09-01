@@ -18,7 +18,6 @@ import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
-import { BillingPanel } from "@/components/BillingPanel";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
 import { CalendarDays, Download, TrendingUp, Users, Wallet } from "lucide-react";
@@ -220,7 +219,6 @@ function FinancePage() {
         </table>
       </div>
 
-      <BillingPanel shopId={shop?.id} />
     </AppShell>
   );
 }
