@@ -108,7 +108,7 @@ export function AppShell({
             <Crown className="size-3" /> 100% grátis
           </span>
         </div>
-        <nav className="flex-1 space-y-1 px-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3">
           {NAV.map((item) => {
             const active = pathname.startsWith(item.to);
             return (
