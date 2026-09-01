@@ -649,16 +649,54 @@ function PublicBooking() {
                 </span>
               </div>
             </div>
-            <div className="surface-card p-4">
+            <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Forma de pagamento</p>
-              <p className="mt-1 text-sm">Pagamento realizado no local, direto com a barbearia.</p>
+              {shopHasPix ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <PaymentOption
+                      active={paymentChoice === "pix"}
+                      title="Pix"
+                      hint="Direto para o barbeiro"
+                      badge="Recomendado"
+                      onClick={() => setPayment("pix")}
+                    />
+                    <PaymentOption
+                      active={paymentChoice === "on_site"}
+                      title="No local"
+                      hint="Pix, cartão ou dinheiro"
+                      onClick={() => setPayment("on_site")}
+                    />
+                  </div>
+                  {paymentChoice === "pix" && (
+                    <>
+                      <PixKeyCard
+                        pixKey={shop.pix_key!}
+                        pixKeyType={shop.pix_key_type}
+                        holderName={shop.pix_holder_name}
+                        amountCents={service.price_cents}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Copie a chave, faça o Pix de {brl(service.price_cents)} no app do seu banco e
+                        confirme o agendamento. Leve o comprovante no dia.
+                      </p>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm">Pagamento realizado no local, direto com a barbearia.</p>
+              )}
             </div>
             <Button
               className="h-14 w-full text-base"
               disabled={book.isPending}
               onClick={() => book.mutate()}
             >
-              {book.isPending ? "Confirmando…" : "Confirmar agendamento"}
+              {book.isPending
+                ? "Confirmando…"
+                : paymentChoice === "pix"
+                  ? "Já fiz o Pix — confirmar agendamento"
+                  : "Confirmar agendamento"}
             </Button>
           </section>
         )}
