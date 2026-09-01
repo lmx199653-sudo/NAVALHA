@@ -236,6 +236,7 @@ function PublicBooking() {
     queryKey: ["slots", slug, barber?.id, dayKey(day)],
     enabled: !!barber && step >= 2,
     queryFn: async () => {
+      if (isDemo(slug)) return [];
       const { data: rows } = await supabase.rpc("booked_slots", {
         _slug: slug,
         _barber_id: barber!.id,
