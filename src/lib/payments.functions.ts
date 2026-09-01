@@ -430,6 +430,14 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
     const sellerToken =
       account?.connected && account.access_token ? account.access_token : undefined;
 
+    const { data: customer } = appointment.customer_id
+      ? await supabaseAdmin
+          .from("customers")
+          .select("name, email, phone")
+          .eq("id", appointment.customer_id)
+          .maybeSingle()
+      : { data: null };
+
     const preference = await createPreference({
       title: `${shop.name} — atendimento`,
       amount,
@@ -438,9 +446,12 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       backUrl: `${origin()}/pagamento/${appointment.id}`,
       expiresAt,
       metadata: { payment_id: payment.id, appointment_id: appointment.id, type: "customer_service" },
+      ...(customer?.name ? { payerName: customer.name } : {}),
+      ...(customer?.email ? { payerEmail: customer.email } : {}),
       ...(sellerToken ? { sellerToken } : {}),
       ...(sellerToken && marketplaceFee ? { marketplaceFee } : {}),
     });
+
 
     await supabaseAdmin
       .from("payments")
