@@ -82,7 +82,44 @@ export const getMercadoPagoStatus = createServerFn({ method: "POST" })
       _shop: data.shopId,
     });
     if (error) throw new Error(error.message);
-    return status as unknown as { connected: boolean; mp_user_id?: string | null };
+    const basic = status as unknown as { connected: boolean; mp_user_id?: string | null };
+    if (!basic.connected) return { ...basic, ready: false, blockingCodes: [] as string[] };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: account } = await supabaseAdmin
+      .from("mercado_pago_accounts")
+      .select("access_token")
+      .eq("barbershop_id", data.shopId)
+      .maybeSingle();
+    if (!account?.access_token) return { ...basic, ready: false, blockingCodes: [] as string[] };
+
+    const { getAccountReadiness } = await import("@/lib/mercadopago.server");
+    const readiness = await getAccountReadiness(account.access_token);
+    return { ...basic, ...readiness };
+  });
+
+export const getPublicPaymentAvailability = createServerFn({ method: "POST" })
+  .inputValidator((input: { slug: string }) => input)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: shop } = await supabaseAdmin
+      .from("barbershops")
+      .select("id")
+      .eq("slug", data.slug)
+      .maybeSingle();
+    if (!shop) return false;
+    const { data: account } = await supabaseAdmin
+      .from("mercado_pago_accounts")
+      .select("access_token, connected")
+      .eq("barbershop_id", shop.id)
+      .maybeSingle();
+    if (!account?.connected || !account.access_token) return false;
+    try {
+      const { getAccountReadiness } = await import("@/lib/mercadopago.server");
+      return (await getAccountReadiness(account.access_token)).ready;
+    } catch {
+      return false;
+    }
   });
 
 export const listPlatformPlans = createServerFn({ method: "GET" }).handler(async () => {
@@ -433,6 +470,20 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
 
     const sellerToken =
       account?.connected && account.access_token ? account.access_token : undefined;
+
+    if (!sellerToken) {
+      throw new Error("O pagamento online não está disponível nesta barbearia.");
+    }
+    const { getAccountReadiness } = await import("@/lib/mercadopago.server");
+    const readiness = await getAccountReadiness(sellerToken);
+    if (!readiness.ready) {
+      const needsAddress = readiness.blockingCodes.includes("address_pending");
+      throw new Error(
+        needsAddress
+          ? "A conta Mercado Pago precisa concluir o cadastro e informar o endereço antes de receber pagamentos."
+          : "A conta Mercado Pago ainda não está liberada para receber pagamentos. Conclua as pendências da conta e tente novamente.",
+      );
+    }
 
     const { data: customer } = appointment.customer_id
       ? await supabaseAdmin

@@ -18,7 +18,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { serviceImages } from "@/lib/service-images";
 import { notifyNewAppointment } from "@/lib/notify.functions";
-import { createServiceCheckout } from "@/lib/payments.functions";
+import { createServiceCheckout, getPublicPaymentAvailability } from "@/lib/payments.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -147,7 +147,7 @@ function PublicBooking() {
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
-        supabase.rpc("public_payment_enabled", { _shop: shop.id }),
+        getPublicPaymentAvailability({ data: { slug } }),
       ]);
       return {
         shop: shop as Shop,
@@ -155,7 +155,7 @@ function PublicBooking() {
         barbers: (barbers.data ?? []) as Barber[],
         hours: (hours.data ?? []) as HoursRow[],
         breaks: (breaks.data ?? []) as BreakRow[],
-        paymentEnabled: (payment.data as boolean | null) ?? false,
+        paymentEnabled: payment,
       };
     },
   });
