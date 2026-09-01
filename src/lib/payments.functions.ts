@@ -403,11 +403,15 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       .eq("barbershop_id", shop.id)
       .maybeSingle();
 
-    const marketplaceFee =
-      money(
-        (amount * Number(settings?.marketplace_fee_percentage ?? 0)) / 100 +
-          Number(settings?.marketplace_fee_fixed ?? 0),
-      ) || undefined;
+    // A comissão nunca pode igualar/ultrapassar o valor — o Mercado Pago
+    // recusa a preferência e o botão "Pagar" fica desabilitado no checkout.
+    const rawFee = money(
+      (amount * Number(settings?.marketplace_fee_percentage ?? 0)) / 100 +
+        Number(settings?.marketplace_fee_fixed ?? 0),
+    );
+    const maxFee = money(amount * 0.9);
+    const marketplaceFee = rawFee > 0 ? Math.min(rawFee, maxFee) : undefined;
+
 
     const expiresAt = new Date(Date.now() + CHECKOUT_TTL_MIN * 60_000).toISOString();
 
