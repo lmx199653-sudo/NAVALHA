@@ -270,6 +270,9 @@ export type Database = {
           onboarding_done: boolean
           owner_id: string
           phone: string | null
+          pix_holder_name: string | null
+          pix_key: string | null
+          pix_key_type: string | null
           secondary_color: string
           slug: string
           template: string
@@ -293,6 +296,9 @@ export type Database = {
           onboarding_done?: boolean
           owner_id: string
           phone?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
           secondary_color?: string
           slug: string
           template?: string
@@ -316,6 +322,9 @@ export type Database = {
           onboarding_done?: boolean
           owner_id?: string
           phone?: string | null
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
           secondary_color?: string
           slug?: string
           template?: string
@@ -1068,6 +1077,7 @@ export type Database = {
           _barber_id: string
           _cpf?: string
           _name: string
+          _payment_method?: string
           _phone: string
           _service_id: string
           _slug: string
@@ -1086,7 +1096,10 @@ export type Database = {
         Args: { _reason?: string; _subscription_id: string }
         Returns: Json
       }
-      complete_appointment: { Args: { _appointment_id: string }; Returns: Json }
+      complete_appointment: {
+        Args: { _appointment_id: string; _payment_method?: string }
+        Returns: Json
+      }
       create_subscription: {
         Args: { _customer_id: string; _plan_id: string; _shop: string }
         Returns: Json
