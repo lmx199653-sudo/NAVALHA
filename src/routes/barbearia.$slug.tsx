@@ -26,6 +26,8 @@ import { brl, timeLabel, WEEKDAYS } from "@/lib/format";
 import { useBrand } from "@/lib/brand";
 import { availableSlots, dayKey, type BreakRow, type HoursRow } from "@/lib/slots";
 import { cn } from "@/lib/utils";
+import { hasPix } from "@/lib/pix";
+import { PixKeyCard } from "@/components/PixKeyCard";
 
 const DEMO_SHOP: Shop = {
   id: "demo-shop-001",
