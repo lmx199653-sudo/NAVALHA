@@ -42,6 +42,8 @@ export function MercadoPagoConnect({ shopId }: { shopId: string | undefined }) {
   });
 
   const connected = !!data?.connected;
+  const ready = connected && data?.ready === true;
+  const needsAddress = data?.blockingCodes?.includes("address_pending");
 
   return (
     <div className="surface-card p-4">
@@ -51,10 +53,17 @@ export function MercadoPagoConnect({ shopId }: { shopId: string | undefined }) {
       </p>
       <p className="mt-3 text-sm">
         Mercado Pago:{" "}
-        <span className={connected ? "text-success" : "text-destructive"}>
-          {connected ? "🟢 Conectado" : "🔴 Não conectado"}
+        <span className={ready ? "text-success" : "text-destructive"}>
+          {ready ? "🟢 Conectado" : connected ? "🟠 Cadastro pendente" : "🔴 Não conectado"}
         </span>
       </p>
+      {connected && !ready && (
+        <p className="mt-2 text-sm text-destructive">
+          {needsAddress
+            ? "O Mercado Pago exige que você conclua o cadastro e informe o endereço da conta antes de receber pagamentos."
+            : "Conclua as pendências da sua conta no Mercado Pago para liberar os pagamentos online."}
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap gap-2">
         {connected ? (
           <Button size="sm" variant="outline" disabled={remove.isPending} onClick={() => remove.mutate()}>

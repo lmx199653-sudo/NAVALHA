@@ -271,6 +271,33 @@ export async function refreshOauthToken(refreshToken: string): Promise<MpOauthTo
   });
 }
 
+export type MpAccountReadiness = {
+  ready: boolean;
+  billingAllowed: boolean;
+  blockingCodes: string[];
+  requiredAction: string | null;
+};
+
+/** Confirma na conta recebedora se o Mercado Pago já liberou cobranças. */
+export async function getAccountReadiness(token: string): Promise<MpAccountReadiness> {
+  const account = await mpFetch<{
+    status?: {
+      billing?: { allow?: boolean; codes?: string[] };
+      required_action?: string | null;
+      site_status?: string;
+    };
+  }>("/users/me", { token });
+  const billingAllowed = account.status?.billing?.allow === true;
+  const blockingCodes = account.status?.billing?.codes ?? [];
+  const requiredAction = account.status?.required_action ?? null;
+  return {
+    ready: billingAllowed && account.status?.site_status === "active",
+    billingAllowed,
+    blockingCodes,
+    requiredAction,
+  };
+}
+
 /** Converte o status do Mercado Pago para o enum interno de pagamentos. */
 export function mapPaymentStatus(status: string) {
   const allowed = [
