@@ -173,12 +173,20 @@ export async function lookupCustomerByCpf(shopId: string, cpf: string): Promise<
   return (data ?? { found: false }) as unknown as CpfLookup;
 }
 
-export async function completeAppointment(appointmentId: string) {
+export type LocalPaymentMethod = "pix" | "card" | "cash";
+
+export async function completeAppointment(appointmentId: string, paymentMethod?: LocalPaymentMethod) {
   const { data, error } = await supabase.rpc("complete_appointment", {
     _appointment_id: appointmentId,
+    _payment_method: paymentMethod ?? null,
   });
   if (error) throw new Error(friendlyError(error.message));
-  return data as unknown as { consumed: boolean; benefit_kind: BenefitKind | null; left: number };
+  return data as unknown as {
+    consumed: boolean;
+    benefit_kind: BenefitKind | null;
+    left: number;
+    payment_method: string;
+  };
 }
 
 export async function refundAppointmentBenefit(appointmentId: string, reason: string) {
