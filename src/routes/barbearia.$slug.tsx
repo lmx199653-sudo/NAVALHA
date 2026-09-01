@@ -12,6 +12,7 @@ import {
   MapPin,
   MessageCircle,
   Navigation,
+  QrCode,
   Scissors,
   User,
 } from "lucide-react";
@@ -837,7 +838,7 @@ function PaymentOption({
   active: boolean;
   title: string;
   hint: string;
-  badge?: string;
+  badge?: string | undefined;
   onClick: () => void;
 }) {
   return (

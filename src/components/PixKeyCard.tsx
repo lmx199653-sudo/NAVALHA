@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 type Props = {
   pixKey: string;
   pixKeyType: string | null | undefined;
-  holderName?: string | null;
-  amountCents?: number;
-  compact?: boolean;
-  className?: string;
+  holderName?: string | null | undefined;
+  amountCents?: number | undefined;
+  compact?: boolean | undefined;
+  className?: string | undefined;
 };
 
 /** Exibe a chave Pix do barbeiro com botão de copiar — o pagamento vai direto para ele. */
