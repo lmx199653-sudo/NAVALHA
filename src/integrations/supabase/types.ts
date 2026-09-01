@@ -557,303 +557,6 @@ export type Database = {
           },
         ]
       }
-      mercado_pago_accounts: {
-        Row: {
-          access_token: string | null
-          barbershop_id: string
-          connected: boolean
-          created_at: string
-          expires_at: string | null
-          id: string
-          mp_user_id: string | null
-          public_key: string | null
-          refresh_token: string | null
-          updated_at: string
-        }
-        Insert: {
-          access_token?: string | null
-          barbershop_id: string
-          connected?: boolean
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          mp_user_id?: string | null
-          public_key?: string | null
-          refresh_token?: string | null
-          updated_at?: string
-        }
-        Update: {
-          access_token?: string | null
-          barbershop_id?: string
-          connected?: boolean
-          created_at?: string
-          expires_at?: string | null
-          id?: string
-          mp_user_id?: string | null
-          public_key?: string | null
-          refresh_token?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mercado_pago_accounts_barbershop_id_fkey"
-            columns: ["barbershop_id"]
-            isOneToOne: true
-            referencedRelation: "barbershops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mercado_pago_webhook_events: {
-        Row: {
-          created_at: string
-          error: string | null
-          event_id: string
-          id: string
-          payload: Json
-          processed: boolean
-          processed_at: string | null
-          resource_id: string | null
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          error?: string | null
-          event_id: string
-          id?: string
-          payload?: Json
-          processed?: boolean
-          processed_at?: string | null
-          resource_id?: string | null
-          type: string
-        }
-        Update: {
-          created_at?: string
-          error?: string | null
-          event_id?: string
-          id?: string
-          payload?: Json
-          processed?: boolean
-          processed_at?: string | null
-          resource_id?: string | null
-          type?: string
-        }
-        Relationships: []
-      }
-      payments: {
-        Row: {
-          amount: number
-          appointment_id: string | null
-          barbershop_id: string | null
-          created_at: string
-          currency: string
-          customer_id: string | null
-          id: string
-          mercado_pago_payment_id: string | null
-          mercado_pago_preference_id: string | null
-          mercado_pago_subscription_id: string | null
-          metadata: Json
-          paid_at: string | null
-          payment_method: string | null
-          status: Database["public"]["Enums"]["payment_state"]
-          type: Database["public"]["Enums"]["payment_type"]
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          appointment_id?: string | null
-          barbershop_id?: string | null
-          created_at?: string
-          currency?: string
-          customer_id?: string | null
-          id?: string
-          mercado_pago_payment_id?: string | null
-          mercado_pago_preference_id?: string | null
-          mercado_pago_subscription_id?: string | null
-          metadata?: Json
-          paid_at?: string | null
-          payment_method?: string | null
-          status?: Database["public"]["Enums"]["payment_state"]
-          type: Database["public"]["Enums"]["payment_type"]
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          appointment_id?: string | null
-          barbershop_id?: string | null
-          created_at?: string
-          currency?: string
-          customer_id?: string | null
-          id?: string
-          mercado_pago_payment_id?: string | null
-          mercado_pago_preference_id?: string | null
-          mercado_pago_subscription_id?: string | null
-          metadata?: Json
-          paid_at?: string | null
-          payment_method?: string | null
-          status?: Database["public"]["Enums"]["payment_state"]
-          type?: Database["public"]["Enums"]["payment_type"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_barbershop_id_fkey"
-            columns: ["barbershop_id"]
-            isOneToOne: false
-            referencedRelation: "barbershops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "payments_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      platform_plans: {
-        Row: {
-          active: boolean
-          created_at: string
-          description: string | null
-          id: string
-          monthly_price: number
-          name: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          monthly_price?: number
-          name: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          description?: string | null
-          id?: string
-          monthly_price?: number
-          name?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      platform_settings: {
-        Row: {
-          block_when_overdue: boolean
-          created_at: string
-          id: boolean
-          marketplace_fee_fixed: number
-          marketplace_fee_percentage: number
-          payment_due_days: number
-          pending_balance_warning: number
-          tolerance_days: number
-          updated_at: string
-          usage_fee_amount: number
-        }
-        Insert: {
-          block_when_overdue?: boolean
-          created_at?: string
-          id?: boolean
-          marketplace_fee_fixed?: number
-          marketplace_fee_percentage?: number
-          payment_due_days?: number
-          pending_balance_warning?: number
-          tolerance_days?: number
-          updated_at?: string
-          usage_fee_amount?: number
-        }
-        Update: {
-          block_when_overdue?: boolean
-          created_at?: string
-          id?: boolean
-          marketplace_fee_fixed?: number
-          marketplace_fee_percentage?: number
-          payment_due_days?: number
-          pending_balance_warning?: number
-          tolerance_days?: number
-          updated_at?: string
-          usage_fee_amount?: number
-        }
-        Relationships: []
-      }
-      platform_subscriptions: {
-        Row: {
-          barbershop_id: string
-          created_at: string
-          id: string
-          mercado_pago_preference_id: string | null
-          mercado_pago_subscription_id: string | null
-          mercado_pago_user_id: string | null
-          plan_id: string | null
-          price_amount: number
-          status: Database["public"]["Enums"]["platform_subscription_status"]
-          subscription_end_date: string | null
-          subscription_next_billing_date: string | null
-          subscription_start_date: string | null
-          updated_at: string
-        }
-        Insert: {
-          barbershop_id: string
-          created_at?: string
-          id?: string
-          mercado_pago_preference_id?: string | null
-          mercado_pago_subscription_id?: string | null
-          mercado_pago_user_id?: string | null
-          plan_id?: string | null
-          price_amount?: number
-          status?: Database["public"]["Enums"]["platform_subscription_status"]
-          subscription_end_date?: string | null
-          subscription_next_billing_date?: string | null
-          subscription_start_date?: string | null
-          updated_at?: string
-        }
-        Update: {
-          barbershop_id?: string
-          created_at?: string
-          id?: string
-          mercado_pago_preference_id?: string | null
-          mercado_pago_subscription_id?: string | null
-          mercado_pago_user_id?: string | null
-          plan_id?: string | null
-          price_amount?: number
-          status?: Database["public"]["Enums"]["platform_subscription_status"]
-          subscription_end_date?: string | null
-          subscription_next_billing_date?: string | null
-          subscription_start_date?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "platform_subscriptions_barbershop_id_fkey"
-            columns: ["barbershop_id"]
-            isOneToOne: true
-            referencedRelation: "barbershops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "platform_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "platform_plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -1321,74 +1024,6 @@ export type Database = {
           },
         ]
       }
-      usage_fees: {
-        Row: {
-          amount: number
-          appointment_id: string
-          barber_id: string | null
-          barbershop_id: string
-          created_at: string
-          id: string
-          paid_at: string | null
-          payment_id: string | null
-          status: Database["public"]["Enums"]["usage_fee_status"]
-          updated_at: string
-        }
-        Insert: {
-          amount?: number
-          appointment_id: string
-          barber_id?: string | null
-          barbershop_id: string
-          created_at?: string
-          id?: string
-          paid_at?: string | null
-          payment_id?: string | null
-          status?: Database["public"]["Enums"]["usage_fee_status"]
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          appointment_id?: string
-          barber_id?: string | null
-          barbershop_id?: string
-          created_at?: string
-          id?: string
-          paid_at?: string | null
-          payment_id?: string | null
-          status?: Database["public"]["Enums"]["usage_fee_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "usage_fees_appointment_id_fkey"
-            columns: ["appointment_id"]
-            isOneToOne: false
-            referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usage_fees_barber_id_fkey"
-            columns: ["barber_id"]
-            isOneToOne: false
-            referencedRelation: "barbers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usage_fees_barbershop_id_fkey"
-            columns: ["barbershop_id"]
-            isOneToOne: false
-            referencedRelation: "barbershops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usage_fees_payment_id_fkey"
-            columns: ["payment_id"]
-            isOneToOne: false
-            referencedRelation: "payments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       subscription_cycle_balances: {
@@ -1428,11 +1063,6 @@ export type Database = {
       }
     }
     Functions: {
-      appointment_payment_status: {
-        Args: { _appointment_id: string }
-        Returns: Json
-      }
-      barbershop_billing_summary: { Args: { _shop: string }; Returns: Json }
       book_appointment: {
         Args: {
           _barber_id: string
@@ -1484,13 +1114,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      expire_pending_payment_appointments: {
-        Args: { _shop?: string }
-        Returns: number
-      }
       is_member: { Args: { _shop: string }; Returns: boolean }
       is_shop_admin: { Args: { _shop: string }; Returns: boolean }
-      mercado_pago_status: { Args: { _shop: string }; Returns: Json }
       public_breaks: {
         Args: { _slug: string }
         Returns: {
@@ -1503,7 +1128,6 @@ export type Database = {
           weekdays: number[]
         }[]
       }
-      public_payment_enabled: { Args: { _shop: string }; Returns: boolean }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
@@ -1511,24 +1135,6 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "barber" | "customer"
-      payment_state:
-        | "pending"
-        | "approved"
-        | "authorized"
-        | "in_process"
-        | "rejected"
-        | "cancelled"
-        | "refunded"
-        | "charged_back"
-      payment_type: "subscription" | "usage_fee" | "customer_service"
-      platform_subscription_status:
-        | "active"
-        | "pending"
-        | "paused"
-        | "cancelled"
-        | "expired"
-        | "rejected"
-      usage_fee_status: "pending" | "billed" | "paid" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1657,26 +1263,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "barber", "customer"],
-      payment_state: [
-        "pending",
-        "approved",
-        "authorized",
-        "in_process",
-        "rejected",
-        "cancelled",
-        "refunded",
-        "charged_back",
-      ],
-      payment_type: ["subscription", "usage_fee", "customer_service"],
-      platform_subscription_status: [
-        "active",
-        "pending",
-        "paused",
-        "cancelled",
-        "expired",
-        "rejected",
-      ],
-      usage_fee_status: ["pending", "billed", "paid", "cancelled"],
     },
   },
 } as const
