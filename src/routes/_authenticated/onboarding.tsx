@@ -29,7 +29,6 @@ function Onboarding() {
     name: "",
     slug: "",
     address: "",
-    whatsapp: "",
     celular: "",
     cpf_cnpj: "",
     instagram: "",
@@ -183,10 +182,6 @@ function Onboarding() {
                 value={form.celular}
                 onChange={(e) => setForm({ ...form, celular: e.target.value })}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp</Label>
-              <Input id="whatsapp" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="instagram">Instagram</Label>
