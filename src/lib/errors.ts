@@ -1,6 +1,7 @@
 /** Traduz erros técnicos do backend em mensagens claras em português. */
-export function friendlyError(message: string) {
+export function friendlyError(message: string | null | undefined) {
   const m = (message ?? "").toLowerCase();
+
 
   // Chaves duplicadas
   if (m.includes("barbershops_slug_key") || m.includes("duplicate key value") && m.includes("slug")) {
