@@ -166,6 +166,7 @@ function PublicBooking() {
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [done, setDone] = useState(false);
+  const [payment, setPayment] = useState<PaymentChoice>("pix");
 
   /** Serviços selecionados combinados em um "serviço" único para agenda/resumo. */
   const service = useMemo<Service | null>(() => {
