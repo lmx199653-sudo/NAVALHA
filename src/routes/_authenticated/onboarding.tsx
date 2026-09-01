@@ -160,6 +160,30 @@ function Onboarding() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
+              <Label htmlFor="cpf_cnpj">CPF ou CNPJ</Label>
+              <Input
+                id="cpf_cnpj"
+                required
+                inputMode="numeric"
+                maxLength={18}
+                placeholder="000.000.000-00"
+                value={form.cpf_cnpj}
+                onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="celular">Celular</Label>
+              <Input
+                id="celular"
+                required
+                inputMode="tel"
+                maxLength={15}
+                placeholder="(11) 99999-9999"
+                value={form.celular}
+                onChange={(e) => setForm({ ...form, celular: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="whatsapp">WhatsApp</Label>
               <Input id="whatsapp" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
             </div>
