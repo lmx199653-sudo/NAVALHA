@@ -141,6 +141,40 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
+  const [pix, setPix] = useState({ key: "", type: "cpf", holder: "" });
+  useEffect(() => {
+    if (shop) {
+      setPix({
+        key: shop.pix_key ?? "",
+        type: shop.pix_key_type ?? "cpf",
+        holder: shop.pix_holder_name ?? "",
+      });
+    }
+  }, [shop]);
+
+  const savePix = useMutation({
+    mutationFn: async (clear?: boolean) => {
+      const { error } = await supabase
+        .from("barbershops")
+        .update(
+          clear
+            ? { pix_key: null, pix_key_type: null, pix_holder_name: null }
+            : {
+                pix_key: pix.key.trim() || null,
+                pix_key_type: pix.key.trim() ? pix.type : null,
+                pix_holder_name: pix.holder.trim() || null,
+              },
+        )
+        .eq("id", shop!.id);
+      if (error) throw error;
+    },
+    onSuccess: (_, clear) => {
+      qc.invalidateQueries({ queryKey: ["shop"] });
+      toast.success(clear ? "Chave Pix removida" : "Chave Pix salva");
+    },
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
+  });
+
   const saveHours = useMutation({
     mutationFn: async () => {
       const rows = (localHours ?? []).map((h) => ({
