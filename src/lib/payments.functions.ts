@@ -403,11 +403,15 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       .eq("barbershop_id", shop.id)
       .maybeSingle();
 
-    const marketplaceFee =
-      money(
-        (amount * Number(settings?.marketplace_fee_percentage ?? 0)) / 100 +
-          Number(settings?.marketplace_fee_fixed ?? 0),
-      ) || undefined;
+    // A comissão nunca pode igualar/ultrapassar o valor — o Mercado Pago
+    // recusa a preferência e o botão "Pagar" fica desabilitado no checkout.
+    const rawFee = money(
+      (amount * Number(settings?.marketplace_fee_percentage ?? 0)) / 100 +
+        Number(settings?.marketplace_fee_fixed ?? 0),
+    );
+    const maxFee = money(amount * 0.9);
+    const marketplaceFee = rawFee > 0 ? Math.min(rawFee, maxFee) : undefined;
+
 
     const expiresAt = new Date(Date.now() + CHECKOUT_TTL_MIN * 60_000).toISOString();
 
@@ -430,6 +434,14 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
     const sellerToken =
       account?.connected && account.access_token ? account.access_token : undefined;
 
+    const { data: customer } = appointment.customer_id
+      ? await supabaseAdmin
+          .from("customers")
+          .select("name, email, phone")
+          .eq("id", appointment.customer_id)
+          .maybeSingle()
+      : { data: null };
+
     const preference = await createPreference({
       title: `${shop.name} — atendimento`,
       amount,
@@ -438,9 +450,12 @@ export const createServiceCheckout = createServerFn({ method: "POST" })
       backUrl: `${origin()}/pagamento/${appointment.id}`,
       expiresAt,
       metadata: { payment_id: payment.id, appointment_id: appointment.id, type: "customer_service" },
+      ...(customer?.name ? { payerName: customer.name } : {}),
+      ...(customer?.email ? { payerEmail: customer.email } : {}),
       ...(sellerToken ? { sellerToken } : {}),
       ...(sellerToken && marketplaceFee ? { marketplaceFee } : {}),
     });
+
 
     await supabaseAdmin
       .from("payments")

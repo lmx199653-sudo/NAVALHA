@@ -67,6 +67,8 @@ export type PreferencePayload = {
   notificationUrl: string;
   backUrl: string;
   payerEmail?: string;
+  payerName?: string;
+  payerPhone?: string;
   metadata?: Record<string, unknown>;
   /** Comissão retida pela plataforma no split (marketplace 1:1). */
   marketplaceFee?: MpMoney;
@@ -76,11 +78,36 @@ export type PreferencePayload = {
   expiresAt?: string;
 };
 
-
 export type MpPreference = { id: string; init_point: string; sandbox_init_point?: string };
+
+/**
+ * O Mercado Pago exige data com offset explícito (ex.: -03:00) nos campos de
+ * expiração. Datas em "Z" podem ser interpretadas como preferência expirada,
+ * deixando o botão "Pagar" desabilitado no checkout.
+ */
+function mpDate(value: Date | string): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}` +
+    `T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}.000+00:00`
+  );
+}
+
+function splitName(name?: string) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return undefined;
+  return { name: parts[0]!, surname: parts.slice(1).join(" ") || parts[0]! };
+}
 
 export async function createPreference(payload: PreferencePayload): Promise<MpPreference> {
   const token = payload.sellerToken ?? platformAccessToken();
+  const person = splitName(payload.payerName);
+  const payer = {
+    ...(payload.payerEmail ? { email: payload.payerEmail } : {}),
+    ...(person ?? {}),
+  };
+
   return mpFetch<MpPreference>("/checkout/preferences", {
     method: "POST",
     token,
@@ -88,7 +115,10 @@ export async function createPreference(payload: PreferencePayload): Promise<MpPr
     body: {
       items: [
         {
+          id: payload.externalReference,
           title: payload.title,
+          description: payload.title,
+          category_id: "services",
           quantity: payload.quantity ?? 1,
           unit_price: Number(payload.amount),
           currency_id: "BRL",
@@ -98,8 +128,19 @@ export async function createPreference(payload: PreferencePayload): Promise<MpPr
       notification_url: payload.notificationUrl,
       back_urls: { success: payload.backUrl, pending: payload.backUrl, failure: payload.backUrl },
       auto_return: "approved",
+      binary_mode: false,
+      payment_methods: {
+        installments: 12,
+        excluded_payment_methods: [],
+        excluded_payment_types: [],
+      },
+      ...(Object.keys(payer).length > 0 ? { payer } : {}),
       ...(payload.expiresAt
-        ? { expires: true, expiration_date_to: payload.expiresAt }
+        ? {
+            expires: true,
+            expiration_date_from: mpDate(new Date()),
+            expiration_date_to: mpDate(payload.expiresAt),
+          }
         : {}),
       metadata: payload.metadata ?? {},
       ...(payload.marketplaceFee && payload.sellerToken
@@ -108,6 +149,7 @@ export async function createPreference(payload: PreferencePayload): Promise<MpPr
     },
   });
 }
+
 
 export type MpPayment = {
   id: number | string;
