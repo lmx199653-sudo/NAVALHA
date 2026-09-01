@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ExternalLink, LogOut } from "lucide-react";
+import { Copy, ExternalLink, LogOut, QrCode } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -15,6 +15,8 @@ import { Switch } from "@/components/ui/switch";
 import { WEEKDAYS } from "@/lib/format";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import { DEFAULT_BRAND, type Brand } from "@/lib/brand";
+import { PixKeyCard } from "@/components/PixKeyCard";
+import { PIX_KEY_TYPES } from "@/lib/pix";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: SettingsPage,
