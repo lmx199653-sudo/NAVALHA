@@ -44,9 +44,12 @@ function Onboarding() {
     if (!userId) return;
     setLoading(true);
     const slug = slugify(form.slug || form.name);
+    const { celular, ...rest } = form;
     const payload = {
-      ...form,
+      ...rest,
       slug,
+      phone: celular,
+      cpf_cnpj: form.cpf_cnpj || null,
       owner_id: userId,
       onboarding_done: true,
       logo_url: brand.logo_url,
