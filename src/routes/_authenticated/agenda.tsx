@@ -57,7 +57,10 @@ import {
   refundAppointmentBenefit,
   type BenefitKind,
   type CpfLookup,
+  type LocalPaymentMethod,
 } from "@/lib/subscriptions";
+import { PixKeyCard } from "@/components/PixKeyCard";
+import { hasPix, PAYMENT_METHOD_LABEL } from "@/lib/pix";
 
 
 
@@ -95,6 +98,7 @@ function AgendaPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<string | null>(null);
   const [confirmDone, setConfirmDone] = useState<string | null>(null);
+  const [payMethod, setPayMethod] = useState<LocalPaymentMethod>("pix");
 
   const notified = useRef<Set<string>>(new Set());
 
@@ -248,7 +252,7 @@ function AgendaPage() {
 
   // Conclusão do atendimento: o consumo do crédito acontece no banco (idempotente).
   const finish = useMutation({
-    mutationFn: (id: string) => completeAppointment(id),
+    mutationFn: (id: string) => completeAppointment(id, payMethod),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ["agenda"] });
       setConfirmDone(null);
@@ -259,7 +263,9 @@ function AgendaPage() {
           description: `Saldo restante: ${result.left}`,
         });
       } else {
-        toast.success("Atendimento concluído.");
+        toast.success("Atendimento concluído.", {
+          description: `Pagamento: ${PAYMENT_METHOD_LABEL[result?.payment_method ?? ""] ?? "registrado"}.`,
+        });
       }
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -553,7 +559,13 @@ function AgendaPage() {
                 >
                   <MessageCircle className="size-4" /> Avisar cliente
                 </Button>
-                <Button size="sm" onClick={() => setConfirmDone(selected.id)}>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setPayMethod(selected.payment_method === "card" || selected.payment_method === "cash" ? selected.payment_method : "pix");
+                    setConfirmDone(selected.id);
+                  }}
+                >
                   <Check className="size-4" /> Concluir
                 </Button>
                 {selected.benefit_processed && (
@@ -631,7 +643,50 @@ function AgendaPage() {
                       ) : appt.benefit_processed ? (
                         <p className="text-muted-foreground">Benefício já processado — não será descontado novamente.</p>
                       ) : (
-                        <p className="text-muted-foreground">Atendimento avulso: {brl(appt.price_cents)}.</p>
+                        <>
+                          <p className="text-muted-foreground">Atendimento avulso: {brl(appt.price_cents)}.</p>
+                          <div className="pt-3">
+                            <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
+                              Como o cliente pagou?
+                            </p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {(["pix", "card", "cash"] as LocalPaymentMethod[]).map((m) => (
+                                <button
+                                  key={m}
+                                  type="button"
+                                  onClick={() => setPayMethod(m)}
+                                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                                    payMethod === m
+                                      ? "border-primary bg-primary/15 text-primary"
+                                      : "border-border text-muted-foreground hover:border-primary/40"
+                                  }`}
+                                >
+                                  {PAYMENT_METHOD_LABEL[m]}
+                                </button>
+                              ))}
+                            </div>
+                            {payMethod === "pix" && hasPix(shop) && (
+                              <PixKeyCard
+                                compact
+                                className="mt-3"
+                                pixKey={shop!.pix_key!}
+                                pixKeyType={shop!.pix_key_type}
+                                holderName={shop!.pix_holder_name}
+                                amountCents={appt.price_cents}
+                              />
+                            )}
+                            {payMethod === "pix" && !hasPix(shop) && (
+                              <p className="mt-2 text-xs text-muted-foreground">
+                                Cadastre sua chave Pix em Configurações para mostrá-la aqui ao cliente.
+                              </p>
+                            )}
+                            {appt.payment_method === "pix" && appt.source === "online" && (
+                              <p className="mt-2 text-xs text-primary">
+                                Cliente escolheu pagar via Pix ao agendar — confira o comprovante.
+                              </p>
+                            )}
+                          </div>
+                        </>
                       )}
                     </>
                   );
