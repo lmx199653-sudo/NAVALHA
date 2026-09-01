@@ -186,6 +186,16 @@ function PublicBooking() {
         )
         .eq("slug", slug)
         .maybeSingle();
+      if (isDemo(slug) && !shop) {
+        return {
+          shop: DEMO_SHOP,
+          services: DEMO_SERVICES,
+          barbers: DEMO_BARBERS,
+          hours: DEMO_HOURS,
+          breaks: DEMO_BREAKS,
+          paymentEnabled: false,
+        };
+      }
       if (!shop) return null;
       const [services, barbers, hours, breaks, payment] = await Promise.all([
         supabase
