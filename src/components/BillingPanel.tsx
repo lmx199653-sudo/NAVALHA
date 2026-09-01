@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -83,7 +84,7 @@ export function BillingPanel({ shopId }: { shopId: string | undefined }) {
         summary.refetch();
       }
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error.message)),
   });
 
   const pay = useMutation({
@@ -91,7 +92,7 @@ export function BillingPanel({ shopId }: { shopId: string | undefined }) {
     onSuccess: (result) => {
       if (result?.checkoutUrl) window.location.href = result.checkoutUrl;
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error.message)),
   });
 
   const s = summary.data;

@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -86,7 +87,7 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["shop"] });
       toast.success("Identidade visual salva");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const { data: hours } = useQuery({
@@ -135,7 +136,7 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["shop"] });
       toast.success("Dados atualizados");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const saveHours = useMutation({
@@ -156,7 +157,7 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["hours"] });
       toast.success("Horários salvos");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const publicUrl =

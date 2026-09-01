@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -91,7 +92,7 @@ function ServicesPage() {
       setForm((f) => ({ ...f, image_url: signed.data.signedUrl }));
       toast.success("Foto enviada");
     } catch (e) {
-      toast.error((e as Error).message);
+      toast.error(friendlyError((e as Error).message));
     } finally {
       setUploading(false);
     }
@@ -153,7 +154,7 @@ function ServicesPage() {
       setForm(EMPTY);
       toast.success("Serviço salvo");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const remove = useMutation({
@@ -165,7 +166,7 @@ function ServicesPage() {
       qc.invalidateQueries({ queryKey: ["services"] });
       toast.success("Serviço removido");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   function openNew() {

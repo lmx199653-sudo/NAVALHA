@@ -228,7 +228,7 @@ function SubscriptionsPage() {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
       toast.success("Pagamento registrado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const renew = useMutation({
@@ -237,7 +237,7 @@ function SubscriptionsPage() {
       qc.invalidateQueries({ queryKey: ["subscriptions"] });
       toast.success("Ciclo verificado/renovado");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const cancel = useMutation({
@@ -251,7 +251,7 @@ function SubscriptionsPage() {
       setReason("");
       toast.success("Assinatura cancelada");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   return (

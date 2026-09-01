@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -254,7 +255,7 @@ function PublicBooking() {
       }
       setDone(true);
     },
-    onError: (e: Error) => toast.error(e.message || "Horário indisponível"),
+    onError: (e: Error) => toast.error(friendlyError(e.message) || "Horário indisponível"),
   });
 
 

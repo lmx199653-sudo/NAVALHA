@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -28,7 +29,7 @@ export function MercadoPagoConnect({ shopId }: { shopId: string | undefined }) {
     onSuccess: (result) => {
       if (result?.url) window.location.href = result.url;
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error.message)),
   });
 
   const remove = useMutation({
@@ -37,7 +38,7 @@ export function MercadoPagoConnect({ shopId }: { shopId: string | undefined }) {
       toast.success("Mercado Pago desconectado.");
       qc.invalidateQueries({ queryKey: ["mercado-pago-status"] });
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => toast.error(friendlyError(error.message)),
   });
 
   const connected = !!data?.connected;

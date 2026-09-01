@@ -213,15 +213,10 @@ export async function renewCycle(subscriptionId: string) {
   if (error) throw new Error(friendlyError(error.message));
 }
 
+export { friendlyError } from "@/lib/errors";
+
 /** Traduz erros técnicos do banco em mensagens claras em português. */
 export function friendlyError(message: string) {
-  const m = (message ?? "").toLowerCase();
-  if (m.includes("customers_shop_cpf_unique")) return "Este CPF já está cadastrado.";
-  if (m.includes("subscription_usages_appt_debit_unique"))
-    return "Este atendimento já teve o benefício descontado.";
-  if (m.includes("permission denied") || m.includes("row-level security"))
-    return "Você não tem permissão para esta operação.";
-  if (m.includes("violates") || m.includes("constraint") || m.includes("sql"))
-    return "Não foi possível concluir a operação. Revise os dados informados.";
-  return message || "Não foi possível concluir a operação.";
+  return _friendlyError(message);
 }
+

@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -81,7 +82,7 @@ function HoursPage() {
       qc.invalidateQueries({ queryKey: ["hours"] });
       toast.success("Horários salvos");
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   const { data: barbers } = useQuery({
@@ -280,7 +281,7 @@ function BreakDialog({
       toast.success("Pausa criada");
       setOpen(false);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
   return (

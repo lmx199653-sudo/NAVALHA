@@ -1,3 +1,4 @@
+import { friendlyError } from "@@/lib/errors";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -66,7 +67,7 @@ function Onboarding() {
 
     if (error || !data) {
       setLoading(false);
-      toast.error(error?.message ?? "Não foi possível salvar");
+      toast.error(error ? friendlyError(error.message) : "Não foi possível salvar");
       return;
     }
 
