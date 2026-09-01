@@ -1,4 +1,4 @@
-import { friendlyError } from "@@/lib/errors";
+import { friendlyError } from "@/lib/errors";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";

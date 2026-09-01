@@ -1,4 +1,4 @@
-import { friendlyError } from "@@/lib/errors";
+import { friendlyError } from "@/lib/errors";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
