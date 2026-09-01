@@ -5,7 +5,6 @@ import {
   CalendarDays,
   CalendarPlus,
   Clock,
-  CreditCard,
   Crown,
   Repeat,
   
@@ -50,7 +49,6 @@ const NAV = [
   { to: "/planos", label: "Planos de assinatura", icon: Crown },
   { to: "/assinaturas", label: "Assinaturas", icon: Repeat },
   { to: "/marketing", label: "Marketing", icon: Megaphone },
-  { to: "/pagamentos", label: "Pagamentos", icon: CreditCard },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ] as const;
 
