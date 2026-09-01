@@ -270,7 +270,7 @@ function PublicBooking() {
       if (isDemo(slug)) {
         await new Promise((r) => setTimeout(r, 600));
         toast.success("Agendamento de demonstração confirmado!");
-        return { checkoutUrl: null as string | null };
+        return;
       }
       // Um agendamento por serviço, em sequência, a partir do horário escolhido.
       let cursor = new Date(slot!).getTime();
@@ -296,7 +296,6 @@ function PublicBooking() {
           notifyNewAppointment({ data: { appointmentId } }).catch(() => null),
         ),
       );
-
     },
     onSuccess: () => setDone(true),
     onError: (e: Error) => toast.error(friendlyError(e.message) || "Horário indisponível"),
