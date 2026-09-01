@@ -12,6 +12,7 @@ import {
   MapPin,
   MessageCircle,
   Navigation,
+  QrCode,
   Scissors,
   User,
 } from "lucide-react";
@@ -26,6 +27,8 @@ import { brl, timeLabel, WEEKDAYS } from "@/lib/format";
 import { useBrand } from "@/lib/brand";
 import { availableSlots, dayKey, type BreakRow, type HoursRow } from "@/lib/slots";
 import { cn } from "@/lib/utils";
+import { hasPix } from "@/lib/pix";
+import { PixKeyCard } from "@/components/PixKeyCard";
 
 const DEMO_SHOP: Shop = {
   id: "demo-shop-001",
@@ -42,6 +45,9 @@ const DEMO_SHOP: Shop = {
   secondary_color: "#C08A2E",
   bg_color: "#0D0D10",
   font_family: "Bebas Neue",
+  pix_key: "demo@navalhapro.app",
+  pix_key_type: "email",
+  pix_holder_name: "Barbearia Demo",
 };
 
 const DEMO_SERVICES: Service[] = [
@@ -116,7 +122,12 @@ type Shop = {
   secondary_color: string;
   bg_color: string;
   font_family: string;
+  pix_key?: string | null;
+  pix_key_type?: string | null;
+  pix_holder_name?: string | null;
 };
+
+type PaymentChoice = "pix" | "on_site";
 
 type Service = {
   id: string;
@@ -158,6 +169,7 @@ function PublicBooking() {
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [done, setDone] = useState(false);
+  const [payment, setPayment] = useState<PaymentChoice>("pix");
 
   /** Serviços selecionados combinados em um "serviço" único para agenda/resumo. */
   const service = useMemo<Service | null>(() => {
@@ -180,7 +192,7 @@ function PublicBooking() {
       const { data: shop } = await supabase
         .from("barbershops")
         .select(
-          "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family",
+          "id, name, slug, description, address, phone, whatsapp, instagram, logo_url, cover_url, accent_color, secondary_color, bg_color, font_family, pix_key, pix_key_type, pix_holder_name",
         )
         .eq("slug", slug)
         .maybeSingle();
@@ -265,6 +277,9 @@ function PublicBooking() {
     [],
   );
 
+  const shopHasPix = hasPix(data?.shop);
+  const paymentChoice: PaymentChoice = shopHasPix ? payment : "on_site";
+
   const book = useMutation({
     mutationFn: async () => {
       if (isDemo(slug)) {
@@ -284,6 +299,7 @@ function PublicBooking() {
           _name: name,
           _phone: phone,
           _cpf: cpf.replace(/\D/g, ""),
+          _payment_method: paymentChoice,
         });
         if (error) throw error;
         const id = (created as { id?: string } | null)?.id;
@@ -336,6 +352,7 @@ function PublicBooking() {
         name={name}
         phone={phone}
         whatsappLink={whatsappLink}
+        payment={paymentChoice}
       />
     );
   }
@@ -633,16 +650,54 @@ function PublicBooking() {
                 </span>
               </div>
             </div>
-            <div className="surface-card p-4">
+            <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Forma de pagamento</p>
-              <p className="mt-1 text-sm">Pagamento realizado no local, direto com a barbearia.</p>
+              {shopHasPix ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    <PaymentOption
+                      active={paymentChoice === "pix"}
+                      title="Pix"
+                      hint="Direto para o barbeiro"
+                      badge="Recomendado"
+                      onClick={() => setPayment("pix")}
+                    />
+                    <PaymentOption
+                      active={paymentChoice === "on_site"}
+                      title="No local"
+                      hint="Pix, cartão ou dinheiro"
+                      onClick={() => setPayment("on_site")}
+                    />
+                  </div>
+                  {paymentChoice === "pix" && (
+                    <>
+                      <PixKeyCard
+                        pixKey={shop.pix_key!}
+                        pixKeyType={shop.pix_key_type}
+                        holderName={shop.pix_holder_name}
+                        amountCents={service.price_cents}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Copie a chave, faça o Pix de {brl(service.price_cents)} no app do seu banco e
+                        confirme o agendamento. Leve o comprovante no dia.
+                      </p>
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm">Pagamento realizado no local, direto com a barbearia.</p>
+              )}
             </div>
             <Button
               className="h-14 w-full text-base"
               disabled={book.isPending}
               onClick={() => book.mutate()}
             >
-              {book.isPending ? "Confirmando…" : "Confirmar agendamento"}
+              {book.isPending
+                ? "Confirmando…"
+                : paymentChoice === "pix"
+                  ? "Já fiz o Pix — confirmar agendamento"
+                  : "Confirmar agendamento"}
             </Button>
           </section>
         )}
@@ -773,6 +828,39 @@ function SummaryRow({
   );
 }
 
+function PaymentOption({
+  active,
+  title,
+  hint,
+  badge,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  hint: string;
+  badge?: string | undefined;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "relative rounded-xl border p-3 text-left transition-colors",
+        active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+      )}
+    >
+      {badge && (
+        <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">
+          {badge}
+        </span>
+      )}
+      <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+    </button>
+  );
+}
+
 function SuccessScreen({
   shop,
   service,
@@ -781,6 +869,7 @@ function SuccessScreen({
   name,
   phone,
   whatsappLink,
+  payment,
 }: {
   shop: Shop;
   service: Service;
@@ -789,6 +878,7 @@ function SuccessScreen({
   name: string;
   phone: string;
   whatsappLink: string | null;
+  payment: PaymentChoice;
 }) {
   const start = new Date(slot);
   const end = new Date(start.getTime() + service.duration_min * 60000);
@@ -799,6 +889,8 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
+  const paidByPix = payment === "pix" && hasPix(shop);
+
   const whatsappMessage = [
     `✅ *Agendamento confirmado* — ${shop.name}`,
     "",
@@ -808,6 +900,7 @@ function SuccessScreen({
     `Dia: ${WEEKDAYS[start.getDay()]}, ${start.toLocaleDateString("pt-BR")}`,
     `Horário: ${timeLabel(slot)}`,
     `Valor: ${brl(service.price_cents)}`,
+    `Pagamento: ${paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
     `Telefone: ${phone}`,
   ].join("\n");
   const whatsappConfirmLink = whatsappLink
@@ -838,16 +931,37 @@ function SuccessScreen({
             />
             <SummaryRow icon={Clock} label="Horário" value={timeLabel(slot)} />
             <SummaryRow icon={MessageCircle} label="Seu WhatsApp" value={phone} />
+            <SummaryRow
+              icon={QrCode}
+              label="Pagamento"
+              value={paidByPix ? "Pix direto ao barbeiro" : "No local (Pix, cartão ou dinheiro)"}
+            />
             <div className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-muted-foreground">Valor</span>
               <span className="font-display text-3xl text-primary">{brl(service.price_cents)}</span>
             </div>
           </div>
           <div className="space-y-3 p-5">
+            {paidByPix && (
+              <>
+                <PixKeyCard
+                  compact
+                  pixKey={shop.pix_key!}
+                  pixKeyType={shop.pix_key_type}
+                  holderName={shop.pix_holder_name ?? null}
+                  amountCents={service.price_cents}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ainda não pagou? Copie a chave acima e faça o Pix. Envie o comprovante pelo WhatsApp
+                  para agilizar a confirmação.
+                </p>
+              </>
+            )}
             {whatsappConfirmLink && (
               <Button className="h-14 w-full text-base font-semibold shadow-lg" size="lg" asChild>
                 <a href={whatsappConfirmLink} target="_blank" rel="noreferrer">
-                  <MessageCircle className="size-5" /> CONFIRMAR COM BARBEARIA
+                  <MessageCircle className="size-5" />
+                  {paidByPix ? "ENVIAR COMPROVANTE NO WHATSAPP" : "CONFIRMAR COM BARBEARIA"}
                 </a>
               </Button>
             )}
