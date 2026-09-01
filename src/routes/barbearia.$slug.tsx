@@ -272,6 +272,11 @@ function PublicBooking() {
 
   const book = useMutation({
     mutationFn: async () => {
+      if (isDemo(slug)) {
+        await new Promise((r) => setTimeout(r, 600));
+        toast.success("Agendamento de demonstração confirmado!");
+        return { checkoutUrl: null as string | null };
+      }
       // Um agendamento por serviço, em sequência, a partir do horário escolhido.
       let cursor = new Date(slot!).getTime();
       const createdIds: string[] = [];
