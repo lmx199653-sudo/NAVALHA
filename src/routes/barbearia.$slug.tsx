@@ -116,7 +116,12 @@ type Shop = {
   secondary_color: string;
   bg_color: string;
   font_family: string;
+  pix_key?: string | null;
+  pix_key_type?: string | null;
+  pix_holder_name?: string | null;
 };
+
+type PaymentChoice = "pix" | "on_site";
 
 type Service = {
   id: string;
