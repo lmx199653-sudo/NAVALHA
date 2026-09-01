@@ -29,6 +29,8 @@ function Onboarding() {
     slug: "",
     address: "",
     whatsapp: "",
+    celular: "",
+    cpf_cnpj: "",
     instagram: "",
     description: "",
   });
