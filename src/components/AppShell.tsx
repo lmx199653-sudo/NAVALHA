@@ -6,8 +6,6 @@ import {
   CalendarPlus,
   Clock,
   Crown,
-  Repeat,
-  
   LayoutDashboard,
   Link2,
   LogOut,
