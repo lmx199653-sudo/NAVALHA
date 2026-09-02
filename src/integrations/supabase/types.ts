@@ -1141,6 +1141,10 @@ export type Database = {
           weekdays: number[]
         }[]
       }
+      public_plan_eligibility: {
+        Args: { _cpf: string; _service_ids: string[]; _slug: string }
+        Returns: Json
+      }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
