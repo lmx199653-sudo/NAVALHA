@@ -14,6 +14,7 @@ import {
   Navigation,
   QrCode,
   Scissors,
+  Sparkles,
   User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -127,7 +128,14 @@ type Shop = {
   pix_holder_name?: string | null;
 };
 
-type PaymentChoice = "pix" | "pix_qr" | "on_site";
+type PaymentChoice = "plan" | "pix" | "pix_qr" | "on_site";
+
+type PlanEligibility = {
+  eligible: boolean;
+  plan_name?: string | null;
+  period_end?: string | null;
+  services?: { service_id: string; covered: boolean; benefit_kind: string | null; left: number }[];
+};
 
 type Service = {
   id: string;
@@ -278,7 +286,37 @@ function PublicBooking() {
   );
 
   const shopHasPix = hasPix(data?.shop);
-  const paymentChoice: PaymentChoice = shopHasPix ? payment : "on_site";
+  const cpfDigits = cpf.replace(/\D/g, "");
+  const selectedIds = selected.map((s) => s.id);
+
+  // Verifica (pelo CPF) se o cliente tem plano ativo cobrindo os serviços escolhidos.
+  const { data: eligibility } = useQuery({
+    queryKey: ["plan-eligibility", slug, cpfDigits, selectedIds],
+    enabled: !isDemo(slug) && step === 4 && cpfDigits.length === 11 && selectedIds.length > 0,
+    queryFn: async () => {
+      const { data: res } = await supabase.rpc("public_plan_eligibility", {
+        _slug: slug,
+        _cpf: cpfDigits,
+        _service_ids: selectedIds,
+      });
+      return (res ?? { eligible: false }) as unknown as PlanEligibility;
+    },
+  });
+  const planEligible = !!eligibility?.eligible;
+  const coveredIds = useMemo(
+    () => new Set((eligibility?.services ?? []).filter((s) => s.covered).map((s) => s.service_id)),
+    [eligibility],
+  );
+  const planUncoveredCents = selected.filter((s) => !coveredIds.has(s.id)).reduce((t, s) => t + s.price_cents, 0);
+
+  const paymentChoice: PaymentChoice =
+    payment === "plan" ? (planEligible ? "plan" : shopHasPix ? "pix" : "on_site")
+    : shopHasPix ? payment : "on_site";
+
+  // Assinante elegível: sugere o plano automaticamente.
+  useEffect(() => {
+    if (planEligible && payment !== "on_site") setPayment("plan");
+  }, [planEligible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const book = useMutation({
     mutationFn: async () => {
@@ -291,6 +329,9 @@ function PublicBooking() {
       let cursor = new Date(slot!).getTime();
       const createdIds: string[] = [];
       for (const s of selected) {
+        // Com o plano: serviços inclusos usam o benefício; os demais são pagos no local.
+        const method =
+          paymentChoice === "plan" ? (coveredIds.has(s.id) ? "plan" : "on_site") : paymentChoice;
         const { data: created, error } = await supabase.rpc("book_appointment", {
           _slug: slug,
           _barber_id: barber!.id,
@@ -298,8 +339,8 @@ function PublicBooking() {
           _starts_at: new Date(cursor).toISOString(),
           _name: name,
           _phone: phone,
-          _cpf: cpf.replace(/\D/g, ""),
-          _payment_method: paymentChoice,
+          _cpf: cpfDigits,
+          _payment_method: method,
         });
         if (error) throw error;
         const id = (created as { id?: string } | null)?.id;
@@ -353,6 +394,7 @@ function PublicBooking() {
         phone={phone}
         whatsappLink={whatsappLink}
         payment={paymentChoice}
+        planUncoveredCents={planUncoveredCents}
       />
     );
   }
@@ -652,47 +694,75 @@ function PublicBooking() {
             </div>
             <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
-              {shopHasPix ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <PaymentOption
-                      active={paymentChoice === "pix"}
-                      title="Pagar com Pix"
-                      hint="QR Code ou chave · agora"
-                      badge="Recomendado"
-                      onClick={() => setPayment("pix")}
-                    />
-                    <PaymentOption
-                      active={paymentChoice === "on_site"}
-                      title="Pagar no local"
-                      hint="Pix, cartão ou dinheiro"
-                      onClick={() => setPayment("on_site")}
-                    />
+              <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
+                {planEligible && (
+                  <PaymentOption
+                    active={paymentChoice === "plan"}
+                    title="Usar meu plano"
+                    hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
+                    badge="Assinante"
+                    onClick={() => setPayment("plan")}
+                  />
+                )}
+                {shopHasPix && (
+                  <PaymentOption
+                    active={paymentChoice === "pix"}
+                    title="Pagar com Pix"
+                    hint="QR Code ou chave · agora"
+                    badge={planEligible ? undefined : "Recomendado"}
+                    onClick={() => setPayment("pix")}
+                  />
+                )}
+                <PaymentOption
+                  active={paymentChoice === "on_site"}
+                  title="Pagar no local"
+                  hint="Pix, cartão ou dinheiro"
+                  onClick={() => setPayment("on_site")}
+                />
+              </div>
+              {paymentChoice === "plan" ? (
+                <div className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Sparkles className="size-4 text-primary" />
+                    <span>
+                      {planUncoveredCents === 0
+                        ? "Tudo incluso no seu plano — nada a pagar agora."
+                        : `Parte inclusa no plano. Restante de ${brl(planUncoveredCents)} você paga no local.`}
+                    </span>
                   </div>
-                  {paymentChoice === "pix" ? (
-                    <>
-                      <PixQrCard
-                        showKey
-                        pixKey={shop.pix_key!}
-                        pixKeyType={shop.pix_key_type}
-                        holderName={shop.pix_holder_name}
-                        amountCents={service.price_cents}
-                        description={service.name}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o barbeiro, e
-                        confirme o agendamento. Leve o comprovante no dia.
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou dinheiro.
-                    </p>
+                  {selected.length > 1 && (
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {selected.map((s) => (
+                        <li key={s.id} className="flex justify-between">
+                          <span>{s.name}</span>
+                          <span>{coveredIds.has(s.id) ? "incluso no plano" : brl(s.price_cents)}</span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    O crédito só é descontado quando o atendimento for concluído. Se cancelar ou não comparecer,
+                    nada é descontado.
+                  </p>
+                </div>
+              ) : paymentChoice === "pix" && shopHasPix ? (
+                <>
+                  <PixQrCard
+                    showKey
+                    pixKey={shop.pix_key!}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name}
+                    amountCents={service.price_cents}
+                    description={service.name}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o barbeiro, e
+                    confirme o agendamento. Leve o comprovante no dia.
+                  </p>
                 </>
               ) : (
-                <p className="text-sm">
-                  Pagamento no local, direto com a barbearia — Pix, cartão ou dinheiro. Nada é cobrado agora.
+                <p className="text-xs text-muted-foreground">
+                  Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou dinheiro.
                 </p>
               )}
             </div>
@@ -705,7 +775,9 @@ function PublicBooking() {
                 ? "Confirmando…"
                 : paymentChoice === "pix" || paymentChoice === "pix_qr"
                   ? "Já fiz o Pix — confirmar agendamento"
-                  : "Confirmar agendamento"}
+                  : paymentChoice === "plan"
+                    ? "Confirmar com meu plano"
+                    : "Confirmar agendamento"}
             </Button>
           </section>
         )}
@@ -878,6 +950,7 @@ function SuccessScreen({
   phone,
   whatsappLink,
   payment,
+  planUncoveredCents = 0,
 }: {
   shop: Shop;
   service: Service;
@@ -887,6 +960,7 @@ function SuccessScreen({
   phone: string;
   whatsappLink: string | null;
   payment: PaymentChoice;
+  planUncoveredCents?: number | undefined;
 }) {
   const start = new Date(slot);
   const end = new Date(start.getTime() + service.duration_min * 60000);
@@ -897,7 +971,10 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
+
+  const usingPlan = payment === "plan";
   const paidByPix = (payment === "pix" || payment === "pix_qr") && hasPix(shop);
+  const planCoveredAll = usingPlan && planUncoveredCents === 0;
 
   const whatsappMessage = [
     `✅ *Agendamento confirmado* — ${shop.name}`,
@@ -907,8 +984,8 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
     `Dia: ${WEEKDAYS[start.getDay()]}, ${start.toLocaleDateString("pt-BR")}`,
     `Horário: ${timeLabel(slot)}`,
-    `Valor: ${brl(service.price_cents)}`,
-    `Pagamento: ${paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
+    `Valor: ${usingPlan ? (planCoveredAll ? "incluso no plano" : `${brl(planUncoveredCents)} (restante fora do plano)`) : brl(service.price_cents)}`,
+    `Pagamento: ${usingPlan ? "meu plano de assinatura" : paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
     `Telefone: ${phone}`,
   ].join("\n");
   const whatsappConfirmLink = whatsappLink
@@ -940,16 +1017,28 @@ function SuccessScreen({
             <SummaryRow icon={Clock} label="Horário" value={timeLabel(slot)} />
             <SummaryRow icon={MessageCircle} label="Seu WhatsApp" value={phone} />
             <SummaryRow
-              icon={QrCode}
+              icon={usingPlan ? Sparkles : QrCode}
               label="Pagamento"
               value={
-                paidByPix ? "Pix direto ao barbeiro" : "No local (Pix, cartão ou dinheiro)"
+                usingPlan
+                  ? "Meu plano de assinatura"
+                  : paidByPix
+                    ? "Pix direto ao barbeiro"
+                    : "No local (Pix, cartão ou dinheiro)"
               }
             />
             <div className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-muted-foreground">Valor</span>
-              <span className="font-display text-3xl text-primary">{brl(service.price_cents)}</span>
+              <span className="font-display text-3xl text-primary">
+                {planCoveredAll ? "Incluso" : brl(usingPlan ? planUncoveredCents : service.price_cents)}
+              </span>
             </div>
+            {usingPlan && (
+              <p className="px-5 py-3 text-xs text-muted-foreground">
+                O crédito do seu plano só é descontado quando o atendimento for concluído. Se cancelar ou não
+                comparecer, nada é descontado.
+              </p>
+            )}
           </div>
           <div className="space-y-3 p-5">
             {paidByPix && (
