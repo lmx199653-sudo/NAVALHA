@@ -353,6 +353,7 @@ function PublicBooking() {
         phone={phone}
         whatsappLink={whatsappLink}
         payment={paymentChoice}
+        planUncoveredCents={planUncoveredCents}
       />
     );
   }
