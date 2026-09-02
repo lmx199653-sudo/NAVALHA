@@ -133,6 +133,11 @@ function SubscriptionsPage() {
 
   const alerts = useMemo(() => buildAlerts(rows), [rows]);
   const attentionIds = useMemo(() => new Set(alerts.map((a) => a.row.sub.id)), [alerts]);
+  const activeCustomerIds = useMemo(
+    () => new Set(rows.filter((r) => r.sub.status === "active" || r.sub.status === "pending").map((r) => r.sub.customer_id)),
+    [rows],
+  );
+  const manageRow = useMemo(() => rows.find((r) => r.sub.id === manageId) ?? null, [rows, manageId]);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -273,14 +278,19 @@ function SubscriptionsPage() {
                 <p className="font-display text-xl leading-tight">Assinantes</p>
                 <p className="text-xs text-muted-foreground">{rows.length} cadastrado(s)</p>
               </div>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="pl-9"
-                  placeholder="Buscar por CPF, nome ou plano"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar por CPF, nome ou plano"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button size="sm" onClick={() => setNewOpen(true)}>
+                  <Plus className="size-4" /> Novo assinante
+                </Button>
               </div>
             </div>
 
@@ -332,98 +342,77 @@ function SubscriptionsPage() {
               {filtered.map((row) => {
                 const { sub, customer, plan, balance } = row;
                 const status = SUB_STATUS[sub.status] ?? SUB_STATUS.pending;
-                const renewIn = daysUntil(balance?.period_end);
+                const dueIn = daysUntil(balance?.period_end ?? sub.next_payment);
+                const dueLabel = balance?.period_end
+                  ? dateLabel(balance.period_end)
+                  : sub.next_payment
+                    ? dateLabel(sub.next_payment)
+                    : "—";
+                const pending = sub.payment_status !== "paid" ? pendingPaymentOf(row) : null;
                 const hasAlert = attentionIds.has(sub.id);
-                const busy = busyId === sub.id;
+                const closed = sub.status === "cancelled" || sub.status === "expired";
                 return (
-                  <div
+                  <button
                     key={sub.id}
+                    type="button"
+                    onClick={() => setManageId(sub.id)}
                     className={cn(
-                      "rounded-xl border p-3 transition-colors",
+                      "group flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between",
                       hasAlert ? "border-primary/30 bg-primary/[0.03]" : "border-border",
+                      closed && "opacity-60",
                     )}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
-                          {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
-                        </p>
-                      </div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className={status.tone}>
-                          {status.dot} {status.label}
+                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
+                        <Badge variant="outline" className={cn("h-5 px-1.5 text-[10px]", status.tone)}>
+                          {status.label}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className={
+                          className={cn(
+                            "h-5 px-1.5 text-[10px]",
                             sub.payment_status === "paid"
                               ? "border-success/40 bg-success/15 text-success"
-                              : "border-warning/40 bg-warning/15 text-warning"
-                          }
+                              : "border-warning/40 bg-warning/15 text-warning",
+                          )}
                         >
                           {PAYMENT_STATUS[sub.payment_status]}
                         </Badge>
                       </div>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                      <span>
-                        Cortes:{" "}
-                        <b className="text-foreground">
-                          {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
-                        </b>
-                      </span>
-                      <span>
-                        Barbas:{" "}
-                        <b className="text-foreground">
-                          {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
-                        </b>
-                      </span>
-                      <span>
-                        Renova:{" "}
-                        <b className={cn(renewIn !== null && renewIn <= 5 ? "text-warning" : "text-foreground")}>
-                          {balance ? dateLabel(balance.period_end) : "—"}
-                        </b>
-                      </span>
-                      <span>Início: {dateLabel(sub.started_on)}</span>
-                    </div>
-                    {sub.status !== "cancelled" && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {sub.payment_status !== "paid" && (
-                          <Button size="sm" variant="outline" disabled={busy} onClick={() => markPaid.mutate(row)}>
-                            <CheckCircle2 className="size-3.5" /> Registrar pagamento
-                          </Button>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {plan?.name ?? "—"} · {brl(sub.price_cents)} · {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>
+                          Vence:{" "}
+                          <b
+                            className={cn(
+                              "text-foreground",
+                              dueIn !== null && dueIn <= 5 && "text-warning",
+                              dueIn !== null && dueIn < 0 && "text-destructive",
+                            )}
+                          >
+                            {dueLabel}
+                          </b>
+                        </span>
+                        <span>
+                          Cortes: <b className="text-foreground">{balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}</b>
+                        </span>
+                        <span>
+                          Barbas: <b className="text-foreground">{balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}</b>
+                        </span>
+                        {pending && (
+                          <span className="inline-flex items-center gap-1 text-warning">
+                            <Clock3 className="size-3" /> Pendente {brl(pending.amount_cents)}
+                          </span>
                         )}
-                        <Button size="sm" variant="outline" disabled={busy} onClick={() => renew.mutate(row)}>
-                          <RefreshCw className={cn("size-3.5", busy && "animate-spin")} /> Renovar
-                        </Button>
-                        {customer?.phone && (
-                          <Button size="sm" variant="ghost" asChild>
-                            <a
-                              target="_blank"
-                              rel="noreferrer"
-                              href={`https://wa.me/55${customer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                                `Olá, ${customer.name}! Seu plano ${plan?.name ?? ""} está ${
-                                  sub.status === "active" ? "ativo" : "inativo"
-                                } e você possui ${balance?.cuts_left ?? 0} corte(s) disponíveis neste ciclo.`,
-                              )}`}
-                            >
-                              <MessageCircle className="size-3.5" /> WhatsApp
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground"
-                          onClick={() => setCancelTarget(sub)}
-                        >
-                          <XCircle className="size-3.5" /> Cancelar
-                        </Button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors group-hover:border-primary/50 group-hover:text-primary sm:self-center">
+                      <Settings2 className="size-3.5" /> Gerenciar
+                    </span>
+                  </button>
                 );
               })}
             </div>
@@ -434,6 +423,26 @@ function SubscriptionsPage() {
           <PlansPanel />
         </TabsContent>
       </Tabs>
+
+      <NewSubscriberDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        shopId={shop?.id}
+        plans={data?.plans ?? []}
+        customers={data?.customers ?? []}
+        activeCustomerIds={activeCustomerIds}
+        onCreated={invalidate}
+      />
+
+      <ManageSubscriberDialog
+        row={manageRow}
+        plans={data?.plans ?? []}
+        shopName={shopName}
+        pixKey={pixKey}
+        onOpenChange={(v) => !v && setManageId(null)}
+        onChanged={invalidate}
+        onCancel={(row) => setCancelTarget(row.sub)}
+      />
 
       <AlertDialog open={!!cancelTarget} onOpenChange={(v) => !v && setCancelTarget(null)}>
         <AlertDialogContent>
