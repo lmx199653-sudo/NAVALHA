@@ -455,7 +455,7 @@ function AgendaPage() {
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
                         onClick={() => setEditing(a.id)}
-                        className={`group min-w-44 flex-1 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg ${statusTone[a.status] ?? statusTone.blocked}`}
+                        className={`group min-w-44 flex-1 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg ${statusTone[a.status] ?? statusTone[FALLBACK_STATUS]}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
@@ -513,7 +513,7 @@ function AgendaPage() {
                       <button
                         key={a.id}
                         onClick={() => setEditing(a.id)}
-                        className={`w-full rounded-xl border p-2.5 text-left transition-all hover:shadow-sm ${statusTone[a.status] ?? statusTone.blocked}`}
+                        className={`w-full rounded-xl border p-2.5 text-left transition-all hover:shadow-sm ${statusTone[a.status] ?? statusTone[FALLBACK_STATUS]}`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-xs font-semibold">{timeLabel(a.starts_at)}</span>
@@ -569,7 +569,7 @@ function AgendaPage() {
                   {list.length > 0 && (
                     <div className="mt-auto flex flex-wrap items-center gap-1.5">
                       {Array.from(new Set(list.map((a) => a.status))).map((s) => (
-                        <span key={s} className={`size-2 rounded-full ${statusDot[s] ?? statusDot.blocked}`} title={STATUS_LABEL[s]} />
+                        <span key={s} className={`size-2 rounded-full ${statusDot[s] ?? statusDot[FALLBACK_STATUS]}`} title={STATUS_LABEL[s]} />
                       ))}
                       <span className="text-[11px] font-medium text-muted-foreground">{list.length}</span>
                     </div>
