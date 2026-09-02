@@ -278,7 +278,37 @@ function PublicBooking() {
   );
 
   const shopHasPix = hasPix(data?.shop);
-  const paymentChoice: PaymentChoice = shopHasPix ? payment : "on_site";
+  const cpfDigits = cpf.replace(/\D/g, "");
+  const selectedIds = selected.map((s) => s.id);
+
+  // Verifica (pelo CPF) se o cliente tem plano ativo cobrindo os serviços escolhidos.
+  const { data: eligibility } = useQuery({
+    queryKey: ["plan-eligibility", slug, cpfDigits, selectedIds],
+    enabled: !isDemo(slug) && step === 4 && cpfDigits.length === 11 && selectedIds.length > 0,
+    queryFn: async () => {
+      const { data: res } = await supabase.rpc("public_plan_eligibility", {
+        _slug: slug,
+        _cpf: cpfDigits,
+        _service_ids: selectedIds,
+      });
+      return (res ?? { eligible: false }) as unknown as PlanEligibility;
+    },
+  });
+  const planEligible = !!eligibility?.eligible;
+  const coveredIds = useMemo(
+    () => new Set((eligibility?.services ?? []).filter((s) => s.covered).map((s) => s.service_id)),
+    [eligibility],
+  );
+  const planUncoveredCents = selected.filter((s) => !coveredIds.has(s.id)).reduce((t, s) => t + s.price_cents, 0);
+
+  const paymentChoice: PaymentChoice =
+    payment === "plan" ? (planEligible ? "plan" : shopHasPix ? "pix" : "on_site")
+    : shopHasPix ? payment : "on_site";
+
+  // Assinante elegível: sugere o plano automaticamente.
+  useEffect(() => {
+    if (planEligible && payment !== "on_site") setPayment("plan");
+  }, [planEligible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const book = useMutation({
     mutationFn: async () => {
@@ -291,6 +321,9 @@ function PublicBooking() {
       let cursor = new Date(slot!).getTime();
       const createdIds: string[] = [];
       for (const s of selected) {
+        // Com o plano: serviços inclusos usam o benefício; os demais são pagos no local.
+        const method =
+          paymentChoice === "plan" ? (coveredIds.has(s.id) ? "plan" : "on_site") : paymentChoice;
         const { data: created, error } = await supabase.rpc("book_appointment", {
           _slug: slug,
           _barber_id: barber!.id,
@@ -298,8 +331,8 @@ function PublicBooking() {
           _starts_at: new Date(cursor).toISOString(),
           _name: name,
           _phone: phone,
-          _cpf: cpf.replace(/\D/g, ""),
-          _payment_method: paymentChoice,
+          _cpf: cpfDigits,
+          _payment_method: method,
         });
         if (error) throw error;
         const id = (created as { id?: string } | null)?.id;
