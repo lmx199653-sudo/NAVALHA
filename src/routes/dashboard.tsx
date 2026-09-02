@@ -180,12 +180,14 @@ function Dashboard() {
           : "Carregando..."
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard size="hero" label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" hint={`${brl(revToday)} previstos hoje`} />
+        <StatCard size="hero" label="Faturamento do dia" value={brl(revToday)} icon={Coins} />
+        <StatCard size="hero" label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
+        <StatCard size="hero" label="Ticket médio" value={brl(ticket)} icon={Coins} />
+      </div>
 
-        <StatCard label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" />
-        <StatCard label="Faturamento do dia" value={brl(revToday)} icon={Coins} />
-        <StatCard label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
-        <StatCard label="Ticket médio" value={brl(ticket)} icon={Coins} />
+      <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
         <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} />
         <StatCard label="Base de clientes" value={customers.length} icon={Users} />
         <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} />
@@ -197,31 +199,6 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-4 surface-card grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-4">
-        <div className="min-w-0">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">Próximo cliente</p>
-          {upcoming[0] ? (
-            <>
-              <p className="mt-1 truncate font-display text-3xl leading-none">
-                {upcoming[0].customer_name}
-              </p>
-              <p className="mt-1 truncate text-sm text-muted-foreground">
-                {serviceName(upcoming[0].service_id)} · {barberName(upcoming[0].barber_id)}
-              </p>
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Nenhum cliente na fila.</p>
-          )}
-        </div>
-        {upcoming[0] && (
-          <div className="shrink-0 text-right">
-            <p className="font-display text-3xl leading-none text-primary">
-              {timeLabel(upcoming[0].starts_at)}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">{dateLabel(upcoming[0].starts_at)}</p>
-          </div>
-        )}
-      </div>
 
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
@@ -296,7 +273,15 @@ function Dashboard() {
         </div>
 
         <div className="surface-card p-4">
-          <h2 className="font-display text-2xl">Próximos agendamentos</h2>
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-display text-2xl">Próximos agendamentos</h2>
+            {upcoming[0] && (
+              <p className="text-xs text-muted-foreground">
+                Próximo: <span className="text-primary">{timeLabel(upcoming[0].starts_at)}</span> ·{" "}
+                {upcoming[0].customer_name}
+              </p>
+            )}
+          </div>
           <div className="mt-3 space-y-2">
             {upcoming.length === 0 && (
               <p className="text-sm text-muted-foreground">Nenhum agendamento futuro.</p>
