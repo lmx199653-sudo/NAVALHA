@@ -94,58 +94,75 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <div className="flex items-center gap-2 px-5 py-6">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+        <div className="flex items-center gap-2.5 px-4 pb-5 pt-5">
           <img
             src={shop?.logo_url ?? logoAsset.url}
             alt={shop?.name ? `Logo ${shop.name}` : "NAVALHA PRO"}
-            className="size-8 shrink-0 object-contain"
+            className="size-7 shrink-0 object-contain"
           />
-          <span className="break-words font-display text-2xl leading-tight tracking-wide">
+          <span className="break-words font-display text-xl leading-tight tracking-wide">
             {shop?.name ? shop.name.toUpperCase() : <>NAVALHA <span className="text-primary">PRO</span></>}
           </span>
         </div>
-        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3">
-          {NAV.map((item) => {
-            const active = pathname.startsWith(item.to);
-            return (
+        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2.5">
+          {NAV_GROUPS.map((group) => (
+            <div key={group}>
+              <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
+                {group}
+              </p>
+              <div className="space-y-0.5">
+                {NAV.filter((item) => item.group === group).map((item) => {
+                  const active = pathname.startsWith(item.to);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={cn(
+                        "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        active && "bg-sidebar-accent font-medium text-primary",
+                      )}
+                    >
+                      {active && (
+                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />
+                      )}
+                      <item.icon className="size-4" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {!installed && (
+            <div>
+              <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
+                Cliente
+              </p>
               <Link
-                key={item.to}
-                to={item.to}
+                to="/agendar"
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                  active && "bg-sidebar-accent text-primary",
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  pathname.startsWith("/agendar") && "bg-sidebar-accent font-medium text-primary",
                 )}
               >
-                <item.icon className="size-4" />
-                {item.label}
+                <CalendarPlus className="size-4" />
+                Página do cliente
               </Link>
-            );
-          })}
-          {!installed && (
-            <Link
-              to="/agendar"
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                pathname.startsWith("/agendar") && "bg-sidebar-accent text-primary",
-              )}
-            >
-              <CalendarPlus className="size-4" />
-              Página do cliente
-            </Link>
+            </div>
           )}
         </nav>
-        <div className="space-y-2 border-t border-sidebar-border p-3">
+        <div className="border-t border-sidebar-border p-2.5">
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:text-destructive"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:text-destructive"
           >
             <LogOut className="size-4" /> Sair
           </button>
         </div>
       </aside>
 
-      <div className="lg:pl-60">
+      <div className="lg:pl-56">
         <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-between sm:px-6">
             <div className="min-w-0">
