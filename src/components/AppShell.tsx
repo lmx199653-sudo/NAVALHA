@@ -38,21 +38,24 @@ import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/link", label: "Link cliente", icon: Link2 },
-  { to: "/clientes", label: "Clientes", icon: Users },
-  { to: "/barbeiros", label: "Profissionais", icon: UserSquare2 },
-  { to: "/servicos", label: "Serviços", icon: Scissors },
-  { to: "/horarios", label: "Horários", icon: Clock },
-  { to: "/financeiro", label: "Financeiro", icon: BarChart3 },
-  { to: "/planos", label: "Planos de assinatura", icon: Crown },
-  { to: "/assinaturas", label: "Assinaturas", icon: Repeat },
-  { to: "/marketing", label: "Marketing", icon: Megaphone },
-  { to: "/configuracoes", label: "Configurações", icon: Settings },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Operação" },
+  { to: "/agenda", label: "Agenda", icon: CalendarDays, group: "Operação" },
+  { to: "/link", label: "Link cliente", icon: Link2, group: "Operação" },
+  { to: "/clientes", label: "Clientes", icon: Users, group: "Cadastros" },
+  { to: "/barbeiros", label: "Profissionais", icon: UserSquare2, group: "Cadastros" },
+  { to: "/servicos", label: "Serviços", icon: Scissors, group: "Cadastros" },
+  { to: "/horarios", label: "Horários", icon: Clock, group: "Cadastros" },
+  { to: "/financeiro", label: "Financeiro", icon: BarChart3, group: "Negócio" },
+  { to: "/planos", label: "Planos de assinatura", icon: Crown, group: "Negócio" },
+  { to: "/assinaturas", label: "Assinaturas", icon: Repeat, group: "Negócio" },
+  { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
+  { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
 ] as const;
 
+const NAV_GROUPS = ["Operação", "Cadastros", "Negócio"] as const;
+
 const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
+
 
 
 
