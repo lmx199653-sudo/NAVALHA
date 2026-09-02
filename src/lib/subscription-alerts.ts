@@ -42,7 +42,7 @@ export type SubscriptionAlert = {
   detail: string;
   actions: AlertAction[];
   row: SubscriptionRow;
-  days?: number;
+  days?: number | undefined;
 };
 
 export const ALERT_META: Record<
