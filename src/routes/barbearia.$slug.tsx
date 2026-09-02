@@ -313,11 +313,6 @@ function PublicBooking() {
     payment === "plan" ? (planEligible ? "plan" : shopHasPix ? "pix" : "on_site")
     : shopHasPix ? payment : "on_site";
 
-  // Assinante elegível: sugere o plano automaticamente.
-  useEffect(() => {
-    if (planEligible && payment !== "on_site") setPayment("plan");
-  }, [planEligible]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const book = useMutation({
     mutationFn: async () => {
       if (isDemo(slug)) {
@@ -695,6 +690,15 @@ function PublicBooking() {
             <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
               <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
+                {shopHasPix && (
+                  <PaymentOption
+                    active={paymentChoice === "pix"}
+                    title="Pagar com Pix"
+                    hint="QR Code ou chave · agora"
+                    badge="Recomendado"
+                    onClick={() => setPayment("pix")}
+                  />
+                )}
                 {planEligible && (
                   <PaymentOption
                     active={paymentChoice === "plan"}
@@ -702,15 +706,6 @@ function PublicBooking() {
                     hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
                     badge="Assinante"
                     onClick={() => setPayment("plan")}
-                  />
-                )}
-                {shopHasPix && (
-                  <PaymentOption
-                    active={paymentChoice === "pix"}
-                    title="Pagar com Pix"
-                    hint="QR Code ou chave · agora"
-                    badge={planEligible ? undefined : "Recomendado"}
-                    onClick={() => setPayment("pix")}
                   />
                 )}
                 <PaymentOption
