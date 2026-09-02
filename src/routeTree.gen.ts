@@ -14,7 +14,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as DevPreviewRouteImport } from './routes/dev-preview'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
@@ -52,11 +51,6 @@ const AuthRoute = AuthRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DevPreviewRoute = DevPreviewRouteImport.update({
-  id: '/dev-preview',
-  path: '/dev-preview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InstalarAppRoute = InstalarAppRouteImport.update({
@@ -137,7 +131,6 @@ export interface FileRoutesByFullPath {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/dev-preview': typeof DevPreviewRoute
   '/instalar-app': typeof InstalarAppRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
@@ -158,7 +151,6 @@ export interface FileRoutesByTo {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/dev-preview': typeof DevPreviewRoute
   '/instalar-app': typeof InstalarAppRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
@@ -181,7 +173,6 @@ export interface FileRoutesById {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
-  '/dev-preview': typeof DevPreviewRoute
   '/instalar-app': typeof InstalarAppRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
@@ -204,7 +195,6 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
-    | '/dev-preview'
     | '/instalar-app'
     | '/agenda'
     | '/assinaturas'
@@ -225,7 +215,6 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
-    | '/dev-preview'
     | '/instalar-app'
     | '/agenda'
     | '/assinaturas'
@@ -247,7 +236,6 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
-    | '/dev-preview'
     | '/instalar-app'
     | '/_authenticated/agenda'
     | '/_authenticated/assinaturas'
@@ -270,7 +258,6 @@ export interface RootRouteChildren {
   AgendarRoute: typeof AgendarRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
-  DevPreviewRoute: typeof DevPreviewRoute
   InstalarAppRoute: typeof InstalarAppRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
 }
@@ -310,13 +297,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dev-preview': {
-      id: '/dev-preview'
-      path: '/dev-preview'
-      fullPath: '/dev-preview'
-      preLoaderRoute: typeof DevPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/instalar-app': {
@@ -459,7 +439,6 @@ const rootRouteChildren: RootRouteChildren = {
   AgendarRoute: AgendarRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
-  DevPreviewRoute: DevPreviewRoute,
   InstalarAppRoute: InstalarAppRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
 }
