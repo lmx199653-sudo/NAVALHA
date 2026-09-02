@@ -878,6 +878,7 @@ function SuccessScreen({
   phone,
   whatsappLink,
   payment,
+  planUncoveredCents = 0,
 }: {
   shop: Shop;
   service: Service;
@@ -887,6 +888,7 @@ function SuccessScreen({
   phone: string;
   whatsappLink: string | null;
   payment: PaymentChoice;
+  planUncoveredCents?: number | undefined;
 }) {
   const start = new Date(slot);
   const end = new Date(start.getTime() + service.duration_min * 60000);
@@ -896,6 +898,7 @@ function SuccessScreen({
   )}&dates=${fmt(start)}/${fmt(end)}&details=${encodeURIComponent(
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
+
 
   const usingPlan = payment === "plan";
   const paidByPix = (payment === "pix" || payment === "pix_qr") && hasPix(shop);
