@@ -273,7 +273,15 @@ function Dashboard() {
         </div>
 
         <div className="surface-card p-4">
-          <h2 className="font-display text-2xl">Próximos agendamentos</h2>
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-display text-2xl">Próximos agendamentos</h2>
+            {upcoming[0] && (
+              <p className="text-xs text-muted-foreground">
+                Próximo: <span className="text-primary">{timeLabel(upcoming[0].starts_at)}</span> ·{" "}
+                {upcoming[0].customer_name}
+              </p>
+            )}
+          </div>
           <div className="mt-3 space-y-2">
             {upcoming.length === 0 && (
               <p className="text-sm text-muted-foreground">Nenhum agendamento futuro.</p>
