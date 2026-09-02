@@ -7,6 +7,7 @@ import { Scissors, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
 import { slugify } from "@/lib/format";
+import { defaultServiceRows } from "@/lib/default-services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,12 +95,7 @@ function Onboarding() {
       ]);
 
       if (!servicesCount) {
-        await supabase.from("services").insert([
-          { barbershop_id: data.id, name: "Corte masculino", price_cents: 4500, duration_min: 40, sort_order: 1, benefit_kind: "cut", description: "Corte na tesoura ou máquina, com finalização." },
-          { barbershop_id: data.id, name: "Barba", price_cents: 3000, duration_min: 30, sort_order: 2, benefit_kind: "beard", description: "Barba feita na navalha com toalha quente." },
-          { barbershop_id: data.id, name: "Corte + Barba", price_cents: 7000, duration_min: 70, sort_order: 3, benefit_kind: "cut", description: "Combo completo." },
-          { barbershop_id: data.id, name: "Sobrancelha", price_cents: 1500, duration_min: 15, sort_order: 4, benefit_kind: "extra", description: "Design de sobrancelha masculina." },
-        ]);
+        await supabase.from("services").insert(defaultServiceRows(data.id));
       }
 
       if (!barbersCount) {
