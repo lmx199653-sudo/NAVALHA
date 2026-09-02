@@ -652,47 +652,75 @@ function PublicBooking() {
             </div>
             <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
-              {shopHasPix ? (
-                <>
-                  <div className="grid grid-cols-2 gap-2">
-                    <PaymentOption
-                      active={paymentChoice === "pix"}
-                      title="Pagar com Pix"
-                      hint="QR Code ou chave · agora"
-                      badge="Recomendado"
-                      onClick={() => setPayment("pix")}
-                    />
-                    <PaymentOption
-                      active={paymentChoice === "on_site"}
-                      title="Pagar no local"
-                      hint="Pix, cartão ou dinheiro"
-                      onClick={() => setPayment("on_site")}
-                    />
+              <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
+                {planEligible && (
+                  <PaymentOption
+                    active={paymentChoice === "plan"}
+                    title="Usar meu plano"
+                    hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
+                    badge="Assinante"
+                    onClick={() => setPayment("plan")}
+                  />
+                )}
+                {shopHasPix && (
+                  <PaymentOption
+                    active={paymentChoice === "pix"}
+                    title="Pagar com Pix"
+                    hint="QR Code ou chave · agora"
+                    badge={planEligible ? undefined : "Recomendado"}
+                    onClick={() => setPayment("pix")}
+                  />
+                )}
+                <PaymentOption
+                  active={paymentChoice === "on_site"}
+                  title="Pagar no local"
+                  hint="Pix, cartão ou dinheiro"
+                  onClick={() => setPayment("on_site")}
+                />
+              </div>
+              {paymentChoice === "plan" ? (
+                <div className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Sparkles className="size-4 text-primary" />
+                    <span>
+                      {planUncoveredCents === 0
+                        ? "Tudo incluso no seu plano — nada a pagar agora."
+                        : `Parte inclusa no plano. Restante de ${brl(planUncoveredCents)} você paga no local.`}
+                    </span>
                   </div>
-                  {paymentChoice === "pix" ? (
-                    <>
-                      <PixQrCard
-                        showKey
-                        pixKey={shop.pix_key!}
-                        pixKeyType={shop.pix_key_type}
-                        holderName={shop.pix_holder_name}
-                        amountCents={service.price_cents}
-                        description={service.name}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o barbeiro, e
-                        confirme o agendamento. Leve o comprovante no dia.
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou dinheiro.
-                    </p>
+                  {selected.length > 1 && (
+                    <ul className="space-y-1 text-xs text-muted-foreground">
+                      {selected.map((s) => (
+                        <li key={s.id} className="flex justify-between">
+                          <span>{s.name}</span>
+                          <span>{coveredIds.has(s.id) ? "incluso no plano" : brl(s.price_cents)}</span>
+                        </li>
+                      ))}
+                    </ul>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    O crédito só é descontado quando o atendimento for concluído. Se cancelar ou não comparecer,
+                    nada é descontado.
+                  </p>
+                </div>
+              ) : paymentChoice === "pix" && shopHasPix ? (
+                <>
+                  <PixQrCard
+                    showKey
+                    pixKey={shop.pix_key!}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name}
+                    amountCents={service.price_cents}
+                    description={service.name}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o barbeiro, e
+                    confirme o agendamento. Leve o comprovante no dia.
+                  </p>
                 </>
               ) : (
-                <p className="text-sm">
-                  Pagamento no local, direto com a barbearia — Pix, cartão ou dinheiro. Nada é cobrado agora.
+                <p className="text-xs text-muted-foreground">
+                  Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou dinheiro.
                 </p>
               )}
             </div>
@@ -705,7 +733,9 @@ function PublicBooking() {
                 ? "Confirmando…"
                 : paymentChoice === "pix" || paymentChoice === "pix_qr"
                   ? "Já fiz o Pix — confirmar agendamento"
-                  : "Confirmar agendamento"}
+                  : paymentChoice === "plan"
+                    ? "Confirmar com meu plano"
+                    : "Confirmar agendamento"}
             </Button>
           </section>
         )}
