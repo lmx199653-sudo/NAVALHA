@@ -14,6 +14,7 @@ import {
   Navigation,
   QrCode,
   Scissors,
+  Sparkles,
   User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
