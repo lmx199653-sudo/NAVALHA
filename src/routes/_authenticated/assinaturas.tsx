@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Crown, MessageCircle, RefreshCw, Search, Users, XCircle } from "lucide-react";
+import { Clock3, Crown, Plus, Search, Settings2, Users } from "lucide-react";
 
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
@@ -31,15 +31,23 @@ import {
   daysUntil,
   friendlyError,
   PAYMENT_STATUS,
-  renewCycle,
   SUB_STATUS,
   type CycleBalance,
   type Plan,
   type Subscription,
 } from "@/lib/subscriptions";
-import { buildAlerts, type AlertCustomer, type PaymentRow, type SubscriptionRow } from "@/lib/subscription-alerts";
+import {
+  buildAlerts,
+  pendingPaymentOf,
+  type AlertCustomer,
+  type PaymentRow,
+  type SubscriptionRow,
+} from "@/lib/subscription-alerts";
+import { registerPayment, renewSubscription } from "@/lib/subscription-actions";
 import { SubscriptionAlerts } from "@/components/subscriptions/SubscriptionAlerts";
 import { PlansPanel } from "@/components/subscriptions/PlansPanel";
+import { NewSubscriberDialog } from "@/components/subscriptions/NewSubscriberDialog";
+import { ManageSubscriberDialog } from "@/components/subscriptions/ManageSubscriberDialog";
 
 type Tab = "assinantes" | "planos";
 
@@ -58,7 +66,8 @@ export const Route = createFileRoute("/_authenticated/assinaturas")({
       { property: "og:title", content: "Assinaturas | Navalha Pro" },
       {
         property: "og:description",
-        content: "Planos, assinantes e alertas inteligentes de cobrança e renovação em um só lugar.",
+        content:
+          "Planos, assinantes e alertas inteligentes de cobrança e renovação em um só lugar.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -80,6 +89,8 @@ function SubscriptionsPage() {
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null);
   const [reason, setReason] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [manageId, setManageId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["subscriptions", shop?.id],
@@ -123,6 +134,19 @@ function SubscriptionsPage() {
 
   const alerts = useMemo(() => buildAlerts(rows), [rows]);
   const attentionIds = useMemo(() => new Set(alerts.map((a) => a.row.sub.id)), [alerts]);
+  const activeCustomerIds = useMemo(
+    () =>
+      new Set(
+        rows
+          .filter((r) => r.sub.status === "active" || r.sub.status === "pending")
+          .map((r) => r.sub.customer_id),
+      ),
+    [rows],
+  );
+  const manageRow = useMemo(
+    () => rows.find((r) => r.sub.id === manageId) ?? null,
+    [rows, manageId],
+  );
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -163,32 +187,7 @@ function SubscriptionsPage() {
   const markPaid = useMutation({
     mutationFn: async (row: SubscriptionRow) => {
       setBusyId(row.sub.id);
-      const now = new Date().toISOString();
-      const { error } = await supabase
-        .from("customer_subscriptions")
-        .update({ payment_status: "paid", last_payment_at: now })
-        .eq("id", row.sub.id);
-      if (error) throw new Error(friendlyError(error.message));
-
-      const pending = row.payments.find((p) => p.status === "pending" || p.status === "failed");
-      if (pending) {
-        const { error: upErr } = await supabase
-          .from("subscription_payments")
-          .update({ status: "paid", method: "manual", paid_at: now })
-          .eq("id", pending.id);
-        if (upErr) throw new Error(friendlyError(upErr.message));
-      } else {
-        const { error: insErr } = await supabase.from("subscription_payments").insert({
-          barbershop_id: row.sub.barbershop_id,
-          subscription_id: row.sub.id,
-          cycle_id: row.balance?.cycle_id ?? null,
-          amount_cents: row.sub.price_cents,
-          status: "paid",
-          method: "manual",
-          paid_at: now,
-        });
-        if (insErr) throw new Error(friendlyError(insErr.message));
-      }
+      await registerPayment(row, "manual");
     },
     onSuccess: () => {
       invalidate();
@@ -201,30 +200,15 @@ function SubscriptionsPage() {
   const renew = useMutation({
     mutationFn: async (row: SubscriptionRow) => {
       setBusyId(row.sub.id);
-      const cycle = await renewCycle(row.sub.id);
-      const isNewCycle = !!cycle && cycle.id !== row.balance?.cycle_id;
-      if (isNewCycle) {
-        // Novo ciclo aberto: gera a cobrança do período e marca como pendente.
-        const { error } = await supabase
-          .from("customer_subscriptions")
-          .update({ payment_status: "pending" })
-          .eq("id", row.sub.id);
-        if (error) throw new Error(friendlyError(error.message));
-        const { error: payErr } = await supabase.from("subscription_payments").insert({
-          barbershop_id: row.sub.barbershop_id,
-          subscription_id: row.sub.id,
-          cycle_id: cycle!.id,
-          amount_cents: row.sub.price_cents,
-          status: "pending",
-          due_date: cycle!.period_start,
-        });
-        if (payErr) throw new Error(friendlyError(payErr.message));
-      }
-      return isNewCycle;
+      return renewSubscription(row);
     },
     onSuccess: (renewed) => {
       invalidate();
-      toast.success(renewed ? "Ciclo renovado — créditos liberados e cobrança gerada" : "Ciclo atual ainda está em vigor");
+      toast.success(
+        renewed
+          ? "Ciclo renovado — créditos liberados e cobrança gerada"
+          : "Ciclo atual ainda está em vigor",
+      );
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
     onSettled: () => setBusyId(null),
@@ -252,7 +236,11 @@ function SubscriptionsPage() {
       <Tabs
         value={activeTab}
         onValueChange={(v) =>
-          navigate({ to: "/assinaturas", search: v === "planos" ? { tab: "planos" } : {}, replace: true })
+          navigate({
+            to: "/assinaturas",
+            search: v === "planos" ? { tab: "planos" } : {},
+            replace: true,
+          })
         }
         className="space-y-4"
       >
@@ -296,7 +284,11 @@ function SubscriptionsPage() {
                 <Metric label="Receita recorrente" value={brl(metrics.mrr)} highlight />
                 <Metric label="Assinantes ativos" value={String(metrics.active)} />
                 <Metric label="Recebido (30 dias)" value={brl(metrics.received)} />
-                <Metric label="A receber" value={brl(metrics.toReceive)} warn={metrics.toReceive > 0} />
+                <Metric
+                  label="A receber"
+                  value={brl(metrics.toReceive)}
+                  warn={metrics.toReceive > 0}
+                />
               </div>
             </>
           )}
@@ -307,14 +299,19 @@ function SubscriptionsPage() {
                 <p className="font-display text-xl leading-tight">Assinantes</p>
                 <p className="text-xs text-muted-foreground">{rows.length} cadastrado(s)</p>
               </div>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="pl-9"
-                  placeholder="Buscar por CPF, nome ou plano"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar por CPF, nome ou plano"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
+                <Button size="sm" onClick={() => setNewOpen(true)}>
+                  <Plus className="size-4" /> Novo assinante
+                </Button>
               </div>
             </div>
 
@@ -366,98 +363,87 @@ function SubscriptionsPage() {
               {filtered.map((row) => {
                 const { sub, customer, plan, balance } = row;
                 const status = SUB_STATUS[sub.status] ?? SUB_STATUS.pending;
-                const renewIn = daysUntil(balance?.period_end);
+                const dueIn = daysUntil(balance?.period_end ?? sub.next_payment);
+                const dueLabel = balance?.period_end
+                  ? dateLabel(balance.period_end)
+                  : sub.next_payment
+                    ? dateLabel(sub.next_payment)
+                    : "—";
+                const pending = sub.payment_status !== "paid" ? pendingPaymentOf(row) : null;
                 const hasAlert = attentionIds.has(sub.id);
-                const busy = busyId === sub.id;
+                const closed = sub.status === "cancelled" || sub.status === "expired";
                 return (
-                  <div
+                  <button
                     key={sub.id}
+                    type="button"
+                    onClick={() => setManageId(sub.id)}
                     className={cn(
-                      "rounded-xl border p-3 transition-colors",
+                      "group flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between",
                       hasAlert ? "border-primary/30 bg-primary/[0.03]" : "border-border",
+                      closed && "opacity-60",
                     )}
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
-                          {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
-                        </p>
-                      </div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className={status.tone}>
-                          {status.dot} {status.label}
+                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
+                        <Badge
+                          variant="outline"
+                          className={cn("h-5 px-1.5 text-[10px]", status.tone)}
+                        >
+                          {status.label}
                         </Badge>
                         <Badge
                           variant="outline"
-                          className={
+                          className={cn(
+                            "h-5 px-1.5 text-[10px]",
                             sub.payment_status === "paid"
                               ? "border-success/40 bg-success/15 text-success"
-                              : "border-warning/40 bg-warning/15 text-warning"
-                          }
+                              : "border-warning/40 bg-warning/15 text-warning",
+                          )}
                         >
                           {PAYMENT_STATUS[sub.payment_status]}
                         </Badge>
                       </div>
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-muted-foreground sm:grid-cols-4">
-                      <span>
-                        Cortes:{" "}
-                        <b className="text-foreground">
-                          {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
-                        </b>
-                      </span>
-                      <span>
-                        Barbas:{" "}
-                        <b className="text-foreground">
-                          {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
-                        </b>
-                      </span>
-                      <span>
-                        Renova:{" "}
-                        <b className={cn(renewIn !== null && renewIn <= 5 ? "text-warning" : "text-foreground")}>
-                          {balance ? dateLabel(balance.period_end) : "—"}
-                        </b>
-                      </span>
-                      <span>Início: {dateLabel(sub.started_on)}</span>
-                    </div>
-                    {sub.status !== "cancelled" && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {sub.payment_status !== "paid" && (
-                          <Button size="sm" variant="outline" disabled={busy} onClick={() => markPaid.mutate(row)}>
-                            <CheckCircle2 className="size-3.5" /> Registrar pagamento
-                          </Button>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
+                        {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
+                      </p>
+                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>
+                          Vence:{" "}
+                          <b
+                            className={cn(
+                              "text-foreground",
+                              dueIn !== null && dueIn <= 5 && "text-warning",
+                              dueIn !== null && dueIn < 0 && "text-destructive",
+                            )}
+                          >
+                            {dueLabel}
+                          </b>
+                        </span>
+                        <span>
+                          Cortes:{" "}
+                          <b className="text-foreground">
+                            {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
+                          </b>
+                        </span>
+                        <span>
+                          Barbas:{" "}
+                          <b className="text-foreground">
+                            {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
+                          </b>
+                        </span>
+                        {pending && (
+                          <span className="inline-flex items-center gap-1 text-warning">
+                            <Clock3 className="size-3" /> Pendente {brl(pending.amount_cents)}
+                          </span>
                         )}
-                        <Button size="sm" variant="outline" disabled={busy} onClick={() => renew.mutate(row)}>
-                          <RefreshCw className={cn("size-3.5", busy && "animate-spin")} /> Renovar
-                        </Button>
-                        {customer?.phone && (
-                          <Button size="sm" variant="ghost" asChild>
-                            <a
-                              target="_blank"
-                              rel="noreferrer"
-                              href={`https://wa.me/55${customer.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
-                                `Olá, ${customer.name}! Seu plano ${plan?.name ?? ""} está ${
-                                  sub.status === "active" ? "ativo" : "inativo"
-                                } e você possui ${balance?.cuts_left ?? 0} corte(s) disponíveis neste ciclo.`,
-                              )}`}
-                            >
-                              <MessageCircle className="size-3.5" /> WhatsApp
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground"
-                          onClick={() => setCancelTarget(sub)}
-                        >
-                          <XCircle className="size-3.5" /> Cancelar
-                        </Button>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors group-hover:border-primary/50 group-hover:text-primary sm:self-center">
+                      <Settings2 className="size-3.5" /> Gerenciar
+                    </span>
+                  </button>
                 );
               })}
             </div>
@@ -468,6 +454,26 @@ function SubscriptionsPage() {
           <PlansPanel />
         </TabsContent>
       </Tabs>
+
+      <NewSubscriberDialog
+        open={newOpen}
+        onOpenChange={setNewOpen}
+        shopId={shop?.id}
+        plans={data?.plans ?? []}
+        customers={data?.customers ?? []}
+        activeCustomerIds={activeCustomerIds}
+        onCreated={invalidate}
+      />
+
+      <ManageSubscriberDialog
+        row={manageRow}
+        plans={data?.plans ?? []}
+        shopName={shopName}
+        pixKey={pixKey}
+        onOpenChange={(v) => !v && setManageId(null)}
+        onChanged={invalidate}
+        onCancel={(row) => setCancelTarget(row.sub)}
+      />
 
       <AlertDialog open={!!cancelTarget} onOpenChange={(v) => !v && setCancelTarget(null)}>
         <AlertDialogContent>
@@ -484,7 +490,9 @@ function SubscriptionsPage() {
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => cancel.mutate()}>Cancelar assinatura</AlertDialogAction>
+            <AlertDialogAction onClick={() => cancel.mutate()}>
+              Cancelar assinatura
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -509,7 +517,11 @@ function Metric({
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
       )}
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}>{value}</p>
+      <p
+        className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}
+      >
+        {value}
+      </p>
     </div>
   );
 }
