@@ -43,8 +43,8 @@ export function SubscriptionAlerts({
 }: {
   alerts: SubscriptionAlert[];
   shopName: string;
-  pixKey?: string | null;
-  busyId?: string | null;
+  pixKey?: string | null | undefined;
+  busyId?: string | null | undefined;
   onMarkPaid: (row: SubscriptionRow) => void;
   onRenew: (row: SubscriptionRow) => void;
   onCancel: (row: SubscriptionRow) => void;
@@ -159,7 +159,7 @@ function AlertItem({
 }: {
   alert: SubscriptionAlert;
   shopName: string;
-  pixKey?: string | null;
+  pixKey?: string | null | undefined;
   busy: boolean;
   onMarkPaid: (row: SubscriptionRow) => void;
   onRenew: (row: SubscriptionRow) => void;
