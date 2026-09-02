@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { defaultServiceRows } from "@/lib/default-services";
 
 const NAMES = [
   "Lucas Prado",
