@@ -7,6 +7,7 @@ import { Scissors, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
 import { slugify } from "@/lib/format";
+import { defaultServiceRows } from "@/lib/default-services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
