@@ -110,7 +110,7 @@ function Body({
   const closed = sub.status === "cancelled" || sub.status === "expired";
   const phone = customer?.phone?.replace(/\D/g, "");
 
-  const run = <T,>(fn: () => Promise<T>, ok: (r: T) => string) =>
+  const useAction = <T,>(fn: () => Promise<T>, ok: (r: T) => string) =>
     useMutation({
       mutationFn: fn,
       onSuccess: (r) => {
@@ -124,13 +124,13 @@ function Body({
   /* ---- pagamento ---- */
   const [method, setMethod] = useState<PayMethod>("pix");
   const [amount, setAmount] = useState((sub.price_cents / 100).toFixed(2).replace(".", ","));
-  const pay = run(
+  const pay = useAction(
     () => registerPayment(row, method, Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100)),
     () => "Pagamento registrado",
   );
 
   /* ---- renovar ---- */
-  const renew = run(
+  const renew = useAction(
     () => renewSubscription(row),
     (r) => (r ? "Ciclo renovado — créditos liberados e cobrança gerada" : "Ciclo atual ainda está em vigor"),
   );
@@ -139,7 +139,7 @@ function Body({
   const [newPlanId, setNewPlanId] = useState(plan?.id ?? "");
   const [applyNow, setApplyNow] = useState(true);
   const newPlan = plans.find((p) => p.id === newPlanId) ?? null;
-  const change = run(
+  const change = useAction(
     async () => {
       if (!newPlan) throw new Error("Escolha um plano.");
       if (newPlan.id === plan?.id) throw new Error("Escolha um plano diferente do atual.");
@@ -152,7 +152,7 @@ function Body({
   const [startedOn, setStartedOn] = useState(sub.started_on);
   const [periodEnd, setPeriodEnd] = useState(balance?.period_end ?? sub.next_payment ?? "");
   const [price, setPrice] = useState((sub.price_cents / 100).toFixed(2).replace(".", ","));
-  const edit = run(
+  const edit = useAction(
     async () => {
       const cents = Math.round(Number(price.replace(/\./g, "").replace(",", ".")) * 100);
       if (!Number.isFinite(cents) || cents <= 0) throw new Error("Informe um valor válido.");
@@ -163,7 +163,7 @@ function Body({
   );
 
   /* ---- suspender / reativar ---- */
-  const toggle = run(
+  const toggle = useAction(
     () => setSubscriptionStatus(row, sub.status === "suspended" ? "active" : "suspended"),
     () => (sub.status === "suspended" ? "Assinatura reativada" : "Assinatura suspensa"),
   );
