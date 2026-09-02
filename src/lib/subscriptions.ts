@@ -216,11 +216,15 @@ export async function cancelSubscription(subscriptionId: string, reason: string)
   if (error) throw new Error(friendlyError(error.message));
 }
 
-export async function renewCycle(subscriptionId: string) {
-  const { error } = await supabase.rpc("ensure_subscription_cycle", {
+export type RenewedCycle = { id: string; period_start: string; period_end: string; status: string };
+
+/** Garante um ciclo vigente; devolve o ciclo atual (novo ou já existente). */
+export async function renewCycle(subscriptionId: string): Promise<RenewedCycle | null> {
+  const { data, error } = await supabase.rpc("ensure_subscription_cycle", {
     _subscription_id: subscriptionId,
   });
   if (error) throw new Error(friendlyError(error.message));
+  return (data as unknown as RenewedCycle | null) ?? null;
 }
 
 export { friendlyError };

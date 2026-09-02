@@ -46,8 +46,7 @@ const NAV = [
   { to: "/servicos", label: "Serviços", icon: Scissors, group: "Cadastros" },
   { to: "/horarios", label: "Horários", icon: Clock, group: "Cadastros" },
   { to: "/financeiro", label: "Financeiro", icon: BarChart3, group: "Negócio" },
-  { to: "/planos", label: "Planos de assinatura", icon: Crown, group: "Negócio" },
-  { to: "/assinaturas", label: "Assinaturas", icon: Repeat, group: "Negócio" },
+  { to: "/assinaturas", label: "Assinaturas", icon: Crown, group: "Negócio" },
   { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
 ] as const;
