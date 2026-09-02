@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Crown, MessageCircle, RefreshCw, Search, Users, XCircle } from "lucide-react";
+import { Clock3, Crown, Plus, Search, Settings2, Users } from "lucide-react";
 
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
@@ -31,15 +31,23 @@ import {
   daysUntil,
   friendlyError,
   PAYMENT_STATUS,
-  renewCycle,
   SUB_STATUS,
   type CycleBalance,
   type Plan,
   type Subscription,
 } from "@/lib/subscriptions";
-import { buildAlerts, type AlertCustomer, type PaymentRow, type SubscriptionRow } from "@/lib/subscription-alerts";
+import {
+  buildAlerts,
+  pendingPaymentOf,
+  type AlertCustomer,
+  type PaymentRow,
+  type SubscriptionRow,
+} from "@/lib/subscription-alerts";
+import { registerPayment, renewSubscription } from "@/lib/subscription-actions";
 import { SubscriptionAlerts } from "@/components/subscriptions/SubscriptionAlerts";
 import { PlansPanel } from "@/components/subscriptions/PlansPanel";
+import { NewSubscriberDialog } from "@/components/subscriptions/NewSubscriberDialog";
+import { ManageSubscriberDialog } from "@/components/subscriptions/ManageSubscriberDialog";
 
 type Tab = "assinantes" | "planos";
 
@@ -80,6 +88,8 @@ function SubscriptionsPage() {
   const [cancelTarget, setCancelTarget] = useState<Subscription | null>(null);
   const [reason, setReason] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
+  const [manageId, setManageId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["subscriptions", shop?.id],
@@ -163,32 +173,7 @@ function SubscriptionsPage() {
   const markPaid = useMutation({
     mutationFn: async (row: SubscriptionRow) => {
       setBusyId(row.sub.id);
-      const now = new Date().toISOString();
-      const { error } = await supabase
-        .from("customer_subscriptions")
-        .update({ payment_status: "paid", last_payment_at: now })
-        .eq("id", row.sub.id);
-      if (error) throw new Error(friendlyError(error.message));
-
-      const pending = row.payments.find((p) => p.status === "pending" || p.status === "failed");
-      if (pending) {
-        const { error: upErr } = await supabase
-          .from("subscription_payments")
-          .update({ status: "paid", method: "manual", paid_at: now })
-          .eq("id", pending.id);
-        if (upErr) throw new Error(friendlyError(upErr.message));
-      } else {
-        const { error: insErr } = await supabase.from("subscription_payments").insert({
-          barbershop_id: row.sub.barbershop_id,
-          subscription_id: row.sub.id,
-          cycle_id: row.balance?.cycle_id ?? null,
-          amount_cents: row.sub.price_cents,
-          status: "paid",
-          method: "manual",
-          paid_at: now,
-        });
-        if (insErr) throw new Error(friendlyError(insErr.message));
-      }
+      await registerPayment(row, "manual");
     },
     onSuccess: () => {
       invalidate();
@@ -201,26 +186,7 @@ function SubscriptionsPage() {
   const renew = useMutation({
     mutationFn: async (row: SubscriptionRow) => {
       setBusyId(row.sub.id);
-      const cycle = await renewCycle(row.sub.id);
-      const isNewCycle = !!cycle && cycle.id !== row.balance?.cycle_id;
-      if (isNewCycle) {
-        // Novo ciclo aberto: gera a cobrança do período e marca como pendente.
-        const { error } = await supabase
-          .from("customer_subscriptions")
-          .update({ payment_status: "pending" })
-          .eq("id", row.sub.id);
-        if (error) throw new Error(friendlyError(error.message));
-        const { error: payErr } = await supabase.from("subscription_payments").insert({
-          barbershop_id: row.sub.barbershop_id,
-          subscription_id: row.sub.id,
-          cycle_id: cycle!.id,
-          amount_cents: row.sub.price_cents,
-          status: "pending",
-          due_date: cycle!.period_start,
-        });
-        if (payErr) throw new Error(friendlyError(payErr.message));
-      }
-      return isNewCycle;
+      return renewSubscription(row);
     },
     onSuccess: (renewed) => {
       invalidate();
