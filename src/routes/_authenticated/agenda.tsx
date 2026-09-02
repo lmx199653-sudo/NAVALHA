@@ -7,6 +7,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Clock,
   MessageCircle,
   Pencil,
   Plus,
@@ -63,8 +64,6 @@ import { PixKeyCard } from "@/components/PixKeyCard";
 import { PixQrCard } from "@/components/PixQrCard";
 import { hasPix, PAYMENT_METHOD_LABEL } from "@/lib/pix";
 
-
-
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
 });
@@ -74,13 +73,46 @@ type View = "day" | "week" | "month";
 const HOURS = Array.from({ length: 14 }, (_, i) => 8 + i);
 
 const statusTone: Record<string, string> = {
-  scheduled: "bg-primary/15 border-primary/40 text-primary",
-  confirmed: "bg-primary/20 border-primary/50 text-primary",
-  done: "bg-success/15 border-success/40 text-success",
-  canceled: "bg-muted border-border text-muted-foreground line-through",
-  no_show: "bg-destructive/15 border-destructive/40 text-destructive",
-  blocked: "bg-secondary border-border text-muted-foreground",
+  scheduled: "border-warning/30 bg-warning/10 text-warning",
+  confirmed: "border-primary/40 bg-primary/10 text-primary",
+  done: "border-success/30 bg-success/10 text-success",
+  canceled: "border-border bg-muted/50 text-muted-foreground",
+  no_show: "border-destructive/30 bg-destructive/10 text-destructive",
+  blocked: "border-border bg-secondary text-muted-foreground",
 };
+
+const statusDot: Record<string, string> = {
+  scheduled: "bg-warning",
+  confirmed: "bg-primary",
+  done: "bg-success",
+  canceled: "bg-muted-foreground",
+  no_show: "bg-destructive",
+  blocked: "bg-muted-foreground",
+};
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusTone[status] ?? statusTone.blocked}`}
+    >
+      <span className={`size-1.5 rounded-full ${statusDot[status] ?? statusDot.blocked}`} />
+      {STATUS_LABEL[status] ?? status}
+    </span>
+  );
+}
+
+function durationMin(startsAt: string, endsAt: string) {
+  return Math.round((new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60000);
+}
+
+function isToday(d: Date) {
+  const today = new Date();
+  return (
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth() &&
+    d.getFullYear() === today.getFullYear()
+  );
+}
 
 function reminderText(shopName: string, name: string, iso: string) {
   return `Olá ${name}! Seu horário na ${shopName} é às ${timeLabel(iso)} — já pode vir vindo, te esperamos em 10 minutos. 💈`;
@@ -184,7 +216,6 @@ function AgendaPage() {
     };
   }, [shop?.id, qc]);
 
-
   const { data: breaks } = useQuery({
     queryKey: ["breaks", shop?.id],
     enabled: !!shop?.id,
@@ -197,11 +228,7 @@ function AgendaPage() {
     },
   });
 
-  const dayBreaks = useMemo(
-    () => breaksForDay(breaks ?? [], anchor),
-    [breaks, anchor],
-  );
-
+  const dayBreaks = useMemo(() => breaksForDay(breaks ?? [], anchor), [breaks, anchor]);
 
   // Lembrete automático: avisa 10 minutos antes para o cliente já ir indo.
   useEffect(() => {
@@ -237,7 +264,6 @@ function AgendaPage() {
     const id = setInterval(tick, 60000);
     return () => clearInterval(id);
   }, [appts, shop?.name]);
-
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -280,7 +306,6 @@ function AgendaPage() {
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
-
 
   const reschedule = useMutation({
     mutationFn: async ({ id, starts_at }: { id: string; starts_at: Date }) => {
@@ -339,7 +364,7 @@ function AgendaPage() {
       action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" className="gap-1.5">
               <Plus className="size-4" /> Novo
             </Button>
           </DialogTrigger>
@@ -362,29 +387,29 @@ function AgendaPage() {
         </Dialog>
       }
     >
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Tabs value={view} onValueChange={(v) => setView(v as View)}>
-          <TabsList>
+          <TabsList className="bg-secondary/60">
             <TabsTrigger value="day">Dia</TabsTrigger>
             <TabsTrigger value="week">Semana</TabsTrigger>
             <TabsTrigger value="month">Mês</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => shift(-1)}>
+          <Button variant="outline" size="icon" onClick={() => shift(-1)} className="rounded-full">
             <ChevronLeft className="size-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setAnchor(new Date())}>
+          <Button variant="outline" size="sm" onClick={() => setAnchor(new Date())} className="rounded-full">
             Hoje
           </Button>
-          <Button variant="outline" size="icon" onClick={() => shift(1)}>
+          <Button variant="outline" size="icon" onClick={() => shift(1)} className="rounded-full">
             <ChevronRight className="size-4" />
           </Button>
         </div>
       </div>
 
       {view === "day" && (
-        <div className="surface-card divide-y divide-border">
+        <div className="surface-card divide-y divide-border overflow-hidden rounded-2xl">
           {HOURS.map((hour) => {
             const slotAppts = appts.filter((a) => new Date(a.starts_at).getHours() === hour);
             return (
@@ -397,12 +422,12 @@ function AgendaPage() {
                   target.setHours(hour, 0, 0, 0);
                   if (id) reschedule.mutate({ id, starts_at: target });
                 }}
-                className="flex min-h-16 gap-3 p-3"
+                className="flex min-h-[5rem] gap-4 p-4 transition-colors hover:bg-secondary/20"
               >
-                <span className="w-12 shrink-0 pt-1 text-xs text-muted-foreground">
+                <span className="w-14 shrink-0 pt-1 text-xs font-semibold text-muted-foreground/70">
                   {String(hour).padStart(2, "0")}:00
                 </span>
-                <div className="flex flex-1 flex-wrap gap-2">
+                <div className="flex flex-1 flex-wrap content-start gap-2.5">
                   {dayBreaks
                     .filter(
                       (b) =>
@@ -412,26 +437,46 @@ function AgendaPage() {
                     .map((b) => (
                       <span
                         key={b.id}
-                        className="rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs text-muted-foreground"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-secondary/50 px-3 py-1.5 text-[11px] text-muted-foreground"
                       >
-                        ☕ {b.name} · {b.start_time.slice(0, 5)}—{b.end_time.slice(0, 5)}
+                        <span className="size-1.5 rounded-full bg-muted-foreground/50" />
+                        {b.name} · {b.start_time.slice(0, 5)}–{b.end_time.slice(0, 5)}
                       </span>
                     ))}
 
-                  {slotAppts.map((a) => (
-                    <button
-                      key={a.id}
-                      draggable
-                      onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
-                      onClick={() => setEditing(a.id)}
-                      className={`min-w-40 flex-1 rounded-lg border px-3 py-2 text-left ${statusTone[a.status]}`}
-                    >
-                      <p className="text-sm font-medium">{a.customer_name}</p>
-                      <p className="text-xs opacity-80">
-                        {timeLabel(a.starts_at)} · {brl(a.price_cents)}
-                      </p>
-                    </button>
-                  ))}
+                  {slotAppts.map((a) => {
+                    const service = data?.services.find((s) => s.id === a.service_id);
+                    const duration = durationMin(a.starts_at, a.ends_at);
+                    return (
+                      <button
+                        key={a.id}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("text/plain", a.id)}
+                        onClick={() => setEditing(a.id)}
+                        className={`group min-w-44 flex-1 rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg ${statusTone[a.status] ?? statusTone.blocked}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate font-display text-[15px] font-medium tracking-wide">
+                              {a.customer_name}
+                            </p>
+                            {service && (
+                              <p className="truncate text-xs text-muted-foreground/80">{service.name}</p>
+                            )}
+                          </div>
+                          <span className="shrink-0 text-sm font-semibold">{brl(a.price_cents)}</span>
+                        </div>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-background/40 px-1.5 py-0.5 text-xs font-medium backdrop-blur-sm">
+                            <Clock className="size-3" />
+                            {timeLabel(a.starts_at)}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground">{duration} min</span>
+                          <StatusBadge status={a.status} />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -448,22 +493,40 @@ function AgendaPage() {
               (a) => new Date(a.starts_at).toDateString() === day.toDateString(),
             );
             return (
-              <div key={i} className="surface-card p-3">
-                <p className="font-display text-xl">
-                  {WEEKDAYS[day.getDay()]}{" "}
-                  <span className="text-sm text-muted-foreground">{day.getDate()}</span>
-                </p>
-                <div className="mt-2 space-y-2">
+              <div key={i} className={`surface-card p-4 ${isToday(day) ? "border-primary/30 bg-primary/[0.03]" : ""}`}>
+                <div className="flex items-baseline justify-between">
+                  <p className="font-display text-xl tracking-wide">
+                    {WEEKDAYS[day.getDay()]}{" "}
+                    <span className={`text-sm ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}>
+                      {day.getDate()}
+                    </span>
+                  </p>
+                  {isToday(day) && <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">Hoje</span>}
+                </div>
+                <div className="mt-3 space-y-2.5">
                   {list.length === 0 && <p className="text-xs text-muted-foreground">Livre</p>}
-                  {list.map((a) => (
-                    <button
-                      key={a.id}
-                      onClick={() => setEditing(a.id)}
-                      className={`w-full rounded-lg border px-2 py-1.5 text-left text-xs ${statusTone[a.status]}`}
-                    >
-                      {timeLabel(a.starts_at)} · {a.customer_name}
-                    </button>
-                  ))}
+                  {list.map((a) => {
+                    const service = data?.services.find((s) => s.id === a.service_id);
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => setEditing(a.id)}
+                        className={`w-full rounded-xl border p-2.5 text-left transition-all hover:shadow-sm ${statusTone[a.status] ?? statusTone.blocked}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-xs font-semibold">{timeLabel(a.starts_at)}</span>
+                          <span className="text-[11px] font-medium">{brl(a.price_cents)}</span>
+                        </div>
+                        <p className="mt-1 truncate text-sm font-medium">{a.customer_name}</p>
+                        {service && (
+                          <p className="truncate text-[11px] text-muted-foreground/80">{service.name}</p>
+                        )}
+                        <div className="mt-1.5">
+                          <StatusBadge status={a.status} />
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -472,9 +535,9 @@ function AgendaPage() {
       )}
 
       {view === "month" && (
-        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {WEEKDAYS.map((w) => (
-            <div key={w} className="pb-1 text-center text-[10px] uppercase text-muted-foreground">
+            <div key={w} className="pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               {w.slice(0, 3)}
             </div>
           ))}
@@ -496,11 +559,18 @@ function AgendaPage() {
                     setAnchor(day);
                     setView("day");
                   }}
-                  className="surface-card min-h-20 p-2 text-left"
+                  className={`surface-card flex min-h-20 flex-col p-2.5 text-left transition-colors hover:border-primary/30 ${isToday(day) ? "border-primary/40 bg-primary/[0.04]" : ""}`}
                 >
-                  <span className="text-xs text-muted-foreground">{i + 1}</span>
+                  <span className={`text-sm font-semibold ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}>
+                    {i + 1}
+                  </span>
                   {list.length > 0 && (
-                    <p className="mt-1 text-xs text-primary">{list.length} agend.</p>
+                    <div className="mt-auto flex flex-wrap items-center gap-1.5">
+                      {Array.from(new Set(list.map((a) => a.status))).map((s) => (
+                        <span key={s} className={`size-2 rounded-full ${statusDot[s] ?? statusDot.blocked}`} title={STATUS_LABEL[s]} />
+                      ))}
+                      <span className="text-[11px] font-medium text-muted-foreground">{list.length}</span>
+                    </div>
                   )}
                 </button>
               );
@@ -509,23 +579,47 @@ function AgendaPage() {
         </div>
       )}
 
+      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-secondary/30 px-4 py-3">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</span>
+        {[
+          { status: "confirmed", label: "Confirmado" },
+          { status: "scheduled", label: "Pendente" },
+          { status: "done", label: "Concluído" },
+          { status: "canceled", label: "Cancelado" },
+          { status: "no_show", label: "Faltou" },
+        ].map(({ status, label }) => (
+          <div key={status} className="flex items-center gap-1.5">
+            <span className={`size-2 rounded-full ${statusDot[status]}`} />
+            <span className="text-xs text-muted-foreground">{label}</span>
+          </div>
+        ))}
+      </div>
+
       <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{selected?.customer_name}</DialogTitle>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader className="pb-1">
+            <div className="flex items-start justify-between gap-3">
+              <DialogTitle className="font-display text-2xl tracking-wide">
+                {selected?.customer_name}
+              </DialogTitle>
+              {selected && <StatusBadge status={selected.status} />}
+            </div>
           </DialogHeader>
           {selected && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <Info label="Horário" value={timeLabel(selected.starts_at)} />
-                <Info label="Valor" value={brl(selected.price_cents)} />
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-x-5 gap-y-4 rounded-xl border border-border bg-secondary/20 p-4">
                 <Info
-                  label="Barbeiro"
-                  value={data?.barbers.find((b) => b.id === selected.barber_id)?.name ?? "—"}
+                  label="Horário"
+                  value={`${timeLabel(selected.starts_at)} · ${durationMin(selected.starts_at, selected.ends_at)} min`}
                 />
+                <Info label="Valor" value={brl(selected.price_cents)} valueClass="font-semibold text-primary" />
                 <Info
                   label="Serviço"
                   value={data?.services.find((s) => s.id === selected.service_id)?.name ?? "—"}
+                />
+                <Info
+                  label="Barbeiro"
+                  value={data?.barbers.find((b) => b.id === selected.barber_id)?.name ?? "—"}
                 />
                 <Info label="Telefone" value={selected.customer_phone ?? "—"} />
                 <Info
@@ -534,77 +628,78 @@ function AgendaPage() {
                     selected.payment_state === "paid" ? " · pago" : ""
                   }`}
                 />
-                <div>
-                  <p className="text-xs text-muted-foreground">Status</p>
-                  <Badge className="mt-1">{STATUS_LABEL[selected.status]}</Badge>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ações</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setEditForm(selected.id);
+                      setEditing(null);
+                    }}
+                  >
+                    <Pencil className="size-4" /> Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={!selected.customer_phone}
+                    onClick={() =>
+                      window.open(
+                        waLink(
+                          selected.customer_phone,
+                          reminderText(shop?.name ?? "barbearia", selected.customer_name, selected.starts_at),
+                        ),
+                        "_blank",
+                      )
+                    }
+                  >
+                    <MessageCircle className="size-4" /> Avisar cliente
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setPayMethod(
+                        selected.payment_method === "card" ||
+                          selected.payment_method === "cash" ||
+                          selected.payment_method === "pix_qr"
+                          ? selected.payment_method
+                          : "pix",
+                      );
+                      setConfirmDone(selected.id);
+                    }}
+                  >
+                    <Check className="size-4" /> Concluir
+                  </Button>
+                  {selected.benefit_processed && (
+                    <Button size="sm" variant="outline" onClick={() => refund.mutate(selected.id)}>
+                      Estornar crédito
+                    </Button>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setStatus.mutate({ id: selected.id, status: "no_show" })}
+                  >
+                    <UserX className="size-4" /> Faltou
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setStatus.mutate({ id: selected.id, status: "canceled" })}
+                  >
+                    <X className="size-4" /> Cancelar
+                  </Button>
+                  <Button size="sm" variant="destructive" onClick={() => remove.mutate(selected.id)}>
+                    <Ban className="size-4" /> Excluir
+                  </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => {
-                    setEditForm(selected.id);
-                    setEditing(null);
-                  }}
-                >
-                  <Pencil className="size-4" /> Editar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={!selected.customer_phone}
-                  onClick={() =>
-                    window.open(
-                      waLink(
-                        selected.customer_phone,
-                        reminderText(shop?.name ?? "barbearia", selected.customer_name, selected.starts_at),
-                      ),
-                      "_blank",
-                    )
-                  }
-                >
-                  <MessageCircle className="size-4" /> Avisar cliente
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setPayMethod(
-                      selected.payment_method === "card" ||
-                        selected.payment_method === "cash" ||
-                        selected.payment_method === "pix_qr"
-                        ? selected.payment_method
-                        : "pix",
-                    );
-                    setConfirmDone(selected.id);
-                  }}
-                >
-                  <Check className="size-4" /> Concluir
-                </Button>
-                {selected.benefit_processed && (
-                  <Button size="sm" variant="outline" onClick={() => refund.mutate(selected.id)}>
-                    Estornar crédito
-                  </Button>
-                )}
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setStatus.mutate({ id: selected.id, status: "no_show" })}
-                >
-                  <UserX className="size-4" /> Faltou
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setStatus.mutate({ id: selected.id, status: "canceled" })}
-                >
-                  <X className="size-4" /> Cancelar
-                </Button>
-                <Button size="sm" variant="destructive" onClick={() => remove.mutate(selected.id)}>
-                  <Ban className="size-4" /> Excluir
-                </Button>
-              </div>
               <p className="text-xs text-muted-foreground">
                 Dica: na visão por dia você pode arrastar o agendamento para outro horário.
               </p>
@@ -729,15 +824,14 @@ function AgendaPage() {
         </AlertDialogContent>
       </AlertDialog>
     </AppShell>
-
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-sm">{value}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 text-sm ${valueClass ?? ""}`}>{value}</p>
     </div>
   );
 }
@@ -840,7 +934,6 @@ function AppointmentForm({
     toast.success(appointment ? "Agendamento atualizado" : "Agendamento criado");
     onDone();
   }
-
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -963,7 +1056,6 @@ function AppointmentForm({
         </div>
       )}
       <Button className="w-full" disabled={saving}>
-
         {appointment ? "Salvar alterações" : "Salvar agendamento"}
       </Button>
     </form>
