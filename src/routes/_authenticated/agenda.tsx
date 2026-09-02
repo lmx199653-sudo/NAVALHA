@@ -95,9 +95,9 @@ const FALLBACK_STATUS = "blocked";
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusTone[status] ?? statusTone.blocked}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusTone[status] ?? statusTone[FALLBACK_STATUS]}`}
     >
-      <span className={`size-1.5 rounded-full ${statusDot[status] ?? statusDot.blocked}`} />
+      <span className={`size-1.5 rounded-full ${statusDot[status] ?? statusDot[FALLBACK_STATUS]}`} />
       {STATUS_LABEL[status] ?? status}
     </span>
   );
