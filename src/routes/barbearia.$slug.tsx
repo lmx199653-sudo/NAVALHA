@@ -897,7 +897,9 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
+  const usingPlan = payment === "plan";
   const paidByPix = (payment === "pix" || payment === "pix_qr") && hasPix(shop);
+  const planCoveredAll = usingPlan && planUncoveredCents === 0;
 
   const whatsappMessage = [
     `✅ *Agendamento confirmado* — ${shop.name}`,
@@ -907,8 +909,8 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
     `Dia: ${WEEKDAYS[start.getDay()]}, ${start.toLocaleDateString("pt-BR")}`,
     `Horário: ${timeLabel(slot)}`,
-    `Valor: ${brl(service.price_cents)}`,
-    `Pagamento: ${paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
+    `Valor: ${usingPlan ? (planCoveredAll ? "incluso no plano" : `${brl(planUncoveredCents)} (restante fora do plano)`) : brl(service.price_cents)}`,
+    `Pagamento: ${usingPlan ? "meu plano de assinatura" : paidByPix ? "Pix (segue o comprovante)" : "no local"}`,
     `Telefone: ${phone}`,
   ].join("\n");
   const whatsappConfirmLink = whatsappLink
@@ -940,16 +942,28 @@ function SuccessScreen({
             <SummaryRow icon={Clock} label="Horário" value={timeLabel(slot)} />
             <SummaryRow icon={MessageCircle} label="Seu WhatsApp" value={phone} />
             <SummaryRow
-              icon={QrCode}
+              icon={usingPlan ? Sparkles : QrCode}
               label="Pagamento"
               value={
-                paidByPix ? "Pix direto ao barbeiro" : "No local (Pix, cartão ou dinheiro)"
+                usingPlan
+                  ? "Meu plano de assinatura"
+                  : paidByPix
+                    ? "Pix direto ao barbeiro"
+                    : "No local (Pix, cartão ou dinheiro)"
               }
             />
             <div className="flex items-center justify-between px-5 py-4">
               <span className="text-sm text-muted-foreground">Valor</span>
-              <span className="font-display text-3xl text-primary">{brl(service.price_cents)}</span>
+              <span className="font-display text-3xl text-primary">
+                {planCoveredAll ? "Incluso" : brl(usingPlan ? planUncoveredCents : service.price_cents)}
+              </span>
             </div>
+            {usingPlan && (
+              <p className="px-5 py-3 text-xs text-muted-foreground">
+                O crédito do seu plano só é descontado quando o atendimento for concluído. Se cancelar ou não
+                comparecer, nada é descontado.
+              </p>
+            )}
           </div>
           <div className="space-y-3 p-5">
             {paidByPix && (
