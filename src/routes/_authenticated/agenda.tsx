@@ -90,6 +90,8 @@ const statusDot: Record<string, string> = {
   blocked: "bg-muted-foreground",
 };
 
+const FALLBACK_STATUS = "blocked";
+
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
