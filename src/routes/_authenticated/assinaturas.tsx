@@ -66,7 +66,8 @@ export const Route = createFileRoute("/_authenticated/assinaturas")({
       { property: "og:title", content: "Assinaturas | Navalha Pro" },
       {
         property: "og:description",
-        content: "Planos, assinantes e alertas inteligentes de cobrança e renovação em um só lugar.",
+        content:
+          "Planos, assinantes e alertas inteligentes de cobrança e renovação em um só lugar.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -134,10 +135,18 @@ function SubscriptionsPage() {
   const alerts = useMemo(() => buildAlerts(rows), [rows]);
   const attentionIds = useMemo(() => new Set(alerts.map((a) => a.row.sub.id)), [alerts]);
   const activeCustomerIds = useMemo(
-    () => new Set(rows.filter((r) => r.sub.status === "active" || r.sub.status === "pending").map((r) => r.sub.customer_id)),
+    () =>
+      new Set(
+        rows
+          .filter((r) => r.sub.status === "active" || r.sub.status === "pending")
+          .map((r) => r.sub.customer_id),
+      ),
     [rows],
   );
-  const manageRow = useMemo(() => rows.find((r) => r.sub.id === manageId) ?? null, [rows, manageId]);
+  const manageRow = useMemo(
+    () => rows.find((r) => r.sub.id === manageId) ?? null,
+    [rows, manageId],
+  );
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -195,7 +204,11 @@ function SubscriptionsPage() {
     },
     onSuccess: (renewed) => {
       invalidate();
-      toast.success(renewed ? "Ciclo renovado — créditos liberados e cobrança gerada" : "Ciclo atual ainda está em vigor");
+      toast.success(
+        renewed
+          ? "Ciclo renovado — créditos liberados e cobrança gerada"
+          : "Ciclo atual ainda está em vigor",
+      );
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
     onSettled: () => setBusyId(null),
@@ -223,7 +236,11 @@ function SubscriptionsPage() {
       <Tabs
         value={activeTab}
         onValueChange={(v) =>
-          navigate({ to: "/assinaturas", search: v === "planos" ? { tab: "planos" } : {}, replace: true })
+          navigate({
+            to: "/assinaturas",
+            search: v === "planos" ? { tab: "planos" } : {},
+            replace: true,
+          })
         }
         className="space-y-4"
       >
@@ -267,7 +284,11 @@ function SubscriptionsPage() {
                 <Metric label="Receita recorrente" value={brl(metrics.mrr)} highlight />
                 <Metric label="Assinantes ativos" value={String(metrics.active)} />
                 <Metric label="Recebido (30 dias)" value={brl(metrics.received)} />
-                <Metric label="A receber" value={brl(metrics.toReceive)} warn={metrics.toReceive > 0} />
+                <Metric
+                  label="A receber"
+                  value={brl(metrics.toReceive)}
+                  warn={metrics.toReceive > 0}
+                />
               </div>
             </>
           )}
@@ -365,7 +386,10 @@ function SubscriptionsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
-                        <Badge variant="outline" className={cn("h-5 px-1.5 text-[10px]", status.tone)}>
+                        <Badge
+                          variant="outline"
+                          className={cn("h-5 px-1.5 text-[10px]", status.tone)}
+                        >
                           {status.label}
                         </Badge>
                         <Badge
@@ -381,7 +405,8 @@ function SubscriptionsPage() {
                         </Badge>
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {plan?.name ?? "—"} · {brl(sub.price_cents)} · {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
+                        {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
+                        {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
                       </p>
                       <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                         <span>
@@ -397,10 +422,16 @@ function SubscriptionsPage() {
                           </b>
                         </span>
                         <span>
-                          Cortes: <b className="text-foreground">{balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}</b>
+                          Cortes:{" "}
+                          <b className="text-foreground">
+                            {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
+                          </b>
                         </span>
                         <span>
-                          Barbas: <b className="text-foreground">{balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}</b>
+                          Barbas:{" "}
+                          <b className="text-foreground">
+                            {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
+                          </b>
                         </span>
                         {pending && (
                           <span className="inline-flex items-center gap-1 text-warning">
@@ -459,7 +490,9 @@ function SubscriptionsPage() {
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => cancel.mutate()}>Cancelar assinatura</AlertDialogAction>
+            <AlertDialogAction onClick={() => cancel.mutate()}>
+              Cancelar assinatura
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -484,7 +517,11 @@ function Metric({
         <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
       )}
       <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}>{value}</p>
+      <p
+        className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}
+      >
+        {value}
+      </p>
     </div>
   );
 }

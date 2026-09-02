@@ -8,13 +8,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { cpfDigits, cpfMask, friendlyError, isValidCpf, type Plan } from "@/lib/subscriptions";
 import type { AlertCustomer } from "@/lib/subscription-alerts";
-import { addDays, createSubscriber, PAY_METHOD_LABEL, today, type PayMethod } from "@/lib/subscription-actions";
+import {
+  addDays,
+  createSubscriber,
+  PAY_METHOD_LABEL,
+  today,
+  type PayMethod,
+} from "@/lib/subscription-actions";
 
 export function NewSubscriberDialog({
   open,
@@ -109,7 +127,11 @@ export function NewSubscriberDialog({
       await createSubscriber({ shopId, customerId, plan, startedOn, dueDate, payNow, method });
     },
     onSuccess: () => {
-      toast.success(payNow ? "Assinante criado e pagamento registrado" : "Assinante criado — pagamento pendente");
+      toast.success(
+        payNow
+          ? "Assinante criado e pagamento registrado"
+          : "Assinante criado — pagamento pendente",
+      );
       onCreated();
       onOpenChange(false);
     },
@@ -123,7 +145,9 @@ export function NewSubscriberDialog({
       <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl">Novo assinante</DialogTitle>
-          <DialogDescription>Vincule um cliente a um plano e defina o início do ciclo.</DialogDescription>
+          <DialogDescription>
+            Vincule um cliente a um plano e defina o início do ciclo.
+          </DialogDescription>
         </DialogHeader>
 
         {activePlans.length === 0 ? (
@@ -135,7 +159,9 @@ export function NewSubscriberDialog({
             {/* ---------- cliente ---------- */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">1. Cliente</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  1. Cliente
+                </p>
                 <div className="flex gap-1 rounded-full border border-border p-0.5">
                   {(
                     [
@@ -152,7 +178,9 @@ export function NewSubscriberDialog({
                       }}
                       className={cn(
                         "rounded-full px-3 py-1 text-[11px] font-medium transition-colors",
-                        mode === k ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground",
+                        mode === k
+                          ? "bg-primary/15 text-primary"
+                          : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       {l}
@@ -167,13 +195,21 @@ export function NewSubscriberDialog({
                     <div className="min-w-0">
                       <p className="truncate font-medium">{customer.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {customer.cpf ? cpfMask(customer.cpf) : "sem CPF"} · {customer.phone || "sem telefone"}
+                        {customer.cpf ? cpfMask(customer.cpf) : "sem CPF"} ·{" "}
+                        {customer.phone || "sem telefone"}
                       </p>
                       {selectedHasActive && (
-                        <p className="mt-1 text-xs text-warning">Este cliente já possui uma assinatura ativa.</p>
+                        <p className="mt-1 text-xs text-warning">
+                          Este cliente já possui uma assinatura ativa.
+                        </p>
                       )}
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => setCustomer(null)} aria-label="Trocar cliente">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setCustomer(null)}
+                      aria-label="Trocar cliente"
+                    >
                       <X className="size-4" />
                     </Button>
                   </div>
@@ -193,7 +229,11 @@ export function NewSubscriberDialog({
                       {matches.length === 0 && (
                         <div className="p-3 text-sm text-muted-foreground">
                           Nenhum cliente encontrado.{" "}
-                          <button type="button" className="text-primary hover:underline" onClick={() => setMode("new")}>
+                          <button
+                            type="button"
+                            className="text-primary hover:underline"
+                            onClick={() => setMode("new")}
+                          >
                             Cadastrar novo
                           </button>
                         </div>
@@ -213,7 +253,11 @@ export function NewSubscriberDialog({
                                 {c.cpf ? cpfMask(c.cpf) : "sem CPF"} · {c.phone || "sem telefone"}
                               </p>
                             </div>
-                            {has && <span className="shrink-0 text-[10px] text-warning">já assinante</span>}
+                            {has && (
+                              <span className="shrink-0 text-[10px] text-warning">
+                                já assinante
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -224,7 +268,11 @@ export function NewSubscriberDialog({
                 <div className="space-y-3 rounded-xl border border-dashed border-border p-3">
                   <div className="space-y-1.5">
                     <Label>Nome completo</Label>
-                    <Input autoFocus value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                    <Input
+                      autoFocus
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -252,7 +300,9 @@ export function NewSubscriberDialog({
 
             {/* ---------- plano ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">2. Plano</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                2. Plano
+              </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {activePlans.map((p) => (
                   <button
@@ -261,7 +311,9 @@ export function NewSubscriberDialog({
                     onClick={() => setPlanId(p.id)}
                     className={cn(
                       "rounded-xl border p-3 text-left transition-colors",
-                      planId === p.id ? "border-primary/60 bg-primary/10" : "border-border hover:border-primary/30",
+                      planId === p.id
+                        ? "border-primary/60 bg-primary/10"
+                        : "border-border hover:border-primary/30",
                     )}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -269,7 +321,8 @@ export function NewSubscriberDialog({
                       {planId === p.id && <Check className="size-4 shrink-0 text-primary" />}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {brl(p.price_cents)} · {p.cuts_included} corte(s), {p.beards_included} barba(s) · {p.cycle_days} dias
+                      {brl(p.price_cents)} · {p.cuts_included} corte(s), {p.beards_included}{" "}
+                      barba(s) · {p.cycle_days} dias
                     </p>
                   </button>
                 ))}
@@ -278,11 +331,17 @@ export function NewSubscriberDialog({
 
             {/* ---------- datas ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">3. Período</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                3. Período
+              </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Início</Label>
-                  <Input type="date" value={startedOn} onChange={(e) => setStartedOn(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={startedOn}
+                    onChange={(e) => setStartedOn(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Vencimento</Label>
@@ -304,7 +363,9 @@ export function NewSubscriberDialog({
                 <div>
                   <p className="text-sm font-medium">Registrar pagamento agora</p>
                   <p className="text-xs text-muted-foreground">
-                    {plan ? `${brl(plan.price_cents)} referente ao primeiro ciclo` : "Escolha um plano"}
+                    {plan
+                      ? `${brl(plan.price_cents)} referente ao primeiro ciclo`
+                      : "Escolha um plano"}
                   </p>
                 </div>
                 <Switch checked={payNow} onCheckedChange={setPayNow} />
@@ -333,10 +394,16 @@ export function NewSubscriberDialog({
                 Cancelar
               </Button>
               <Button
-                disabled={create.isPending || selectedHasActive || (mode === "existing" && !customer)}
+                disabled={
+                  create.isPending || selectedHasActive || (mode === "existing" && !customer)
+                }
                 onClick={() => create.mutate()}
               >
-                {create.isPending ? <Loader2 className="size-4 animate-spin" /> : <UserPlus className="size-4" />}
+                {create.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <UserPlus className="size-4" />
+                )}
                 Criar assinante
               </Button>
             </div>

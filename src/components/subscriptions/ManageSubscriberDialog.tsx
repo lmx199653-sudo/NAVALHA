@@ -22,11 +22,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { brl, dateLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { cpfMask, daysUntil, friendlyError, PAYMENT_STATUS, SUB_STATUS, type Plan } from "@/lib/subscriptions";
+import {
+  cpfMask,
+  daysUntil,
+  friendlyError,
+  PAYMENT_STATUS,
+  SUB_STATUS,
+  type Plan,
+} from "@/lib/subscriptions";
 import { chargeMessage, pendingPaymentOf, type SubscriptionRow } from "@/lib/subscription-alerts";
 import {
   changePlan,
@@ -125,14 +144,22 @@ function Body({
   const [method, setMethod] = useState<PayMethod>("pix");
   const [amount, setAmount] = useState((sub.price_cents / 100).toFixed(2).replace(".", ","));
   const pay = useAction(
-    () => registerPayment(row, method, Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100)),
+    () =>
+      registerPayment(
+        row,
+        method,
+        Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100),
+      ),
     () => "Pagamento registrado",
   );
 
   /* ---- renovar ---- */
   const renew = useAction(
     () => renewSubscription(row),
-    (r) => (r ? "Ciclo renovado — créditos liberados e cobrança gerada" : "Ciclo atual ainda está em vigor"),
+    (r) =>
+      r
+        ? "Ciclo renovado — créditos liberados e cobrança gerada"
+        : "Ciclo atual ainda está em vigor",
   );
 
   /* ---- plano ---- */
@@ -156,8 +183,13 @@ function Body({
     async () => {
       const cents = Math.round(Number(price.replace(/\./g, "").replace(",", ".")) * 100);
       if (!Number.isFinite(cents) || cents <= 0) throw new Error("Informe um valor válido.");
-      if (periodEnd && periodEnd <= startedOn) throw new Error("O vencimento deve ser depois do início.");
-      await updateSubscription(row, { started_on: startedOn, price_cents: cents, period_end: periodEnd || null });
+      if (periodEnd && periodEnd <= startedOn)
+        throw new Error("O vencimento deve ser depois do início.");
+      await updateSubscription(row, {
+        started_on: startedOn,
+        price_cents: cents,
+        period_end: periodEnd || null,
+      });
     },
     () => "Assinatura atualizada",
   );
@@ -175,21 +207,29 @@ function Body({
     queryFn: () => fetchHistory(sub),
   });
 
-  const busy = pay.isPending || renew.isPending || change.isPending || edit.isPending || toggle.isPending;
+  const busy =
+    pay.isPending || renew.isPending || change.isPending || edit.isPending || toggle.isPending;
 
   return (
     <>
       <DialogHeader>
         <div className="flex items-center gap-2">
           {view !== "menu" && (
-            <Button size="icon" variant="ghost" className="-ml-2 size-8" onClick={() => setView("menu")} aria-label="Voltar">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="-ml-2 size-8"
+              onClick={() => setView("menu")}
+              aria-label="Voltar"
+            >
               <ArrowLeft className="size-4" />
             </Button>
           )}
           <DialogTitle className="font-display text-2xl">{customer?.name ?? "Cliente"}</DialogTitle>
         </div>
         <DialogDescription>
-          {plan?.name ?? "Sem plano"} · {brl(sub.price_cents)} · {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
+          {plan?.name ?? "Sem plano"} · {brl(sub.price_cents)} ·{" "}
+          {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
         </DialogDescription>
       </DialogHeader>
 
@@ -205,19 +245,35 @@ function Body({
             variant="outline"
             className={cn(
               "h-5 px-1.5 text-[10px]",
-              isPaid ? "border-success/40 bg-success/15 text-success" : "border-warning/40 bg-warning/15 text-warning",
+              isPaid
+                ? "border-success/40 bg-success/15 text-success"
+                : "border-warning/40 bg-warning/15 text-warning",
             )}
           >
             {PAYMENT_STATUS[sub.payment_status]}
           </Badge>
         </Info>
         <Info label="Vencimento">
-          <span className={cn("text-sm font-medium", dueIn !== null && dueIn <= 5 && "text-warning", dueIn !== null && dueIn < 0 && "text-destructive")}>
-            {balance?.period_end ? dateLabel(balance.period_end) : sub.next_payment ? dateLabel(sub.next_payment) : "—"}
+          <span
+            className={cn(
+              "text-sm font-medium",
+              dueIn !== null && dueIn <= 5 && "text-warning",
+              dueIn !== null && dueIn < 0 && "text-destructive",
+            )}
+          >
+            {balance?.period_end
+              ? dateLabel(balance.period_end)
+              : sub.next_payment
+                ? dateLabel(sub.next_payment)
+                : "—"}
           </span>
           {dueIn !== null && (
             <span className="block text-[10px] text-muted-foreground">
-              {dueIn < 0 ? `há ${Math.abs(dueIn)} dia(s)` : dueIn === 0 ? "hoje" : `em ${dueIn} dia(s)`}
+              {dueIn < 0
+                ? `há ${Math.abs(dueIn)} dia(s)`
+                : dueIn === 0
+                  ? "hoje"
+                  : `em ${dueIn} dia(s)`}
             </span>
           )}
         </Info>
@@ -239,7 +295,12 @@ function Body({
             <Clock3 className="size-4 text-warning" />
             <span>
               Pagamento pendente de <b>{brl(pending.amount_cents)}</b>
-              {pending.due_date && <span className="text-muted-foreground"> · venceu {dateLabel(pending.due_date)}</span>}
+              {pending.due_date && (
+                <span className="text-muted-foreground">
+                  {" "}
+                  · venceu {dateLabel(pending.due_date)}
+                </span>
+              )}
             </span>
           </div>
           {phone && (
@@ -259,10 +320,32 @@ function Body({
       {/* ---------- ações ---------- */}
       {view === "menu" && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <Action icon={CheckCircle2} label="Registrar pagamento" primary={!isPaid} disabled={closed || busy} onClick={() => setView("pay")} />
-          <Action icon={RefreshCw} label="Renovar ciclo" disabled={closed || busy} loading={renew.isPending} onClick={() => renew.mutate()} />
-          <Action icon={ArrowLeftRight} label="Alterar plano" disabled={closed || busy} onClick={() => setView("plan")} />
-          <Action icon={Pencil} label="Editar" disabled={closed || busy} onClick={() => setView("edit")} />
+          <Action
+            icon={CheckCircle2}
+            label="Registrar pagamento"
+            primary={!isPaid}
+            disabled={closed || busy}
+            onClick={() => setView("pay")}
+          />
+          <Action
+            icon={RefreshCw}
+            label="Renovar ciclo"
+            disabled={closed || busy}
+            loading={renew.isPending}
+            onClick={() => renew.mutate()}
+          />
+          <Action
+            icon={ArrowLeftRight}
+            label="Alterar plano"
+            disabled={closed || busy}
+            onClick={() => setView("plan")}
+          />
+          <Action
+            icon={Pencil}
+            label="Editar"
+            disabled={closed || busy}
+            onClick={() => setView("edit")}
+          />
           <Action icon={History} label="Histórico" onClick={() => setView("history")} />
           <Action
             icon={sub.status === "suspended" ? Play : Pause}
@@ -288,7 +371,11 @@ function Body({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Valor (R$)</Label>
-              <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
+              <Input
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Forma</Label>
@@ -307,7 +394,11 @@ function Body({
             </div>
           </div>
           <Button className="w-full" disabled={pay.isPending} onClick={() => pay.mutate()}>
-            {pay.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+            {pay.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-4" />
+            )}
             Confirmar recebimento
           </Button>
         </Panel>
@@ -337,13 +428,23 @@ function Body({
             <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Aplicar créditos no ciclo atual</p>
-                <p className="text-xs text-muted-foreground">Desligado: o novo plano vale a partir da próxima renovação.</p>
+                <p className="text-xs text-muted-foreground">
+                  Desligado: o novo plano vale a partir da próxima renovação.
+                </p>
               </div>
               <Switch checked={applyNow} onCheckedChange={setApplyNow} />
             </div>
           )}
-          <Button className="w-full" disabled={change.isPending || !newPlan || newPlan.id === plan?.id} onClick={() => change.mutate()}>
-            {change.isPending ? <Loader2 className="size-4 animate-spin" /> : <ArrowLeftRight className="size-4" />}
+          <Button
+            className="w-full"
+            disabled={change.isPending || !newPlan || newPlan.id === plan?.id}
+            onClick={() => change.mutate()}
+          >
+            {change.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <ArrowLeftRight className="size-4" />
+            )}
             Confirmar troca
           </Button>
         </Panel>
@@ -366,7 +467,11 @@ function Body({
             </div>
           </div>
           <Button className="w-full" disabled={edit.isPending} onClick={() => edit.mutate()}>
-            {edit.isPending ? <Loader2 className="size-4 animate-spin" /> : <Pencil className="size-4" />}
+            {edit.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Pencil className="size-4" />
+            )}
             Salvar alterações
           </Button>
         </Panel>
@@ -385,11 +490,20 @@ function Body({
           ) : (
             <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
               {(history.data ?? []).map((h) => (
-                <li key={h.id} className="flex items-start gap-3 rounded-lg border border-border bg-background/40 p-2.5">
+                <li
+                  key={h.id}
+                  className="flex items-start gap-3 rounded-lg border border-border bg-background/40 p-2.5"
+                >
                   <span
                     className={cn(
                       "mt-1.5 size-2 shrink-0 rounded-full",
-                      h.kind === "payment" ? "bg-success" : h.kind === "usage" ? "bg-primary" : h.kind === "cycle" ? "bg-warning" : "bg-muted-foreground/60",
+                      h.kind === "payment"
+                        ? "bg-success"
+                        : h.kind === "usage"
+                          ? "bg-primary"
+                          : h.kind === "cycle"
+                            ? "bg-warning"
+                            : "bg-muted-foreground/60",
                     )}
                   />
                   <div className="min-w-0 flex-1">

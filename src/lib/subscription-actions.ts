@@ -49,12 +49,20 @@ function fail(message: string): never {
 
 /* ---------- pagamento ---------- */
 
-export async function registerPayment(row: SubscriptionRow, method: PayMethod, amountCents?: number) {
+export async function registerPayment(
+  row: SubscriptionRow,
+  method: PayMethod,
+  amountCents?: number,
+) {
   const now = new Date().toISOString();
   const amount = amountCents ?? row.sub.price_cents;
   const { error } = await supabase
     .from("customer_subscriptions")
-    .update({ payment_status: "paid", last_payment_at: now, status: row.sub.status === "pending" ? "active" : row.sub.status })
+    .update({
+      payment_status: "paid",
+      last_payment_at: now,
+      status: row.sub.status === "pending" ? "active" : row.sub.status,
+    })
     .eq("id", row.sub.id);
   if (error) fail(error.message);
 
@@ -77,7 +85,10 @@ export async function registerPayment(row: SubscriptionRow, method: PayMethod, a
     });
     if (insErr) fail(insErr.message);
   }
-  await audit(row.sub.barbershop_id, "subscription.payment_registered", row.sub.id, { method, amount });
+  await audit(row.sub.barbershop_id, "subscription.payment_registered", row.sub.id, {
+    method,
+    amount,
+  });
 }
 
 /* ---------- renovação ---------- */
@@ -160,13 +171,21 @@ export async function updateSubscription(
 /* ---------- suspender / reativar ---------- */
 
 export async function setSubscriptionStatus(row: SubscriptionRow, status: "active" | "suspended") {
-  const { error } = await supabase.from("customer_subscriptions").update({ status }).eq("id", row.sub.id);
+  const { error } = await supabase
+    .from("customer_subscriptions")
+    .update({ status })
+    .eq("id", row.sub.id);
   if (error) fail(error.message);
   if (status === "active") {
     // Garante ciclo vigente ao reativar (não cria cobrança se o ciclo atual ainda vale).
     await renewCycle(row.sub.id).catch(() => null);
   }
-  await audit(row.sub.barbershop_id, status === "active" ? "subscription.reactivated" : "subscription.suspended", row.sub.id, {});
+  await audit(
+    row.sub.barbershop_id,
+    status === "active" ? "subscription.reactivated" : "subscription.suspended",
+    row.sub.id,
+    {},
+  );
 }
 
 /* ---------- criação ---------- */
@@ -180,7 +199,11 @@ export async function createSubscriber(input: {
   payNow: boolean;
   method: PayMethod;
 }) {
-  const { subscription_id, cycle_id } = await createSubscription(input.shopId, input.customerId, input.plan.id);
+  const { subscription_id, cycle_id } = await createSubscription(
+    input.shopId,
+    input.customerId,
+    input.plan.id,
+  );
   const defaultDue = addDays(today(), input.plan.cycle_days ?? 30);
   const customDates = input.startedOn !== today() || input.dueDate !== defaultDue;
 
@@ -262,7 +285,8 @@ export async function fetchHistory(sub: Subscription): Promise<HistoryItem[]> {
       .in("action", Object.keys(ACTION_LABEL)),
   ]);
 
-  const fmt = (c: number) => (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const fmt = (c: number) =>
+    (c / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const day = (d: string) => new Date(`${d}T00:00:00`).toLocaleDateString("pt-BR");
   const BENEFIT: Record<string, string> = { cut: "Corte", beard: "Barba", extra: "Extra" };
 
@@ -272,7 +296,10 @@ export async function fetchHistory(sub: Subscription): Promise<HistoryItem[]> {
       id: `pay-${p.id}`,
       at: p.paid_at ?? p.created_at,
       kind: "payment",
-      title: p.status === "paid" ? `Pagamento de ${fmt(p.amount_cents)}` : `Cobrança de ${fmt(p.amount_cents)}`,
+      title:
+        p.status === "paid"
+          ? `Pagamento de ${fmt(p.amount_cents)}`
+          : `Cobrança de ${fmt(p.amount_cents)}`,
       detail:
         p.status === "paid"
           ? `Recebido via ${PAY_METHOD_LABEL[(p.method as PayMethod) ?? "manual"] ?? p.method ?? "manual"}`
@@ -284,7 +311,10 @@ export async function fetchHistory(sub: Subscription): Promise<HistoryItem[]> {
       id: `use-${u.id}`,
       at: u.created_at,
       kind: "usage",
-      title: u.kind === "refund" ? `Estorno de ${BENEFIT[u.benefit_kind] ?? u.benefit_kind}` : `${BENEFIT[u.benefit_kind] ?? u.benefit_kind} utilizado`,
+      title:
+        u.kind === "refund"
+          ? `Estorno de ${BENEFIT[u.benefit_kind] ?? u.benefit_kind}`
+          : `${BENEFIT[u.benefit_kind] ?? u.benefit_kind} utilizado`,
       detail: u.reason ?? `${u.quantity} crédito(s)`,
     });
   }
@@ -298,7 +328,8 @@ export async function fetchHistory(sub: Subscription): Promise<HistoryItem[]> {
     });
   }
   for (const l of logs.data ?? []) {
-    if (l.action === "subscription.cycle_renewed" || l.action === "subscription.payment_registered") continue;
+    if (l.action === "subscription.cycle_renewed" || l.action === "subscription.payment_registered")
+      continue;
     const after = (l.after_data ?? {}) as Record<string, unknown>;
     items.push({
       id: `log-${l.id}`,
