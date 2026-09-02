@@ -127,7 +127,14 @@ type Shop = {
   pix_holder_name?: string | null;
 };
 
-type PaymentChoice = "pix" | "pix_qr" | "on_site";
+type PaymentChoice = "plan" | "pix" | "pix_qr" | "on_site";
+
+type PlanEligibility = {
+  eligible: boolean;
+  plan_name?: string | null;
+  period_end?: string | null;
+  services?: { service_id: string; covered: boolean; benefit_kind: string | null; left: number }[];
+};
 
 type Service = {
   id: string;
