@@ -33,6 +33,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
+import { Route as ApiPublicBillingPixWebhookRouteImport } from './routes/api/public/billing/pix-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -155,6 +156,12 @@ const BarbeariaSlugRoute = BarbeariaSlugRouteImport.update({
   path: '/barbearia/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBillingPixWebhookRoute =
+  ApiPublicBillingPixWebhookRouteImport.update({
+    id: '/api/public/billing/pix-webhook',
+    path: '/api/public/billing/pix-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -205,6 +213,7 @@ export interface FileRoutesByTo {
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -232,6 +241,7 @@ export interface FileRoutesById {
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
+  '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/api/public/billing/pix-webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/planos'
     | '/servicos'
     | '/barbearia/$slug'
+    | '/api/public/billing/pix-webhook'
   id:
     | '__root__'
     | '/'
@@ -310,6 +322,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planos'
     | '/_authenticated/servicos'
     | '/barbearia/$slug'
+    | '/api/public/billing/pix-webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -325,6 +338,7 @@ export interface RootRouteChildren {
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
+  ApiPublicBillingPixWebhookRoute: typeof ApiPublicBillingPixWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -497,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BarbeariaSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/billing/pix-webhook': {
+      id: '/api/public/billing/pix-webhook'
+      path: '/api/public/billing/pix-webhook'
+      fullPath: '/api/public/billing/pix-webhook'
+      preLoaderRoute: typeof ApiPublicBillingPixWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -546,6 +567,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
+  ApiPublicBillingPixWebhookRoute: ApiPublicBillingPixWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

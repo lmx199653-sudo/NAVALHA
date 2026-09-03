@@ -56,11 +56,11 @@ export const Route = createFileRoute("/api/public/billing/pix-webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data, error } = await supabaseAdmin.rpc("billing_mark_invoice_paid", {
           _txid: body.txid,
-          _amount_cents: body.amount_cents ?? null,
           _provider: body.provider,
-          _reference: body.reference ?? null,
-          _external_id: body.external_id ?? null,
           _payload: raw as never,
+          ...(body.amount_cents !== undefined ? { _amount_cents: body.amount_cents } : {}),
+          ...(body.reference ? { _reference: body.reference } : {}),
+          ...(body.external_id ? { _external_id: body.external_id } : {}),
         });
         if (error) {
           console.error("billing webhook error", error.message);
