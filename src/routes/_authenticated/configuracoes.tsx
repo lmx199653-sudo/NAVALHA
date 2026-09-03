@@ -158,27 +158,6 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const saveHours = useMutation({
-    mutationFn: async () => {
-      const rows = (localHours ?? []).map((h) => ({
-        barbershop_id: shop!.id,
-        weekday: h.weekday,
-        open_time: h.open_time,
-        close_time: h.close_time,
-        closed: h.closed,
-      }));
-      const { error } = await supabase
-        .from("business_hours")
-        .upsert(rows, { onConflict: "barbershop_id,weekday" });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hours"] });
-      toast.success("Horários salvos");
-    },
-    onError: (e: Error) => toast.error(friendlyError(e.message)),
-  });
-
   const publicUrl =
     typeof window !== "undefined" ? `${window.location.origin}/barbearia/${form.slug}` : "";
 
