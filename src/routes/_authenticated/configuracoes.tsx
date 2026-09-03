@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Building2,
   CheckCircle2,
-  Clock,
   Copy,
   ExternalLink,
   LifeBuoy,
@@ -25,9 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { SectionHeader } from "@/components/ui/states";
-import { WEEKDAYS } from "@/lib/format";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import { DEFAULT_BRAND, type Brand } from "@/lib/brand";
 import { PixKeyCard } from "@/components/PixKeyCard";
@@ -38,14 +35,6 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: SettingsPage,
 });
-
-type Hours = {
-  id?: string;
-  weekday: number;
-  open_time: string;
-  close_time: string;
-  closed: boolean;
-};
 
 function SettingsPage() {
   const { data: shop } = useShop();
