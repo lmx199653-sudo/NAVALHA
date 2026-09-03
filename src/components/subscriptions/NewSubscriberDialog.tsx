@@ -159,9 +159,7 @@ export function NewSubscriberDialog({
             {/* ---------- cliente ---------- */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  1. Cliente
-                </p>
+                <p className="eyebrow">1. Cliente</p>
                 <div className="flex gap-1 rounded-full border border-border p-0.5">
                   {(
                     [
@@ -300,9 +298,7 @@ export function NewSubscriberDialog({
 
             {/* ---------- plano ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                2. Plano
-              </p>
+              <p className="eyebrow">2. Plano</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {activePlans.map((p) => (
                   <button
@@ -331,9 +327,7 @@ export function NewSubscriberDialog({
 
             {/* ---------- datas ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                3. Período
-              </p>
+              <p className="eyebrow">3. Período</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Início</Label>
