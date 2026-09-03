@@ -21,9 +21,7 @@ export function BillingBanner() {
       role="alert"
       className={cn(
         "mb-4 flex flex-col gap-3 rounded-xl border p-3.5 sm:flex-row sm:items-center",
-        suspended
-          ? "border-destructive/50 bg-destructive/10"
-          : "border-warning/50 bg-warning/10",
+        suspended ? "border-destructive/50 bg-destructive/10" : "border-warning/50 bg-warning/10",
       )}
     >
       <span

@@ -16,7 +16,13 @@ import { StatCard } from "@/components/StatCard";
 import { PixQrCard } from "@/components/PixQrCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CardSkeleton, EmptyState, ErrorState, ListSkeleton, SectionHeader } from "@/components/ui/states";
+import {
+  CardSkeleton,
+  EmptyState,
+  ErrorState,
+  ListSkeleton,
+  SectionHeader,
+} from "@/components/ui/states";
 import { useBilling } from "@/hooks/useBilling";
 import { useShop } from "@/hooks/useShop";
 import { BILLING_STATUS, daysTo, fetchBillingInvoices } from "@/lib/billing";
@@ -106,11 +112,7 @@ function BillingPage() {
               size="hero"
               label={inv ? "Vencimento" : "Fecha o ciclo em"}
               value={
-                inv
-                  ? dateLabel(inv.due_date)
-                  : data.cycle
-                    ? dateLabel(data.cycle.period_end)
-                    : "—"
+                inv ? dateLabel(inv.due_date) : data.cycle ? dateLabel(data.cycle.period_end) : "—"
               }
               icon={CalendarClock}
               tone={data.status === "active" ? "default" : "danger"}
@@ -213,8 +215,8 @@ function BillingPage() {
               <div>
                 <p className="text-sm font-medium">Nenhuma cobrança em aberto</p>
                 <p className="text-xs text-muted-foreground">
-                  Ao fechar um ciclo com valor acumulado, a cobrança Pix aparece aqui e você
-                  recebe o aviso no painel.
+                  Ao fechar um ciclo com valor acumulado, a cobrança Pix aparece aqui e você recebe
+                  o aviso no painel.
                 </p>
               </div>
             </div>

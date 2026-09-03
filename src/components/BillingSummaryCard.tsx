@@ -34,11 +34,7 @@ export function BillingSummaryCard() {
     { label: "Valor acumulado", value: brl(inv?.amount_cents ?? data.cycle?.amount_cents ?? 0) },
     {
       label: inv ? "Vencimento" : "Fecha em",
-      value: inv
-        ? dateLabel(inv.due_date)
-        : data.cycle
-          ? dateLabel(data.cycle.period_end)
-          : "—",
+      value: inv ? dateLabel(inv.due_date) : data.cycle ? dateLabel(data.cycle.period_end) : "—",
     },
   ];
 
