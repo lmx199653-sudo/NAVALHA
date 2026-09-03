@@ -7,7 +7,6 @@ import {
   AlertCircle,
   Building2,
   CheckCircle2,
-  Clock,
   Copy,
   ExternalLink,
   LifeBuoy,
@@ -25,9 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { SectionHeader } from "@/components/ui/states";
-import { WEEKDAYS } from "@/lib/format";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import { DEFAULT_BRAND, type Brand } from "@/lib/brand";
 import { PixKeyCard } from "@/components/PixKeyCard";
@@ -38,14 +35,6 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: SettingsPage,
 });
-
-type Hours = {
-  id?: string;
-  weekday: number;
-  open_time: string;
-  close_time: string;
-  closed: boolean;
-};
 
 function SettingsPage() {
   const { data: shop } = useShop();
@@ -109,33 +98,6 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const { data: hours } = useQuery({
-    queryKey: ["hours", shop?.id],
-    enabled: !!shop?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("business_hours")
-        .select("*")
-        .eq("barbershop_id", shop!.id)
-        .order("weekday");
-      const rows = (data ?? []) as Hours[];
-      return WEEKDAYS.map(
-        (_, i) =>
-          rows.find((r) => r.weekday === i) ?? {
-            weekday: i,
-            open_time: "09:00",
-            close_time: "20:00",
-            closed: i === 0,
-          },
-      );
-    },
-  });
-
-  const [localHours, setLocalHours] = useState<Hours[] | null>(null);
-  useEffect(() => {
-    if (hours) setLocalHours(hours);
-  }, [hours]);
-
   const saveShop = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
@@ -192,27 +154,6 @@ function SettingsPage() {
           ? "Chave Pix removida"
           : `Chave Pix (${pixTypeLabel(detected?.ok ? detected.type : null)}) salva`,
       );
-    },
-    onError: (e: Error) => toast.error(friendlyError(e.message)),
-  });
-
-  const saveHours = useMutation({
-    mutationFn: async () => {
-      const rows = (localHours ?? []).map((h) => ({
-        barbershop_id: shop!.id,
-        weekday: h.weekday,
-        open_time: h.open_time,
-        close_time: h.close_time,
-        closed: h.closed,
-      }));
-      const { error } = await supabase
-        .from("business_hours")
-        .upsert(rows, { onConflict: "barbershop_id,weekday" });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["hours"] });
-      toast.success("Horários salvos");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
@@ -420,62 +361,6 @@ function SettingsPage() {
                   />
                 </div>
               )}
-            </div>
-
-            <div className="surface-card p-4 sm:p-5">
-              <SectionHeader icon={Clock} title="Horário de funcionamento" />
-              <div className="mt-3 space-y-2">
-                {(localHours ?? []).map((h, i) => (
-                  <div
-                    key={h.weekday}
-                    className="surface-row flex flex-wrap items-center gap-2 px-3.5 py-2.5"
-                  >
-                    <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-                      {WEEKDAYS[h.weekday]}
-                    </span>
-                    <Input
-                      type="time"
-                      className="h-9 w-auto min-w-0 flex-1"
-                      value={h.open_time.slice(0, 5)}
-                      disabled={h.closed}
-                      onChange={(e) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, open_time: e.target.value };
-                        setLocalHours(next);
-                      }}
-                    />
-                    <Input
-                      type="time"
-                      className="h-9 w-auto min-w-0 flex-1"
-                      value={h.close_time.slice(0, 5)}
-                      disabled={h.closed}
-                      onChange={(e) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, close_time: e.target.value };
-                        setLocalHours(next);
-                      }}
-                    />
-                    <Switch
-                      checked={!h.closed}
-                      onCheckedChange={(v) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, closed: !v };
-                        setLocalHours(next);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 flex justify-end">
-                <Button
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  disabled={saveHours.isPending}
-                  onClick={() => saveHours.mutate()}
-                >
-                  {saveHours.isPending ? "Salvando..." : "Salvar horários"}
-                </Button>
-              </div>
             </div>
 
             <Button
