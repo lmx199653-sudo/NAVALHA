@@ -45,6 +45,7 @@ import {
   PAYMENT_STATUS,
   SUB_STATUS,
   type Plan,
+  type SubscriptionStatus,
 } from "@/lib/subscriptions";
 import { chargeMessage, pendingPaymentOf, type SubscriptionRow } from "@/lib/subscription-alerts";
 import {
@@ -59,6 +60,13 @@ import {
 } from "@/lib/subscription-actions";
 
 type View = "menu" | "pay" | "plan" | "edit" | "history";
+
+function statusBadgeVariant(status: SubscriptionStatus): "success" | "warning" | "destructive" | "secondary" {
+  if (status === "active") return "success";
+  if (status === "pending" || status === "suspended") return "warning";
+  if (status === "cancelled") return "secondary";
+  return "destructive";
+}
 
 export function ManageSubscriberDialog({
   row,
@@ -236,20 +244,12 @@ function Body({
       {/* ---------- resumo ---------- */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Info label="Status">
-          <Badge variant="outline" className={cn("h-5 px-1.5 text-[10px]", status.tone)}>
+          <Badge variant={statusBadgeVariant(sub.status)} className="h-5 px-1.5 text-[10px]">
             {status.label}
           </Badge>
         </Info>
         <Info label="Pagamento">
-          <Badge
-            variant="outline"
-            className={cn(
-              "h-5 px-1.5 text-[10px]",
-              isPaid
-                ? "border-success/40 bg-success/15 text-success"
-                : "border-warning/40 bg-warning/15 text-warning",
-            )}
-          >
+          <Badge variant={isPaid ? "success" : "warning"} className="h-5 px-1.5 text-[10px]">
             {PAYMENT_STATUS[sub.payment_status]}
           </Badge>
         </Info>
