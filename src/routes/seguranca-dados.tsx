@@ -151,8 +151,9 @@ function DataSafetyPage() {
 
       <LegalSection title="Contato">
         <p>
-          Segurança ou privacidade: <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>
-          . Política completa em <Link to="/privacidade">Política de Privacidade</Link>.
+          Segurança ou privacidade:{" "}
+          <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>. Política completa em{" "}
+          <Link to="/privacidade">Política de Privacidade</Link>.
         </p>
       </LegalSection>
     </LegalLayout>
