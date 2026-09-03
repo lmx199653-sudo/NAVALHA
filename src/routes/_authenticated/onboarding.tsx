@@ -116,12 +116,14 @@ function Onboarding() {
   if (shop?.onboarding_done) return null;
 
   return (
-    <div className="grid-noise min-h-screen px-4 py-12">
-      <div className="mx-auto w-full max-w-2xl">
+    <div className="grid-noise min-h-screen px-4 py-10 sm:py-14">
+      <div className="mx-auto w-full max-w-lg">
         <div className="mb-8 text-center">
-          <Scissors className="mx-auto size-6 text-primary" />
-          <h1 className="mt-3 font-display text-4xl">Configure sua barbearia</h1>
-          <p className="mt-2 text-sm font-medium text-primary">
+          <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/15">
+            <Scissors className="size-6" />
+          </span>
+          <h1 className="mt-4 font-display text-4xl leading-none sm:text-5xl">Configure sua barbearia</h1>
+          <p className="mt-3 text-sm font-medium text-primary">
             Cadastre sua barbearia e faça login no app.
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -129,8 +131,8 @@ function Onboarding() {
           </p>
         </div>
 
-        <form onSubmit={submit} className="surface-card space-y-4 p-6">
-          <div className="space-y-2">
+        <form onSubmit={submit} className="surface-card space-y-5 p-5 sm:p-6">
+          <div className="space-y-1.5">
             <Label htmlFor="name">Nome da barbearia</Label>
             <Input
               id="name"
@@ -142,7 +144,7 @@ function Onboarding() {
               }}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="slug">Link da página pública</Label>
             <div className="flex items-center gap-2 rounded-lg border border-input px-3">
               <span className="shrink-0 text-xs text-muted-foreground">/barbearia/</span>
@@ -155,7 +157,7 @@ function Onboarding() {
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="cpf_cnpj">CPF ou CNPJ</Label>
               <Input
                 id="cpf_cnpj"
@@ -167,7 +169,7 @@ function Onboarding() {
                 onChange={(e) => setForm({ ...form, cpf_cnpj: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="celular">Celular</Label>
               <Input
                 id="celular"
@@ -179,16 +181,16 @@ function Onboarding() {
                 onChange={(e) => setForm({ ...form, celular: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="instagram">Instagram</Label>
               <Input id="instagram" placeholder="@suabarbearia" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="address">Endereço</Label>
             <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="description">Descrição</Label>
             <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
@@ -197,8 +199,8 @@ function Onboarding() {
             <BrandStudio shopName={form.name} value={brand} onChange={setBrand} allowLogoUpload={false} />
           </div>
 
-          <div className="flex w-full items-center gap-3 rounded-lg border border-border p-3 text-left text-sm">
-            <Sparkles className="size-4 text-primary" />
+          <div className="flex w-full items-start gap-3 rounded-lg border border-border p-3.5 text-left text-sm">
+            <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
             <span>
               Sua barbearia começa do zero
               <span className="block text-xs text-muted-foreground">

@@ -15,8 +15,10 @@ import {
 import {
   CalendarCheck,
   CalendarX2,
+  CalendarClock,
   Coins,
   Sparkles,
+  Trophy,
   TrendingUp,
   UserPlus,
   Users,
@@ -27,6 +29,7 @@ import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
 import { requireLoginInApp } from "@/lib/app-auth";
 
 export const Route = createFileRoute("/dashboard")({
@@ -63,13 +66,18 @@ type Appt = {
 function Dashboard() {
   const navigate = useNavigate();
   const { userId } = useSession();
-  const { data: shop, isSuccess, isError } = useShop();
+  const { data: shop, isSuccess, isError: isShopError } = useShop();
 
   useEffect(() => {
-    if (userId && (isSuccess || isError) && !shop) navigate({ to: "/onboarding", replace: true });
-  }, [userId, isSuccess, isError, shop, navigate]);
+    if (userId && (isSuccess || isShopError) && !shop) navigate({ to: "/onboarding", replace: true });
+  }, [userId, isSuccess, isShopError, shop, navigate]);
 
-  const { data: liveData } = useQuery({
+  const {
+    data: liveData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["dashboard", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -180,150 +188,164 @@ function Dashboard() {
           : "Carregando..."
       }
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard size="hero" label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" hint={`${brl(revToday)} previstos hoje`} />
-        <StatCard size="hero" label="Faturamento do dia" value={brl(revToday)} icon={Coins} />
-        <StatCard size="hero" label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" />
-        <StatCard size="hero" label="Ticket médio" value={brl(ticket)} icon={Coins} />
-      </div>
-
-      <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} />
-        <StatCard label="Base de clientes" value={customers.length} icon={Users} />
-        <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} />
-        <StatCard
-          label="Cancelamentos / faltas"
-          value={`${canceled} / ${noShow}`}
-          icon={CalendarX2}
-          tone="danger"
-        />
-      </div>
-
-
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="surface-card p-4 lg:col-span-2">
-          <h2 className="font-display text-2xl">Faturamento (14 dias)</h2>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={days}>
-                <defs>
-                  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="faturamento"
-                  stroke="var(--color-primary)"
-                  fill="url(#gold)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard size="hero" label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" hint={`${brl(revToday)} previstos hoje`} loading={isLoading} />
+            <StatCard size="hero" label="Faturamento do dia" value={brl(revToday)} icon={Coins} loading={isLoading} />
+            <StatCard size="hero" label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" loading={isLoading} />
+            <StatCard size="hero" label="Ticket médio" value={brl(ticket)} icon={Coins} loading={isLoading} />
           </div>
-        </div>
 
-        <div className="surface-card p-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-primary" />
-            <h2 className="font-display text-2xl">Assistente IA</h2>
+          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} loading={isLoading} />
+            <StatCard label="Base de clientes" value={customers.length} icon={Users} loading={isLoading} />
+            <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} loading={isLoading} />
+            <StatCard
+              label="Cancelamentos / faltas"
+              value={`${canceled} / ${noShow}`}
+              icon={CalendarX2}
+              tone="danger"
+              loading={isLoading}
+            />
           </div>
-          <ul className="mt-3 space-y-3">
-            {insights.map((text) => (
-              <li key={text} className="rounded-lg bg-secondary/60 p-3 text-sm text-foreground/90">
-                {text}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <div className="surface-card p-4">
-          <h2 className="font-display text-2xl">Agendamentos por dia</h2>
-          <div className="mt-4 h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={days}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--color-card)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: 12,
-                  }}
-                />
-                <Bar dataKey="agendamentos" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="surface-card p-4">
-          <div className="flex items-baseline justify-between gap-2">
-            <h2 className="font-display text-2xl">Próximos agendamentos</h2>
-            {upcoming[0] && (
-              <p className="text-xs text-muted-foreground">
-                Próximo: <span className="text-primary">{timeLabel(upcoming[0].starts_at)}</span> ·{" "}
-                {upcoming[0].customer_name}
-              </p>
-            )}
-          </div>
-          <div className="mt-3 space-y-2">
-            {upcoming.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nenhum agendamento futuro.</p>
-            )}
-            {upcoming.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2.5"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{a.customer_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {serviceName(a.service_id)} · {barberName(a.barber_id)}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="text-sm text-primary">{timeLabel(a.starts_at)}</p>
-                  <p className="text-xs text-muted-foreground">{dateLabel(a.starts_at)}</p>
-                </div>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="surface-card p-4 lg:col-span-2">
+              <SectionHeader title="Faturamento (14 dias)" icon={TrendingUp} />
+              <div className="mt-4 h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={days}>
+                    <defs>
+                      <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.6} />
+                        <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 12,
+                        color: "var(--color-foreground)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="faturamento"
+                      stroke="var(--color-primary)"
+                      fill="url(#gold)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-4 surface-card p-4">
-        <h2 className="font-display text-2xl">Ranking de barbeiros (mês)</h2>
-        <div className="mt-3 space-y-2">
-          {barberRevenue.length === 0 && (
-            <p className="text-sm text-muted-foreground">Sem atendimentos concluídos no mês.</p>
-          )}
-          {barberRevenue.map(([name, cents], i) => (
-            <div key={name} className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2.5">
-              <div className="flex items-center gap-3">
-                <Badge variant={i === 0 ? "default" : "secondary"}>{i + 1}º</Badge>
-                <span className="text-sm">{name}</span>
-              </div>
-              <span className="text-sm text-primary">{brl(cents)}</span>
             </div>
-          ))}
-        </div>
-      </div>
+
+            <div className="surface-card p-4">
+              <SectionHeader title="Assistente IA" icon={Sparkles} />
+              <ul className="mt-3 space-y-2">
+                {insights.map((text) => (
+                  <li key={text} className="surface-row flex items-start gap-2.5 px-3.5 py-3">
+                    <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <span className="text-sm text-foreground/90">{text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="surface-card p-4">
+              <SectionHeader title="Agendamentos por dia" icon={CalendarClock} />
+              <div className="mt-4 h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={days}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 12,
+                        color: "var(--color-foreground)",
+                      }}
+                    />
+                    <Bar dataKey="agendamentos" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="surface-card p-4">
+              <SectionHeader
+                title="Próximos agendamentos"
+                {...(upcoming[0]
+                  ? {
+                      description: `Próximo: ${timeLabel(upcoming[0].starts_at)} · ${upcoming[0].customer_name}`,
+                    }
+                  : {})}
+                icon={CalendarCheck}
+              />
+              <div className="mt-3 space-y-2">
+                {upcoming.length === 0 ? (
+                  <EmptyState
+                    icon={CalendarCheck}
+                    title="Nenhum agendamento futuro"
+                    description="Assim que um cliente agendar, ele aparece aqui."
+                    compact
+                  />
+                ) : (
+                  upcoming.map((a) => (
+                    <div key={a.id} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{a.customer_name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {serviceName(a.service_id)} · {barberName(a.barber_id)}
+                        </p>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-sm text-primary">{timeLabel(a.starts_at)}</p>
+                        <p className="text-xs text-muted-foreground">{dateLabel(a.starts_at)}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 surface-card p-4">
+            <SectionHeader title="Ranking de barbeiros (mês)" icon={Trophy} />
+            <div className="mt-3 space-y-2">
+              {barberRevenue.length === 0 ? (
+                <EmptyState
+                  icon={Trophy}
+                  title="Sem atendimentos"
+                  description="Nenhum atendimento concluído no mês ainda."
+                  compact
+                />
+              ) : (
+                barberRevenue.map(([name, cents], i) => (
+                  <div key={name} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+                    <div className="flex items-center gap-3">
+                      <Badge variant={i === 0 ? "default" : "secondary"}>{i + 1}º</Badge>
+                      <span className="text-sm">{name}</span>
+                    </div>
+                    <span className="text-sm text-primary">{brl(cents)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </AppShell>
   );
 }

@@ -65,7 +65,7 @@ export function PixQrCard({
         )}
       </div>
       <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row sm:items-start">
-        <div className="rounded-lg bg-white p-2">
+        <div className="rounded-xl bg-foreground p-2">
           <QRCodeSVG value={payload} size={compact ? 140 : 180} level="M" />
         </div>
         <div className="min-w-0 flex-1 space-y-2">
@@ -85,15 +85,13 @@ export function PixQrCard({
       {showKey && (
         <div className="mt-3 border-t border-primary/20 pt-3">
           <p className="mb-1.5 text-xs text-muted-foreground">Ou copie a chave e pague pelo app do banco:</p>
-          <div className="flex items-center gap-2">
-            <code className="min-w-0 flex-1 select-all break-all rounded-lg bg-background/70 px-3 py-2 text-sm">
-              {key}
-            </code>
-            <Button type="button" size="sm" onClick={() => copy("key")} className="shrink-0">
-              {copied === "key" ? <Check className="size-4" /> : <Copy className="size-4" />}
-              {copied === "key" ? "Copiado" : "Copiar chave"}
-            </Button>
-          </div>
+          <code className="block select-all break-all rounded-lg bg-background/70 px-3 py-2 text-sm">
+            {key}
+          </code>
+          <Button type="button" size="sm" onClick={() => copy("key")} className="mt-2 w-full">
+            {copied === "key" ? <Check className="size-4" /> : <Copy className="size-4" />}
+            {copied === "key" ? "Copiado" : "Copiar chave"}
+          </Button>
         </div>
       )}
     </div>

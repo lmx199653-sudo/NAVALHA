@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -57,7 +58,7 @@ export function PlansPanel() {
   const [enrollPlan, setEnrollPlan] = useState<Plan | null>(null);
   const [lookup, setLookup] = useState<CpfLookup | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["plans", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -200,38 +201,37 @@ export function PlansPanel() {
           <Plus className="size-4" /> Novo plano
         </Button>
       </div>
-      {isLoading && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-44 rounded-xl" />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && plans.length === 0 && (
-        <div className="surface-card flex flex-col items-center gap-3 p-10 text-center">
-          <Crown className="size-8 text-primary" />
-          <p className="font-display text-2xl">Nenhum plano cadastrado</p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Crie planos mensais com cortes e barbas inclusos para fidelizar seus clientes.
-          </p>
-          <Button onClick={openCreate}>
-            <Plus className="size-4" /> Criar primeiro plano
-          </Button>
-        </div>
-      )}
-
+      {isError ? (
+        <ErrorState
+          title="Não foi possível carregar os planos"
+          description="Tente novamente em instantes."
+          onRetry={() => refetch()}
+        />
+      ) : isLoading ? (
+        <CardSkeleton count={3} />
+      ) : plans.length === 0 ? (
+        <EmptyState
+          icon={Crown}
+          title="Nenhum plano cadastrado"
+          description="Crie planos mensais com cortes e barbas inclusos para fidelizar seus clientes."
+          action={
+            <Button onClick={openCreate}>
+              <Plus className="size-4" /> Criar primeiro plano
+            </Button>
+          }
+        />
+      ) : (
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => {
           const active = subscribersOf(plan.id).filter((s) => s.status === "active").length;
           return (
-            <div key={plan.id} className="surface-card space-y-3 p-4">
+            <div key={plan.id} className="surface-card surface-card-hover space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <p className="font-display text-2xl">{plan.name}</p>
-                  <p className="text-sm text-primary">
+                  <p className="font-display text-xl text-primary">
                     {brl(plan.price_cents)}
-                    <span className="text-muted-foreground"> / {plan.cycle_days} dias</span>
+                    <span className="text-xs font-sans font-normal text-muted-foreground"> / {plan.cycle_days} dias</span>
                   </p>
                 </div>
                 <Badge variant={plan.active ? "default" : "outline"}>
@@ -270,12 +270,13 @@ export function PlansPanel() {
           );
         })}
       </div>
+      )}
 
       {/* criar/editar plano */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Editar plano" : "Novo plano"}</DialogTitle>
+            <DialogTitle className="font-display text-2xl">{editing ? "Editar plano" : "Novo plano"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -365,7 +366,7 @@ export function PlansPanel() {
       <Dialog open={!!enrollPlan} onOpenChange={(v) => !v && setEnrollPlan(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Assinar cliente — {enrollPlan?.name}</DialogTitle>
+            <DialogTitle className="font-display text-2xl">Assinar cliente — {enrollPlan?.name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <CpfCustomerLookup shopId={shop?.id} onResult={(r) => setLookup(r)} />

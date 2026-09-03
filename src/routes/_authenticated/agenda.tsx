@@ -13,9 +13,11 @@ import {
   Plus,
   UserX,
   X,
+  CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
+import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/states";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,7 +157,7 @@ function AgendaPage() {
     return { start, end };
   }, [anchor, view]);
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["agenda", shop?.id, range.start.toISOString(), range.end.toISOString()],
     enabled: !!shop?.id,
     refetchInterval: 15_000,
@@ -410,8 +412,21 @@ function AgendaPage() {
         </div>
       </div>
 
-      {view === "day" && (
-        <div className="surface-card divide-y divide-border overflow-hidden rounded-2xl">
+      {isLoading && <ListSkeleton rows={5} />}
+      {isError && <ErrorState onRetry={() => void refetch()} />}
+
+      {!isLoading && !isError && view === "day" && appts.length === 0 && (
+        <EmptyState
+          compact
+          icon={CalendarDays}
+          title="Dia livre"
+          description="Nenhum agendamento para esta data. Arraste ou clique em Novo para adicionar."
+          className="mb-4"
+        />
+      )}
+
+      {!isLoading && !isError && view === "day" && (
+        <div className="surface-card divide-y divide-border/60 overflow-hidden rounded-2xl">
           {HOURS.map((hour) => {
             const slotAppts = appts.filter((a) => new Date(a.starts_at).getHours() === hour);
             return (

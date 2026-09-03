@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Coffee, Plus, Trash2 } from "lucide-react";
+import { Coffee, Plus, Trash2, CalendarClock } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -21,6 +22,7 @@ import {
 import { WEEKDAYS, dateLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BreakRow } from "@/lib/slots";
+import { EmptyState } from "@/components/ui/states";
 
 export const Route = createFileRoute("/_authenticated/horarios")({
   component: HoursPage,
@@ -139,10 +141,10 @@ function HoursPage() {
             {(local ?? []).map((h, i) => (
               <div
                 key={h.weekday}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-border/70 bg-secondary/30 px-3 py-2.5 sm:flex sm:justify-between"
+                className="surface-row flex flex-col gap-2.5 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span className="min-w-0 truncate text-sm font-medium">{WEEKDAYS[h.weekday]}</span>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {h.closed ? (
                     <span className="text-xs text-muted-foreground">Fechado</span>
                   ) : (
@@ -199,14 +201,17 @@ function HoursPage() {
 
           <div className="mt-4 space-y-2">
             {(breaks ?? []).length === 0 && (
-              <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                Nenhuma pausa cadastrada.
-              </p>
+              <EmptyState
+                icon={CalendarClock}
+                compact
+                title="Nenhuma pausa cadastrada"
+                description="Adicione pausas para bloquear horários de almoço, folgas ou reuniões."
+              />
             )}
             {(breaks ?? []).map((b) => (
               <div
                 key={b.id}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-xl border border-border/70 bg-secondary/30 px-3 py-3"
+                className="surface-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-3"
               >
                 <div className="min-w-0">
                   <p className="flex items-center gap-2 truncate text-sm font-medium">
@@ -302,16 +307,16 @@ function BreakDialog({
             create.mutate();
           }}
         >
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Nome</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Almoço" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
               <Label>Início</Label>
               <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Fim</Label>
               <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
             </div>
@@ -344,13 +349,13 @@ function BreakDialog({
               })}
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Data</Label>
               <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label>Profissional</Label>
             <select
               value={barberId}
@@ -366,9 +371,11 @@ function BreakDialog({
             </select>
           </div>
 
-          <Button className="w-full" disabled={create.isPending}>
-            Salvar pausa
-          </Button>
+          <DialogFooter>
+            <Button className="w-full sm:w-auto" disabled={create.isPending}>
+              {create.isPending ? "Salvando..." : "Salvar pausa"}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

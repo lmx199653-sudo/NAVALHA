@@ -3,6 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Clock3, Crown, Plus, Search, Settings2, Users } from "lucide-react";
+import { StatCard } from "@/components/StatCard";
+import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/states";
 
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
@@ -77,6 +79,13 @@ export const Route = createFileRoute("/_authenticated/assinaturas")({
 
 type StatusFilter = "all" | "attention" | "active" | "inactive";
 
+function statusBadgeVariant(status: Subscription["status"]): "success" | "warning" | "destructive" | "secondary" {
+  if (status === "active") return "success";
+  if (status === "pending" || status === "suspended") return "warning";
+  if (status === "cancelled") return "secondary";
+  return "destructive";
+}
+
 function SubscriptionsPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
@@ -92,7 +101,7 @@ function SubscriptionsPage() {
   const [newOpen, setNewOpen] = useState(false);
   const [manageId, setManageId] = useState<string | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["subscriptions", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -259,7 +268,13 @@ function SubscriptionsPage() {
         </TabsList>
 
         <TabsContent value="assinantes" className="space-y-4">
-          {isLoading ? (
+          {isError ? (
+            <ErrorState
+              title="Não foi possível carregar as assinaturas"
+              description="Tente novamente em instantes."
+              onRetry={() => refetch()}
+            />
+          ) : isLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-40 rounded-xl" />
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -280,14 +295,25 @@ function SubscriptionsPage() {
                 onCancel={(row) => setCancelTarget(row.sub)}
               />
 
-              <div className="grid gap-3 grid-cols-2 xl:grid-cols-4">
-                <Metric label="Receita recorrente" value={brl(metrics.mrr)} highlight />
-                <Metric label="Assinantes ativos" value={String(metrics.active)} />
-                <Metric label="Recebido (30 dias)" value={brl(metrics.received)} />
-                <Metric
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <StatCard
+                  label="Receita recorrente"
+                  value={brl(metrics.mrr)}
+                  tone="gold"
+                  icon={Crown}
+                />
+                <StatCard label="Assinantes ativos" value={String(metrics.active)} icon={Users} />
+                <StatCard
+                  label="Recebido (30 dias)"
+                  value={brl(metrics.received)}
+                  tone="success"
+                  icon={Clock3}
+                />
+                <StatCard
                   label="A receber"
                   value={brl(metrics.toReceive)}
-                  warn={metrics.toReceive > 0}
+                  tone={metrics.toReceive > 0 ? "danger" : "default"}
+                  icon={Clock3}
                 />
               </div>
             </>
@@ -340,27 +366,33 @@ function SubscriptionsPage() {
               ))}
             </div>
 
+            {isLoading && <ListSkeleton rows={4} />}
+
             {!isLoading && filtered.length === 0 && (
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {rows.length === 0
-                    ? "Nenhum assinante ainda. Crie um plano e vincule seu primeiro cliente."
-                    : "Nenhuma assinatura encontrada para este filtro."}
-                </p>
-                {rows.length === 0 && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => navigate({ to: "/assinaturas", search: { tab: "planos" } })}
-                  >
-                    <Crown className="size-4" /> Ir para Planos
-                  </Button>
-                )}
-              </div>
+              <EmptyState
+                icon={rows.length === 0 ? Users : Search}
+                title={rows.length === 0 ? "Nenhum assinante ainda" : "Nenhuma assinatura encontrada"}
+                description={
+                  rows.length === 0
+                    ? "Crie um plano e vincule seu primeiro cliente para começar a recorrência."
+                    : "Ajuste os filtros ou o termo de busca."
+                }
+                action={
+                  rows.length === 0 ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate({ to: "/assinaturas", search: { tab: "planos" } })}
+                    >
+                      <Crown className="size-4" /> Ir para Planos
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
 
             <div className="space-y-2">
-              {filtered.map((row) => {
+              {!isLoading && filtered.map((row) => {
                 const { sub, customer, plan, balance } = row;
                 const status = SUB_STATUS[sub.status] ?? SUB_STATUS.pending;
                 const dueIn = daysUntil(balance?.period_end ?? sub.next_payment);
@@ -378,28 +410,20 @@ function SubscriptionsPage() {
                     type="button"
                     onClick={() => setManageId(sub.id)}
                     className={cn(
-                      "group flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between",
-                      hasAlert ? "border-primary/30 bg-primary/[0.03]" : "border-border",
+                      "surface-row group flex w-full flex-col gap-2 p-3.5 text-left sm:flex-row sm:items-center sm:justify-between",
+                      hasAlert && "border-primary/30 bg-primary/[0.03]",
                       closed && "opacity-60",
                     )}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
-                        <Badge
-                          variant="outline"
-                          className={cn("h-5 px-1.5 text-[10px]", status.tone)}
-                        >
+                        <p className="truncate text-sm font-medium">{customer?.name ?? "Cliente"}</p>
+                        <Badge variant={statusBadgeVariant(sub.status)} className="h-5 px-1.5 text-[10px]">
                           {status.label}
                         </Badge>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            "h-5 px-1.5 text-[10px]",
-                            sub.payment_status === "paid"
-                              ? "border-success/40 bg-success/15 text-success"
-                              : "border-warning/40 bg-warning/15 text-warning",
-                          )}
+                          variant={sub.payment_status === "paid" ? "success" : "warning"}
+                          className="h-5 px-1.5 text-[10px]"
                         >
                           {PAYMENT_STATUS[sub.payment_status]}
                         </Badge>
@@ -497,31 +521,5 @@ function SubscriptionsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </AppShell>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  highlight,
-  warn,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-  warn?: boolean;
-}) {
-  return (
-    <div className="surface-card relative overflow-hidden p-4">
-      {highlight && (
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
-      )}
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p
-        className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}
-      >
-        {value}
-      </p>
-    </div>
   );
 }

@@ -21,6 +21,7 @@ import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
 import { CalendarDays, Download, TrendingUp, Users, Wallet } from "lucide-react";
+import { ErrorState, SectionHeader } from "@/components/ui/states";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   component: FinancePage,
@@ -38,7 +39,7 @@ function FinancePage() {
   const { data: shop } = useShop();
   const [days, setDays] = useState(30);
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["finance", shop?.id, days],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -145,80 +146,94 @@ function FinancePage() {
         ))}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Faturamento" value={brl(view.revenue)} icon={Wallet} />
-        <StatCard label="Ticket médio" value={brl(view.ticket)} icon={TrendingUp} />
-        <StatCard label="Atendimentos" value={String(view.done)} icon={CalendarDays} />
-        <StatCard label="Taxa de falta" value={`${view.noShowRate}%`} icon={Users} />
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="surface-card p-4 lg:col-span-2">
-          <h3 className="font-display text-2xl">Faturamento por dia</h3>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={view.daily}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(1 0 0 / 8%)" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="oklch(0.72 0.02 260)" />
-                <YAxis tick={{ fontSize: 11 }} stroke="oklch(0.72 0.02 260)" />
-                <Tooltip
-                  contentStyle={{
-                    background: "oklch(0.18 0.01 85)",
-                    border: "1px solid oklch(1 0 0 / 10%)",
-                    borderRadius: 8,
-                  }}
-                  formatter={(v: number) => brl(v * 100)}
-                />
-                <Bar dataKey="valor" fill="oklch(0.78 0.13 85)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard label="Faturamento" value={brl(view.revenue)} icon={Wallet} loading={isLoading} />
+            <StatCard label="Ticket médio" value={brl(view.ticket)} icon={TrendingUp} loading={isLoading} />
+            <StatCard label="Atendimentos" value={String(view.done)} icon={CalendarDays} loading={isLoading} />
+            <StatCard label="Taxa de falta" value={`${view.noShowRate}%`} icon={Users} loading={isLoading} />
           </div>
-        </div>
 
-        <div className="surface-card p-4">
-          <h3 className="font-display text-2xl">Receita por serviço</h3>
-          <div className="mt-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={view.byService} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80}>
-                  {view.byService.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Tooltip formatter={(v: number) => brl(v * 100)} />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="surface-card p-4 lg:col-span-2">
+              <SectionHeader title="Faturamento por dia" icon={TrendingUp} />
+              <div className="mt-4 h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={view.daily}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 8,
+                        color: "var(--color-foreground)",
+                      }}
+                      formatter={(v: number) => brl(v * 100)}
+                    />
+                    <Bar dataKey="valor" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="surface-card p-4">
+              <SectionHeader title="Receita por serviço" icon={Wallet} />
+              <div className="mt-4 h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={view.byService} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80}>
+                      {view.byService.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--color-card)",
+                        border: "1px solid var(--color-border)",
+                        borderRadius: 8,
+                        color: "var(--color-foreground)",
+                      }}
+                      formatter={(v: number) => brl(v * 100)}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="surface-card mt-4 overflow-x-auto p-4">
-        <h3 className="font-display text-2xl">Comissões da equipe</h3>
-        <table className="mt-3 w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase text-muted-foreground">
-              <th className="py-2">Barbeiro</th>
-              <th>Atendimentos</th>
-              <th>Faturamento</th>
-              <th>%</th>
-              <th className="text-right">Comissão</th>
-            </tr>
-          </thead>
-          <tbody>
-            {view.byBarber.map((b) => (
-              <tr key={b.name} className="border-t border-border">
-                <td className="py-2">{b.name}</td>
-                <td>{b.count}</td>
-                <td>{brl(b.total)}</td>
-                <td>{b.pct}%</td>
-                <td className="text-right text-primary">{brl(b.commission)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+          <div className="surface-card mt-4 overflow-x-auto p-4">
+            <SectionHeader title="Comissões da equipe" icon={Users} />
+            <table className="mt-3 w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase text-muted-foreground">
+                  <th className="py-2">Barbeiro</th>
+                  <th>Atendimentos</th>
+                  <th>Faturamento</th>
+                  <th>%</th>
+                  <th className="text-right">Comissão</th>
+                </tr>
+              </thead>
+              <tbody>
+                {view.byBarber.map((b) => (
+                  <tr key={b.name} className="border-t border-border">
+                    <td className="py-2">{b.name}</td>
+                    <td>{b.count}</td>
+                    <td>{brl(b.total)}</td>
+                    <td>{b.pct}%</td>
+                    <td className="text-right text-primary">{brl(b.commission)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </AppShell>
   );
 }

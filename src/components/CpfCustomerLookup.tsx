@@ -127,8 +127,8 @@ export function CpfCustomerLookup({
 
       {!loading && customer && (
         <div className="space-y-3">
-          <div className="rounded-xl border border-primary/40 bg-primary/5 p-3">
-            <p className="text-xs uppercase tracking-wide text-primary">Cliente encontrado</p>
+          <div className="rounded-xl border border-success/35 bg-success/[0.07] p-3">
+            <p className="eyebrow text-success">Cliente encontrado</p>
             <p className="font-display text-xl">{customer.name}</p>
             <p className="text-xs text-muted-foreground">
               {cpfPartial(customer.cpf)} · {customer.phone || "sem telefone"}

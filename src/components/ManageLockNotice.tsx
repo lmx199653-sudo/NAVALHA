@@ -12,8 +12,8 @@ export function ManageLockNotice() {
   const { canInstall, promptInstall, isIos } = usePwaInstall();
 
   return (
-    <div className="surface-card mx-auto max-w-xl border-primary/40 p-6 text-center">
-      <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
+    <div className="surface-card mx-auto max-w-xl border-primary/30 p-6 text-center sm:p-8">
+      <span className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/20">
         <Lock className="size-6" />
       </span>
       <h2 className="mt-4 font-display text-3xl leading-tight">Gerenciamento só pelo app</h2>
@@ -22,19 +22,19 @@ export function ManageLockNotice() {
         app Navalha Pro e fazer login por ele. Pelo site você pode continuar visualizando o
         Dashboard normalmente.
       </p>
-      <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+      <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
         {canInstall && !isIos ? (
-          <Button onClick={() => void promptInstall()}>
+          <Button className="w-full sm:w-auto" onClick={() => void promptInstall()}>
             <Smartphone className="size-4" /> Instalar app
           </Button>
         ) : (
-          <Button asChild>
+          <Button className="w-full sm:w-auto" asChild>
             <Link to="/instalar-app">
               <Smartphone className="size-4" /> Instalar app
             </Link>
           </Button>
         )}
-        <Button variant="outline" asChild>
+        <Button variant="outline" className="w-full sm:w-auto" asChild>
           <Link to="/dashboard">Voltar ao Dashboard</Link>
         </Button>
       </div>

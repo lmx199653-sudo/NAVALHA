@@ -25,9 +25,9 @@ function ClientLinkPage() {
   return (
     <AppShell title="Link para cliente" subtitle="Compartilhe e receba agendamentos online">
       <div className="mx-auto max-w-2xl">
-        <div className="surface-card overflow-hidden">
-          <div className="border-b border-border/70 bg-primary/10 px-5 py-6 text-center">
-            <h2 className="font-display text-3xl">Seu link de agendamento está pronto!</h2>
+        <div className="surface-card surface-card-hover overflow-hidden ring-1 ring-primary/20">
+          <div className="border-b border-primary/20 bg-primary/10 px-5 py-6 text-center">
+            <h2 className="font-display text-3xl text-gold-gradient">Seu link de agendamento está pronto!</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Envie este link para seus clientes. Eles podem escolher o serviço, profissional e
               horários disponíveis e confirmar o agendamento online.
@@ -35,7 +35,7 @@ function ClientLinkPage() {
           </div>
 
           <div className="space-y-5 p-5">
-            <p className="break-all rounded-xl border border-primary/30 bg-secondary/50 p-4 text-center text-sm text-primary">
+            <p className="break-all rounded-xl border border-primary/30 bg-secondary/50 p-4 text-center text-sm font-medium text-primary">
               {url || "Carregando…"}
             </p>
 

@@ -9,6 +9,13 @@ import {
   type Subscription,
 } from "@/lib/subscriptions";
 
+function statusBadgeVariant(status: Subscription["status"]): "success" | "warning" | "destructive" | "secondary" {
+  if (status === "active") return "success";
+  if (status === "pending" || status === "suspended") return "warning";
+  if (status === "cancelled") return "secondary";
+  return "destructive";
+}
+
 function Bar({ label, used, total }: { label: string; used: number; total: number }) {
   const left = Math.max(total - used, 0);
   const pct = total > 0 ? (left / total) * 100 : 0;
@@ -55,19 +62,21 @@ export function SubscriptionCard({
   const nearRenewal = usable && renewIn !== null && renewIn <= 3;
 
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+    <div className="surface-card space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Assinatura</p>
+          <p className="eyebrow">Assinatura</p>
           <p className="font-display text-xl">{plan.name}</p>
-          <p className="text-xs text-muted-foreground">
-            {brl(subscription.price_cents || plan.price_cents)} / ciclo de {plan.cycle_days} dias
+          <p className="font-display text-lg text-primary">
+            {brl(subscription.price_cents || plan.price_cents)}
+            <span className="text-xs font-sans font-normal text-muted-foreground">
+              {" "}
+              / ciclo de {plan.cycle_days} dias
+            </span>
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Badge variant="outline" className={status.tone}>
-            {status.dot} {status.label}
-          </Badge>
+          <Badge variant={statusBadgeVariant(subscription.status)}>{status.label}</Badge>
           {nearRenewal && (
             <Badge variant="outline" className="border-warning/40 bg-warning/15 text-warning">
               🟠 Renova em {renewIn} dia(s)

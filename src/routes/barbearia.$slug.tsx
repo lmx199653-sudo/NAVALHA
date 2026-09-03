@@ -18,6 +18,8 @@ import {
   User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
+import { Landmark, Wallet } from "lucide-react";
 import { serviceImages } from "@/lib/service-images";
 import { notifyNewAppointment } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
@@ -194,7 +196,7 @@ function PublicBooking() {
 
 
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-shop", slug],
     queryFn: async () => {
       const { data: shop } = await supabase
@@ -356,17 +358,37 @@ function PublicBooking() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Carregando…
+      <div className="mx-auto max-w-2xl px-4 pt-10">
+        <div className="surface-card animate-rise space-y-4 p-5">
+          <div className="skeleton-shimmer h-20 w-20 rounded-2xl" />
+          <div className="skeleton-shimmer h-6 w-2/3 rounded" />
+          <div className="skeleton-shimmer h-4 w-1/2 rounded" />
+        </div>
+        <CardSkeleton count={3} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ErrorState
+          title="Não foi possível carregar a barbearia"
+          description="Verifique sua conexão e tente novamente."
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2 px-4 text-center">
-        <h1 className="font-display text-4xl">Barbearia não encontrada</h1>
-        <p className="text-sm text-muted-foreground">Confira o link com a barbearia.</p>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <EmptyState
+          icon={MapPin}
+          title="Barbearia não encontrada"
+          description="Confira o link com a barbearia."
+        />
       </div>
     );
   }
@@ -444,7 +466,7 @@ function PublicBooking() {
                   className={cn(
                     "surface-card grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 text-left transition-all active:scale-[0.99] sm:gap-4 sm:p-5",
                     active
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                      ? "border-primary bg-primary/5 ring-2 ring-primary/30"
                       : "hover:border-primary/50",
                   )}
                 >
@@ -485,7 +507,7 @@ function PublicBooking() {
             })}
 
             {service && (
-              <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/95 px-4 py-3 backdrop-blur">
+              <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/90 px-4 py-3 pb-safe backdrop-blur">
                 <div className="mx-auto flex max-w-2xl items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs text-muted-foreground">
@@ -591,9 +613,9 @@ function PublicBooking() {
                       setStep(3);
                     }}
                     className={cn(
-                      "rounded-xl border py-3 text-sm font-medium transition-colors",
+                      "min-h-11 rounded-xl border py-3 text-sm font-medium transition-colors",
                       slot === s
-                        ? "border-primary bg-primary/15 text-primary"
+                        ? "border-primary bg-primary/15 text-primary ring-2 ring-primary/30"
                         : "border-border hover:border-primary hover:text-primary",
                     )}
                   >
@@ -666,7 +688,7 @@ function PublicBooking() {
         {step === 4 && service && barber && slot && (
           <section className="space-y-4">
             <StepTitle title="Seu agendamento" hint="Confira antes de confirmar." />
-            <div className="surface-card divide-y divide-border/70 p-0">
+            <div className="surface-card space-y-2 p-3">
               <SummaryRow icon={Scissors} label="Serviço" value={service.name} />
               <SummaryRow icon={User} label="Profissional" value={barber.name} />
               <SummaryRow
@@ -680,7 +702,7 @@ function PublicBooking() {
                 label="Cliente"
                 value={`${name} · ${phone} · ${cpf}`}
               />
-              <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center justify-between px-3.5 py-3">
                 <span className="text-sm text-muted-foreground">Valor</span>
                 <span className="font-display text-3xl text-primary">
                   {brl(service.price_cents)}
@@ -692,6 +714,7 @@ function PublicBooking() {
               <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
                 {shopHasPix && (
                   <PaymentOption
+                    icon={QrCode}
                     active={paymentChoice === "pix"}
                     title="Pagar com Pix"
                     hint="QR Code ou chave · agora"
@@ -701,6 +724,7 @@ function PublicBooking() {
                 )}
                 {planEligible && (
                   <PaymentOption
+                    icon={Sparkles}
                     active={paymentChoice === "plan"}
                     title="Usar meu plano"
                     hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
@@ -709,6 +733,7 @@ function PublicBooking() {
                   />
                 )}
                 <PaymentOption
+                  icon={Wallet}
                   active={paymentChoice === "on_site"}
                   title="Pagar no local"
                   hint="Pix, cartão ou dinheiro"
@@ -761,19 +786,24 @@ function PublicBooking() {
                 </p>
               )}
             </div>
-            <Button
-              className="h-14 w-full text-base"
-              disabled={book.isPending}
-              onClick={() => book.mutate()}
-            >
-              {book.isPending
-                ? "Confirmando…"
-                : paymentChoice === "pix" || paymentChoice === "pix_qr"
-                  ? "Já fiz o Pix — confirmar agendamento"
-                  : paymentChoice === "plan"
-                    ? "Confirmar com meu plano"
-                    : "Confirmar agendamento"}
-            </Button>
+            <div className="h-16" />
+            <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/90 px-4 py-3 pb-safe backdrop-blur">
+              <div className="mx-auto max-w-2xl">
+                <Button
+                  className="h-14 w-full text-base"
+                  disabled={book.isPending}
+                  onClick={() => book.mutate()}
+                >
+                  {book.isPending
+                    ? "Confirmando…"
+                    : paymentChoice === "pix" || paymentChoice === "pix_qr"
+                      ? "Já fiz o Pix — confirmar agendamento"
+                      : paymentChoice === "plan"
+                        ? "Confirmar com meu plano"
+                        : "Confirmar agendamento"}
+                </Button>
+              </div>
+            </div>
           </section>
         )}
 
@@ -802,7 +832,7 @@ function ShopHeader({ shop }: { shop: Shop }) {
             className="size-full object-cover"
           />
         ) : (
-          <div className="size-full bg-gradient-to-br from-secondary via-background to-background" />
+          <div className="grid-noise size-full bg-gradient-to-br from-primary/15 via-secondary to-background" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-transparent" />
       </div>
@@ -894,7 +924,7 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5">
+    <div className="surface-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3.5 py-3">
       <span className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
         <Icon className="size-4 shrink-0 text-primary" /> {label}
       </span>
@@ -904,12 +934,14 @@ function SummaryRow({
 }
 
 function PaymentOption({
+  icon: Icon,
   active,
   title,
   hint,
   badge,
   onClick,
 }: {
+  icon: typeof QrCode;
   active: boolean;
   title: string;
   hint: string;
@@ -920,9 +952,10 @@ function PaymentOption({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "relative rounded-xl border p-3 text-left transition-colors",
-        active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+        "relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-colors min-h-24",
+        active ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border hover:border-primary/40",
       )}
     >
       {badge && (
@@ -930,8 +963,18 @@ function PaymentOption({
           {badge}
         </span>
       )}
-      <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      <span
+        className={cn(
+          "flex size-8 items-center justify-center rounded-lg ring-1",
+          active ? "bg-primary/20 text-primary ring-primary/30" : "bg-secondary/70 text-muted-foreground ring-border",
+        )}
+      >
+        <Icon className="size-4" />
+      </span>
+      <div>
+        <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      </div>
     </button>
   );
 }
@@ -993,7 +1036,7 @@ function SuccessScreen({
       <div className="w-full max-w-md">
         <div className="surface-card overflow-hidden">
           <div className="flex flex-col items-center border-b border-border/70 bg-primary/10 px-6 py-8 text-center">
-            <span className="flex size-16 items-center justify-center rounded-full bg-primary/20 text-primary">
+            <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success ring-1 ring-success/30">
               <Check className="size-8" />
             </span>
             <h1 className="mt-4 font-display text-4xl leading-none">Agendamento confirmado</h1>
@@ -1001,7 +1044,7 @@ function SuccessScreen({
               Te esperamos na {shop.name}, {name.split(" ")[0]}!
             </p>
           </div>
-          <div className="divide-y divide-border/70">
+          <div className="space-y-2 p-3">
             <SummaryRow icon={Scissors} label="Serviço" value={service.name} />
             <SummaryRow icon={User} label="Profissional" value={barber.name} />
             <SummaryRow
@@ -1022,14 +1065,14 @@ function SuccessScreen({
                     : "No local (Pix, cartão ou dinheiro)"
               }
             />
-            <div className="flex items-center justify-between px-5 py-4">
+            <div className="flex items-center justify-between px-3.5 py-3">
               <span className="text-sm text-muted-foreground">Valor</span>
               <span className="font-display text-3xl text-primary">
                 {planCoveredAll ? "Incluso" : brl(usingPlan ? planUncoveredCents : service.price_cents)}
               </span>
             </div>
             {usingPlan && (
-              <p className="px-5 py-3 text-xs text-muted-foreground">
+              <p className="px-3.5 py-2 text-xs text-muted-foreground">
                 O crédito do seu plano só é descontado quando o atendimento for concluído. Se cancelar ou não
                 comparecer, nada é descontado.
               </p>

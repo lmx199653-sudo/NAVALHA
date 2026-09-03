@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { Cake, MessageCircle, Sparkles, UserMinus } from "lucide-react";
+import { Cake, MessageCircle, Sparkles, UserMinus, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState, ErrorState, ListSkeleton, SectionHeader } from "@/components/ui/states";
 
 export const Route = createFileRoute("/_authenticated/marketing")({
   component: MarketingPage,
@@ -27,7 +28,7 @@ function wa(phone: string | null, text: string) {
 function MarketingPage() {
   const { data: shop } = useShop();
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["marketing", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -72,35 +73,42 @@ function MarketingPage() {
 
   return (
     <AppShell title="Marketing" subtitle="Campanhas prontas para trazer o cliente de volta">
-      <div className="grid gap-4 lg:grid-cols-3">
-        <CampaignCard
-          icon={UserMinus}
-          title="Clientes sumidos"
-          desc="Mais de 30 dias sem voltar. Um lembrete costuma recuperar 1 em cada 4."
-          people={groups.inactive}
-          message={(name) =>
-            `Fala ${name}! Faz um tempo que você não passa aqui na ${shop?.name ?? "barbearia"}. Bora marcar seu corte? Tenho horário essa semana.`
-          }
-        />
-        <CampaignCard
-          icon={Cake}
-          title="Aniversariantes do mês"
-          desc="Ofereça um mimo de aniversário e aumente a fidelidade."
-          people={groups.birthdays}
-          message={(name) =>
-            `Parabéns, ${name}! 🎉 Como presente da ${shop?.name ?? "barbearia"}, seu próximo corte tem desconto especial. Vamos agendar?`
-          }
-        />
-        <CampaignCard
-          icon={Sparkles}
-          title="VIPs por pontos"
-          desc="Seus melhores clientes. Recompense antes que a concorrência faça."
-          people={groups.vips}
-          message={(name) =>
-            `${name}, você é VIP aqui na ${shop?.name ?? "barbearia"}! Seus pontos já valem uma recompensa. Quer resgatar no próximo corte?`
-          }
-        />
-      </div>
+      {isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <CampaignCard
+            icon={UserMinus}
+            title="Clientes sumidos"
+            desc="Mais de 30 dias sem voltar. Um lembrete costuma recuperar 1 em cada 4."
+            people={groups.inactive}
+            loading={isLoading}
+            message={(name) =>
+              `Fala ${name}! Faz um tempo que você não passa aqui na ${shop?.name ?? "barbearia"}. Bora marcar seu corte? Tenho horário essa semana.`
+            }
+          />
+          <CampaignCard
+            icon={Cake}
+            title="Aniversariantes do mês"
+            desc="Ofereça um mimo de aniversário e aumente a fidelidade."
+            people={groups.birthdays}
+            loading={isLoading}
+            message={(name) =>
+              `Parabéns, ${name}! 🎉 Como presente da ${shop?.name ?? "barbearia"}, seu próximo corte tem desconto especial. Vamos agendar?`
+            }
+          />
+          <CampaignCard
+            icon={Sparkles}
+            title="VIPs por pontos"
+            desc="Seus melhores clientes. Recompense antes que a concorrência faça."
+            people={groups.vips}
+            loading={isLoading}
+            message={(name) =>
+              `${name}, você é VIP aqui na ${shop?.name ?? "barbearia"}! Seus pontos já valem uma recompensa. Quer resgatar no próximo corte?`
+            }
+          />
+        </div>
+      )}
     </AppShell>
   );
 }
@@ -111,41 +119,45 @@ function CampaignCard({
   desc,
   people,
   message,
+  loading,
 }: {
   icon: typeof Cake;
   title: string;
   desc: string;
   people: Customer[];
   message: (name: string) => string;
+  loading?: boolean;
 }) {
   return (
     <div className="surface-card p-4">
-      <div className="flex items-center gap-2">
-        <span className="rounded-lg bg-primary/15 p-2 text-primary">
-          <Icon className="size-4" />
-        </span>
-        <h3 className="font-display text-2xl leading-none">{title}</h3>
-        <Badge variant="secondary" className="ml-auto">
-          {people.length}
-        </Badge>
-      </div>
+      <SectionHeader
+        title={title}
+        icon={Icon}
+        action={<Badge variant="secondary">{people.length}</Badge>}
+      />
       <p className="mt-2 text-xs text-muted-foreground">{desc}</p>
       <div className="mt-4 space-y-2">
-        {people.slice(0, 10).map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2 text-sm"
-          >
-            <span className="truncate">{c.name}</span>
-            <Button size="sm" variant="ghost" asChild>
-              <a href={wa(c.phone, message(c.name.split(" ")[0]!))} target="_blank" rel="noreferrer">
-                <MessageCircle className="size-4" />
-              </a>
-            </Button>
-          </div>
-        ))}
-        {people.length === 0 && (
-          <p className="text-xs text-muted-foreground">Nenhum cliente neste grupo agora.</p>
+        {loading ? (
+          <ListSkeleton rows={3} />
+        ) : people.length === 0 ? (
+          <EmptyState
+            icon={Users}
+            title="Nenhum cliente neste grupo"
+            description="Volte aqui quando novos clientes entrarem neste grupo."
+            compact
+          />
+        ) : (
+          people.slice(0, 10).map((c) => (
+            <div key={c.id} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+              <span className="truncate text-sm font-medium">{c.name}</span>
+              <Button size="sm" variant="ghost" asChild aria-label={`Enviar WhatsApp para ${c.name}`}>
+                <a href={wa(c.phone, message(c.name.split(" ")[0]!))} target="_blank" rel="noreferrer">
+                  <MessageCircle className="size-4" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </a>
+              </Button>
+            </div>
+          ))
         )}
       </div>
     </div>

@@ -159,9 +159,7 @@ export function NewSubscriberDialog({
             {/* ---------- cliente ---------- */}
             <section className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  1. Cliente
-                </p>
+                <p className="eyebrow">1. Cliente</p>
                 <div className="flex gap-1 rounded-full border border-border p-0.5">
                   {(
                     [
@@ -225,7 +223,7 @@ export function NewSubscriberDialog({
                         onChange={(e) => setTerm(e.target.value)}
                       />
                     </div>
-                    <div className="max-h-48 divide-y divide-border overflow-y-auto rounded-xl border border-border">
+                    <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-border p-1.5">
                       {matches.length === 0 && (
                         <div className="p-3 text-sm text-muted-foreground">
                           Nenhum cliente encontrado.{" "}
@@ -245,7 +243,7 @@ export function NewSubscriberDialog({
                             key={c.id}
                             type="button"
                             onClick={() => setCustomer(c)}
-                            className="flex w-full items-center justify-between gap-2 p-2.5 text-left transition-colors hover:bg-secondary/60"
+                            className="surface-row flex w-full items-center justify-between gap-2 px-2.5 py-2.5 text-left"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium">{c.name}</p>
@@ -300,9 +298,7 @@ export function NewSubscriberDialog({
 
             {/* ---------- plano ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                2. Plano
-              </p>
+              <p className="eyebrow">2. Plano</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {activePlans.map((p) => (
                   <button
@@ -331,9 +327,7 @@ export function NewSubscriberDialog({
 
             {/* ---------- datas ---------- */}
             <section className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                3. Período
-              </p>
+              <p className="eyebrow">3. Período</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Início</Label>
