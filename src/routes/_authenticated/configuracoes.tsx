@@ -1,5 +1,5 @@
 import { friendlyError } from "@/lib/errors";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,10 +10,14 @@ import {
   Clock,
   Copy,
   ExternalLink,
+  LifeBuoy,
   Link2,
   LogOut,
   QrCode,
+  ShieldAlert,
 } from "lucide-react";
+import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
+import { LEGAL, LEGAL_LINKS } from "@/lib/legal";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -486,6 +490,36 @@ function SettingsPage() {
             >
               <LogOut className="size-4" /> Sair da conta
             </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="surface-card p-4 sm:p-5">
+            <SectionHeader icon={LifeBuoy} title="Suporte e privacidade" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Precisa de ajuda ou quer saber como seus dados são tratados?
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {LEGAL_LINKS.filter((l) => l.to !== "/excluir-conta").map((l) => (
+                <Button key={l.to} asChild variant="outline" size="sm">
+                  <Link to={l.to}>{l.label}</Link>
+                </Button>
+              ))}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Contato: <span className="text-foreground">{LEGAL.supportEmail}</span>
+            </p>
+          </div>
+
+          <div className="surface-card border-destructive/30 p-4 sm:p-5">
+            <SectionHeader icon={ShieldAlert} title="Excluir conta" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Apaga definitivamente sua conta, a barbearia e todos os dados (clientes, agenda,
+              assinaturas, financeiro). Não pode ser desfeito.
+            </p>
+            <div className="mt-3">
+              <DeleteAccountDialog />
+            </div>
           </div>
         </div>
       </div>

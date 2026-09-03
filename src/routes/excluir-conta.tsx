@@ -85,7 +85,7 @@ function DeleteAccountPage() {
               dentro do app.
             </p>
             <Button asChild>
-              <Link to="/auth" search={{ next: "/excluir-conta" } as never}>
+              <Link to="/auth">
                 <LogIn className="size-4" /> Entrar para excluir
               </Link>
             </Button>
