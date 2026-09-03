@@ -332,6 +332,289 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_accounts: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          free_quota: number
+          free_used: number
+          updated_at: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          free_quota?: number
+          free_used?: number
+          updated_at?: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          free_quota?: number
+          free_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_accounts_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: true
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_cycles: {
+        Row: {
+          amount_cents: number
+          barbershop_id: string
+          billed_count: number
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          status: string
+          unit_price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          barbershop_id: string
+          billed_count?: number
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          status?: string
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          barbershop_id?: string
+          billed_count?: number
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_invoices: {
+        Row: {
+          amount_cents: number
+          appointments_count: number
+          barbershop_id: string
+          created_at: string
+          cycle_id: string | null
+          due_date: string
+          id: string
+          paid_amount_cents: number | null
+          paid_at: string | null
+          payment_provider: string | null
+          payment_reference: string | null
+          period_end: string
+          period_start: string
+          pix_txid: string
+          status: string
+          suspend_at: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          appointments_count?: number
+          barbershop_id: string
+          created_at?: string
+          cycle_id?: string | null
+          due_date: string
+          id?: string
+          paid_amount_cents?: number | null
+          paid_at?: string | null
+          payment_provider?: string | null
+          payment_reference?: string | null
+          period_end: string
+          period_start: string
+          pix_txid: string
+          status?: string
+          suspend_at: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          appointments_count?: number
+          barbershop_id?: string
+          created_at?: string
+          cycle_id?: string | null
+          due_date?: string
+          id?: string
+          paid_amount_cents?: number | null
+          paid_at?: string | null
+          payment_provider?: string | null
+          payment_reference?: string | null
+          period_end?: string
+          period_start?: string
+          pix_txid?: string
+          status?: string
+          suspend_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoices_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "billing_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_settings: {
+        Row: {
+          cycle_days: number
+          free_quota: number
+          id: boolean
+          payment_days: number
+          pending_days: number
+          pix_holder_name: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          unit_price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          cycle_days?: number
+          free_quota?: number
+          id?: boolean
+          payment_days?: number
+          pending_days?: number
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          cycle_days?: number
+          free_quota?: number
+          id?: boolean
+          payment_days?: number
+          pending_days?: number
+          pix_holder_name?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      billing_usages: {
+        Row: {
+          appointment_id: string
+          barbershop_id: string
+          created_at: string
+          cycle_id: string | null
+          id: string
+          is_free: boolean
+          unit_price_cents: number
+        }
+        Insert: {
+          appointment_id: string
+          barbershop_id: string
+          created_at?: string
+          cycle_id?: string | null
+          id?: string
+          is_free?: boolean
+          unit_price_cents?: number
+        }
+        Update: {
+          appointment_id?: string
+          barbershop_id?: string
+          created_at?: string
+          cycle_id?: string | null
+          id?: string
+          is_free?: boolean
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_usages_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_usages_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_usages_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "billing_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_webhook_events: {
+        Row: {
+          created_at: string
+          external_id: string
+          id: string
+          invoice_id: string | null
+          payload: Json | null
+          provider: string
+          result: string | null
+        }
+        Insert: {
+          created_at?: string
+          external_id: string
+          id?: string
+          invoice_id?: string | null
+          payload?: Json | null
+          provider: string
+          result?: string | null
+        }
+        Update: {
+          created_at?: string
+          external_id?: string
+          id?: string
+          invoice_id?: string | null
+          payload?: Json | null
+          provider?: string
+          result?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_webhook_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "billing_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_hours: {
         Row: {
           barbershop_id: string
@@ -1072,6 +1355,37 @@ export type Database = {
       }
     }
     Functions: {
+      billing_account_status: { Args: { _shop: string }; Returns: string }
+      billing_close_due_cycles: { Args: { _shop?: string }; Returns: number }
+      billing_ensure_account: {
+        Args: { _shop: string }
+        Returns: {
+          barbershop_id: string
+          created_at: string
+          free_quota: number
+          free_used: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "billing_accounts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      billing_is_suspended: { Args: { _shop: string }; Returns: boolean }
+      billing_mark_invoice_paid: {
+        Args: {
+          _amount_cents?: number
+          _external_id?: string
+          _payload?: Json
+          _provider?: string
+          _reference?: string
+          _txid: string
+        }
+        Returns: Json
+      }
+      billing_run_daily: { Args: never; Returns: undefined }
       book_appointment: {
         Args: {
           _barber_id: string
@@ -1129,6 +1443,7 @@ export type Database = {
       }
       is_member: { Args: { _shop: string }; Returns: boolean }
       is_shop_admin: { Args: { _shop: string }; Returns: boolean }
+      my_billing_overview: { Args: { _shop: string }; Returns: Json }
       public_breaks: {
         Args: { _slug: string }
         Returns: {
@@ -1145,6 +1460,7 @@ export type Database = {
         Args: { _cpf: string; _service_ids: string[]; _slug: string }
         Returns: Json
       }
+      public_shop_accepting: { Args: { _slug: string }; Returns: boolean }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
