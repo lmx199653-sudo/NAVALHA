@@ -98,33 +98,6 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
 
-  const { data: hours } = useQuery({
-    queryKey: ["hours", shop?.id],
-    enabled: !!shop?.id,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("business_hours")
-        .select("*")
-        .eq("barbershop_id", shop!.id)
-        .order("weekday");
-      const rows = (data ?? []) as Hours[];
-      return WEEKDAYS.map(
-        (_, i) =>
-          rows.find((r) => r.weekday === i) ?? {
-            weekday: i,
-            open_time: "09:00",
-            close_time: "20:00",
-            closed: i === 0,
-          },
-      );
-    },
-  });
-
-  const [localHours, setLocalHours] = useState<Hours[] | null>(null);
-  useEffect(() => {
-    if (hours) setLocalHours(hours);
-  }, [hours]);
-
   const saveShop = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
