@@ -49,7 +49,7 @@ const NAV_GROUPS = ["Operação", "Cadastros", "Negócio"] as const;
 
 const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
 
-function BrandMark({ shop, size = "md" }: { shop?: { name?: string | null; logo_url?: string | null } | null; size?: "md" | "sm" }) {
+function BrandMark({ shop, size = "md" }: { shop?: { name?: string | null; logo_url?: string | null } | null | undefined; size?: "md" | "sm" }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       <span
