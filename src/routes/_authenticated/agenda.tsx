@@ -13,9 +13,11 @@ import {
   Plus,
   UserX,
   X,
+  CalendarDays,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
+import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/states";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

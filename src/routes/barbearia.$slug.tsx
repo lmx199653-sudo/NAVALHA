@@ -466,7 +466,7 @@ function PublicBooking() {
                   className={cn(
                     "surface-card grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-4 text-left transition-all active:scale-[0.99] sm:gap-4 sm:p-5",
                     active
-                      ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                      ? "border-primary bg-primary/5 ring-2 ring-primary/30"
                       : "hover:border-primary/50",
                   )}
                 >
@@ -507,7 +507,7 @@ function PublicBooking() {
             })}
 
             {service && (
-              <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/95 px-4 py-3 backdrop-blur">
+              <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/90 px-4 py-3 pb-safe backdrop-blur">
                 <div className="mx-auto flex max-w-2xl items-center gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs text-muted-foreground">
@@ -613,9 +613,9 @@ function PublicBooking() {
                       setStep(3);
                     }}
                     className={cn(
-                      "rounded-xl border py-3 text-sm font-medium transition-colors",
+                      "min-h-11 rounded-xl border py-3 text-sm font-medium transition-colors",
                       slot === s
-                        ? "border-primary bg-primary/15 text-primary"
+                        ? "border-primary bg-primary/15 text-primary ring-2 ring-primary/30"
                         : "border-border hover:border-primary hover:text-primary",
                     )}
                   >
@@ -783,19 +783,24 @@ function PublicBooking() {
                 </p>
               )}
             </div>
-            <Button
-              className="h-14 w-full text-base"
-              disabled={book.isPending}
-              onClick={() => book.mutate()}
-            >
-              {book.isPending
-                ? "Confirmando…"
-                : paymentChoice === "pix" || paymentChoice === "pix_qr"
-                  ? "Já fiz o Pix — confirmar agendamento"
-                  : paymentChoice === "plan"
-                    ? "Confirmar com meu plano"
-                    : "Confirmar agendamento"}
-            </Button>
+            <div className="h-16" />
+            <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/90 px-4 py-3 pb-safe backdrop-blur">
+              <div className="mx-auto max-w-2xl">
+                <Button
+                  className="h-14 w-full text-base"
+                  disabled={book.isPending}
+                  onClick={() => book.mutate()}
+                >
+                  {book.isPending
+                    ? "Confirmando…"
+                    : paymentChoice === "pix" || paymentChoice === "pix_qr"
+                      ? "Já fiz o Pix — confirmar agendamento"
+                      : paymentChoice === "plan"
+                        ? "Confirmar com meu plano"
+                        : "Confirmar agendamento"}
+                </Button>
+              </div>
+            </div>
           </section>
         )}
 
@@ -824,7 +829,7 @@ function ShopHeader({ shop }: { shop: Shop }) {
             className="size-full object-cover"
           />
         ) : (
-          <div className="size-full bg-gradient-to-br from-secondary via-background to-background" />
+          <div className="grid-noise size-full bg-gradient-to-br from-primary/15 via-secondary to-background" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/75 to-transparent" />
       </div>

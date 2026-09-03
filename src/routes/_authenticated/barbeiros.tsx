@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState, ErrorState, CardSkeleton } from "@/components/ui/states";
 import { brl, WEEKDAYS } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/barbeiros")({
@@ -50,7 +52,7 @@ function BarbersPage() {
   const [editing, setEditing] = useState<Barber | null>(null);
   const [form, setForm] = useState(EMPTY);
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["barbers-page", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -134,19 +136,49 @@ function BarbersPage() {
         </Button>
       }
     >
+      {isLoading && <CardSkeleton count={6} />}
+
+      {!isLoading && isError && (
+        <ErrorState onRetry={() => refetch()} description="Não foi possível carregar os barbeiros." />
+      )}
+
+      {!isLoading && !isError && (data?.barbers ?? []).length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="Nenhum barbeiro cadastrado"
+          description="Adicione os profissionais da equipe para começar a agendar."
+          action={
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditing(null);
+                setForm(EMPTY);
+                setOpen(true);
+              }}
+            >
+              <Plus className="size-4" /> Novo barbeiro
+            </Button>
+          }
+        />
+      )}
+
+      {!isLoading && !isError && (data?.barbers ?? []).length > 0 && (
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {(data?.barbers ?? []).map((b) => {
           const s = stats(b.id);
           return (
             <div key={b.id} className="surface-card p-4">
               <div className="flex items-start gap-3">
-                <Avatar className="size-12">
+                <Avatar className="size-12 ring-1 ring-border/70">
                   <AvatarImage src={b.photo_url ?? undefined} alt={b.name} />
                   <AvatarFallback>{b.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-2xl leading-none">{b.name}</h3>
+                  <h3 className="truncate font-display text-2xl leading-none">{b.name}</h3>
                   <p className="mt-1 truncate text-xs text-muted-foreground">{b.bio}</p>
+                  <Badge variant={b.active ? "success" : "secondary"} className="mt-1.5">
+                    {b.active ? "Ativo" : "Inativo"}
+                  </Badge>
                 </div>
                 <div className="flex gap-1">
                   <Button
@@ -187,6 +219,7 @@ function BarbersPage() {
           );
         })}
       </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
@@ -200,33 +233,33 @@ function BarbersPage() {
               save.mutate();
             }}
           >
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Nome</Label>
               <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Bio</Label>
               <Textarea rows={2} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Foto (URL)</Label>
               <Input value={form.photo_url} onChange={(e) => setForm({ ...form, photo_url: e.target.value })} />
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
                 <Label>Comissão %</Label>
                 <Input type="number" value={form.commission_pct} onChange={(e) => setForm({ ...form, commission_pct: e.target.value })} />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Início</Label>
                 <Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>Fim</Label>
                 <Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Dias de trabalho</Label>
               <div className="flex flex-wrap gap-2">
                 {WEEKDAYS.map((w, i) => (
@@ -249,9 +282,11 @@ function BarbersPage() {
               <Label>Ativo</Label>
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
-            <Button className="w-full" disabled={save.isPending}>
-              Salvar
-            </Button>
+            <DialogFooter>
+              <Button className="w-full sm:w-auto" disabled={save.isPending}>
+                {save.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
