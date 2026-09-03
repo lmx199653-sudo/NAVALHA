@@ -6,6 +6,7 @@ import {
   CalendarPlus,
   Clock,
   Crown,
+  CreditCard,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -24,6 +25,7 @@ import { useShop } from "@/hooks/useShop";
 import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
+import { BillingBanner } from "@/components/BillingBanner";
 
 import { useBrand } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ const NAV = [
   { to: "/horarios", label: "Horários", icon: Clock, group: "Cadastros" },
   { to: "/financeiro", label: "Financeiro", icon: BarChart3, group: "Negócio" },
   { to: "/assinaturas", label: "Assinaturas", icon: Crown, group: "Negócio" },
+  { to: "/cobranca", label: "Cobrança", icon: CreditCard, group: "Negócio" },
   { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
 ] as const;
@@ -224,6 +227,7 @@ export function AppShell({
 
         <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
           <InstallAppCta />
+          <BillingBanner />
           <div className="animate-rise">{children}</div>
         </main>
       </div>
