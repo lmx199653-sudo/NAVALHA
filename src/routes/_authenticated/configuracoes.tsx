@@ -363,62 +363,6 @@ function SettingsPage() {
               )}
             </div>
 
-            <div className="surface-card p-4 sm:p-5">
-              <SectionHeader icon={Clock} title="Horário de funcionamento" />
-              <div className="mt-3 space-y-2">
-                {(localHours ?? []).map((h, i) => (
-                  <div
-                    key={h.weekday}
-                    className="surface-row flex flex-wrap items-center gap-2 px-3.5 py-2.5"
-                  >
-                    <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
-                      {WEEKDAYS[h.weekday]}
-                    </span>
-                    <Input
-                      type="time"
-                      className="h-9 w-auto min-w-0 flex-1"
-                      value={h.open_time.slice(0, 5)}
-                      disabled={h.closed}
-                      onChange={(e) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, open_time: e.target.value };
-                        setLocalHours(next);
-                      }}
-                    />
-                    <Input
-                      type="time"
-                      className="h-9 w-auto min-w-0 flex-1"
-                      value={h.close_time.slice(0, 5)}
-                      disabled={h.closed}
-                      onChange={(e) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, close_time: e.target.value };
-                        setLocalHours(next);
-                      }}
-                    />
-                    <Switch
-                      checked={!h.closed}
-                      onCheckedChange={(v) => {
-                        const next = [...localHours!];
-                        next[i] = { ...h, closed: !v };
-                        setLocalHours(next);
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3 flex justify-end">
-                <Button
-                  size="sm"
-                  className="w-full sm:w-auto"
-                  disabled={saveHours.isPending}
-                  onClick={() => saveHours.mutate()}
-                >
-                  {saveHours.isPending ? "Salvando..." : "Salvar horários"}
-                </Button>
-              </div>
-            </div>
-
             <Button
               variant="outline"
               className="w-full sm:w-auto"
