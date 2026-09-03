@@ -33,6 +33,8 @@ import { Route as AuthenticatedMarketingRouteImport } from './routes/_authentica
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPlanosRouteImport } from './routes/_authenticated/planos'
 import { Route as AuthenticatedServicosRouteImport } from './routes/_authenticated/servicos'
+import { Route as AuthenticatedSuporteChatRouteImport } from './routes/_authenticated/suporte-chat'
+import { Route as AuthenticatedSuporteInboxRouteImport } from './routes/_authenticated/suporte-inbox'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
 import { Route as ApiPublicBillingPixWebhookRouteImport } from './routes/api/public/billing/pix-webhook'
 
@@ -157,6 +159,18 @@ const AuthenticatedServicosRoute = AuthenticatedServicosRouteImport.update({
   path: '/servicos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSuporteChatRoute =
+  AuthenticatedSuporteChatRouteImport.update({
+    id: '/suporte-chat',
+    path: '/suporte-chat',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSuporteInboxRoute =
+  AuthenticatedSuporteInboxRouteImport.update({
+    id: '/suporte-inbox',
+    path: '/suporte-inbox',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const BarbeariaSlugRoute = BarbeariaSlugRouteImport.update({
   id: '/barbearia/$slug',
   path: '/barbearia/$slug',
@@ -193,6 +207,8 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
+  '/suporte-chat': typeof AuthenticatedSuporteChatRoute
+  '/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
@@ -220,6 +236,8 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/planos': typeof AuthenticatedPlanosRoute
   '/servicos': typeof AuthenticatedServicosRoute
+  '/suporte-chat': typeof AuthenticatedSuporteChatRoute
+  '/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
@@ -249,6 +267,8 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/planos': typeof AuthenticatedPlanosRoute
   '/_authenticated/servicos': typeof AuthenticatedServicosRoute
+  '/_authenticated/suporte-chat': typeof AuthenticatedSuporteChatRoute
+  '/_authenticated/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
 }
@@ -278,6 +298,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/planos'
     | '/servicos'
+    | '/suporte-chat'
+    | '/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -305,6 +327,8 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/planos'
     | '/servicos'
+    | '/suporte-chat'
+    | '/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
   id:
@@ -333,6 +357,8 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/planos'
     | '/_authenticated/servicos'
+    | '/_authenticated/suporte-chat'
+    | '/_authenticated/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
   fileRoutesById: FileRoutesById
@@ -523,6 +549,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServicosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/suporte-chat': {
+      id: '/_authenticated/suporte-chat'
+      path: '/suporte-chat'
+      fullPath: '/suporte-chat'
+      preLoaderRoute: typeof AuthenticatedSuporteChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/suporte-inbox': {
+      id: '/_authenticated/suporte-inbox'
+      path: '/suporte-inbox'
+      fullPath: '/suporte-inbox'
+      preLoaderRoute: typeof AuthenticatedSuporteInboxRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/barbearia/$slug': {
       id: '/barbearia/$slug'
       path: '/barbearia/$slug'
@@ -554,6 +594,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPlanosRoute: typeof AuthenticatedPlanosRoute
   AuthenticatedServicosRoute: typeof AuthenticatedServicosRoute
+  AuthenticatedSuporteChatRoute: typeof AuthenticatedSuporteChatRoute
+  AuthenticatedSuporteInboxRoute: typeof AuthenticatedSuporteInboxRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -570,6 +612,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPlanosRoute: AuthenticatedPlanosRoute,
   AuthenticatedServicosRoute: AuthenticatedServicosRoute,
+  AuthenticatedSuporteChatRoute: AuthenticatedSuporteChatRoute,
+  AuthenticatedSuporteInboxRoute: AuthenticatedSuporteInboxRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

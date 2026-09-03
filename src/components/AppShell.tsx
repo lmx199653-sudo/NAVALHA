@@ -7,6 +7,8 @@ import {
   Clock,
   Crown,
   CreditCard,
+  Headset,
+  Inbox,
   LayoutDashboard,
   Link2,
   LogOut,
@@ -19,9 +21,10 @@ import {
   UserSquare2,
 } from "lucide-react";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
+import { useIsSupport, useMyConversations, useInbox, useSupportRealtime } from "@/hooks/useSupport";
 import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
@@ -33,7 +36,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
 
-const NAV = [
+type NavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  group: "Operação" | "Cadastros" | "Negócio" | "Ajuda";
+};
+
+const NAV: readonly NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Operação" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, group: "Operação" },
   { to: "/link", label: "Link cliente", icon: Link2, group: "Operação" },
@@ -46,11 +56,42 @@ const NAV = [
   { to: "/cobranca", label: "Cobrança", icon: CreditCard, group: "Negócio" },
   { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
+  { to: "/suporte-chat", label: "Suporte", icon: Headset, group: "Ajuda" },
 ] as const;
 
-const NAV_GROUPS = ["Operação", "Cadastros", "Negócio"] as const;
+const SUPPORT_INBOX_ITEM: NavItem = {
+  to: "/suporte-inbox",
+  label: "Inbox suporte",
+  icon: Inbox,
+  group: "Ajuda",
+};
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
+const NAV_GROUPS = ["Operação", "Cadastros", "Negócio", "Ajuda"] as const;
+
+const MOBILE_NAV = [NAV[0]!, NAV[1]!, NAV[2]!, NAV[3]!] as const;
+
+/** Menu completo + contadores de mensagens não lidas (barbeiro e equipe de suporte). */
+function useNav() {
+  const { data: isSupport } = useIsSupport();
+  const { data: mine } = useMyConversations();
+  const { data: inbox } = useInbox(!!isSupport);
+  useSupportRealtime(true);
+  const items = useMemo(() => (isSupport ? [...NAV, SUPPORT_INBOX_ITEM] : [...NAV]), [isSupport]);
+  const badges: Record<string, number> = {
+    "/suporte-chat": (mine ?? []).reduce((t, c) => t + c.barber_unread, 0),
+    "/suporte-inbox": (inbox ?? []).reduce((t, c) => t + c.support_unread, 0),
+  };
+  return { items, badges };
+}
+
+function NavBadge({ count }: { count?: number | undefined }) {
+  if (!count) return null;
+  return (
+    <span className="ml-auto rounded-full bg-primary px-1.5 py-px text-[10px] font-semibold leading-4 text-primary-foreground">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
 
 function BrandMark({
   shop,
@@ -108,6 +149,7 @@ export function AppShell({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
   const { installed } = usePwaInstall();
+  const { items: navItems, badges: navBadges } = useNav();
   useBrand(shop);
 
   async function signOut() {
@@ -132,7 +174,7 @@ export function AppShell({
                 {group}
               </p>
               <div className="space-y-0.5">
-                {NAV.filter((item) => item.group === group).map((item) => {
+                {navItems.filter((item) => item.group === group).map((item) => {
                   const active = pathname.startsWith(item.to);
                   return (
                     <Link
@@ -156,6 +198,7 @@ export function AppShell({
                         )}
                       />
                       {item.label}
+                      <NavBadge count={navBadges[item.to]} />
                     </Link>
                   );
                 })}
@@ -301,18 +344,24 @@ export function AppShell({
                     <span className="leading-tight">Página do cliente</span>
                   </Link>
                 )}
-                {NAV.map((item) => {
+                {navItems.map((item) => {
                   const active = pathname.startsWith(item.to);
+                  const count = navBadges[item.to];
                   return (
                     <Link
                       key={item.to}
                       to={item.to}
                       onClick={() => setMenuOpen(false)}
                       className={cn(
-                        "surface-row flex flex-col items-center gap-2 px-2 py-4 text-center text-xs text-foreground/85",
+                        "surface-row relative flex flex-col items-center gap-2 px-2 py-4 text-center text-xs text-foreground/85",
                         active && "border-primary/50 bg-primary/10 text-primary",
                       )}
                     >
+                      {count ? (
+                        <span className="absolute right-2 top-2 rounded-full bg-primary px-1.5 text-[10px] font-semibold leading-4 text-primary-foreground">
+                          {count > 99 ? "99+" : count}
+                        </span>
+                      ) : null}
                       <item.icon className="size-5" />
                       <span className="leading-tight">{item.label}</span>
                     </Link>

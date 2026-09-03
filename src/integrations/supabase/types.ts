@@ -849,6 +849,63 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      platform_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -1316,6 +1373,103 @@ export type Database = {
           },
         ]
       }
+      support_conversations: {
+        Row: {
+          assigned_to: string | null
+          barber_unread: number
+          barbershop_id: string | null
+          created_at: string
+          id: string
+          last_message_at: string
+          last_message_preview: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          support_unread: number
+          updated_at: string
+          urgent: boolean
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          barber_unread?: number
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          support_unread?: number
+          updated_at?: string
+          urgent?: boolean
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          barber_unread?: number
+          barbershop_id?: string | null
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          support_unread?: number
+          updated_at?: string
+          urgent?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_messages: {
+        Row: {
+          attachment_path: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          attachment_path?: string | null
+          body?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          sender_role?: string
+        }
+        Update: {
+          attachment_path?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       subscription_cycle_balances: {
@@ -1406,6 +1560,7 @@ export type Database = {
           starts_at: string
         }[]
       }
+      can_access_conversation: { Args: { _conv: string }; Returns: boolean }
       cancel_subscription: {
         Args: { _reason?: string; _subscription_id: string }
         Returns: Json
@@ -1443,6 +1598,7 @@ export type Database = {
       }
       is_member: { Args: { _shop: string }; Returns: boolean }
       is_shop_admin: { Args: { _shop: string }; Returns: boolean }
+      is_support: { Args: never; Returns: boolean }
       my_billing_overview: { Args: { _shop: string }; Returns: Json }
       public_breaks: {
         Args: { _slug: string }
@@ -1492,6 +1648,16 @@ export type Database = {
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
+      }
+      support_mark_read: { Args: { _conv: string }; Returns: undefined }
+      support_user_info: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          email: string
+          full_name: string
+          phone: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
