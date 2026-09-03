@@ -1460,7 +1460,35 @@ export type Database = {
         Args: { _cpf: string; _service_ids: string[]; _slug: string }
         Returns: Json
       }
+      public_shop: {
+        Args: { _slug: string }
+        Returns: {
+          accent_color: string
+          address: string
+          bg_color: string
+          cover_url: string
+          description: string
+          font_family: string
+          has_pix: boolean
+          id: string
+          instagram: string
+          logo_url: string
+          name: string
+          phone: string
+          secondary_color: string
+          slug: string
+          whatsapp: string
+        }[]
+      }
       public_shop_accepting: { Args: { _slug: string }; Returns: boolean }
+      public_shop_pix: {
+        Args: { _slug: string }
+        Returns: {
+          pix_holder_name: string
+          pix_key: string
+          pix_key_type: string
+        }[]
+      }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
