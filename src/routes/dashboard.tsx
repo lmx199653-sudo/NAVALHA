@@ -286,11 +286,11 @@ function Dashboard() {
             <div className="surface-card p-4">
               <SectionHeader
                 title="Próximos agendamentos"
-                description={
-                  upcoming[0]
-                    ? `Próximo: ${timeLabel(upcoming[0].starts_at)} · ${upcoming[0].customer_name}`
-                    : undefined
-                }
+                {...(upcoming[0]
+                  ? {
+                      description: `Próximo: ${timeLabel(upcoming[0].starts_at)} · ${upcoming[0].customer_name}`,
+                    }
+                  : {})}
                 icon={CalendarCheck}
               />
               <div className="mt-3 space-y-2">

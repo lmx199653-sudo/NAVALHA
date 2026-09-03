@@ -179,14 +179,25 @@ function AlertItem({
           : Clock3;
 
   return (
-    <li className="relative flex flex-col gap-3 overflow-hidden rounded-xl border border-border bg-background/40 p-3 pl-4 sm:flex-row sm:items-center sm:justify-between">
+    <li className="surface-row relative flex flex-col gap-3 overflow-hidden p-3 pl-4 sm:flex-row sm:items-center sm:justify-between">
       <span className={cn("absolute inset-y-0 left-0 w-1", tone.bar)} />
       <div className="flex min-w-0 items-start gap-3">
         <Icon className={cn("mt-0.5 size-4 shrink-0", meta.tone === "gold" ? "text-primary" : meta.tone === "danger" ? "text-destructive" : meta.tone === "warning" ? "text-warning" : "text-muted-foreground")} />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate font-medium">{alert.title}</p>
-            <Badge variant="outline" className={cn("h-5 px-1.5 text-[10px]", tone.pill)}>
+            <Badge
+              variant={
+                meta.tone === "danger"
+                  ? "destructive"
+                  : meta.tone === "warning"
+                    ? "warning"
+                    : meta.tone === "gold"
+                      ? "default"
+                      : "secondary"
+              }
+              className="h-5 px-1.5 text-[10px]"
+            >
               {meta.label}
             </Badge>
           </div>

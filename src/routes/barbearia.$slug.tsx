@@ -688,7 +688,7 @@ function PublicBooking() {
         {step === 4 && service && barber && slot && (
           <section className="space-y-4">
             <StepTitle title="Seu agendamento" hint="Confira antes de confirmar." />
-            <div className="surface-card divide-y divide-border/70 p-0">
+            <div className="surface-card space-y-2 p-3">
               <SummaryRow icon={Scissors} label="Serviço" value={service.name} />
               <SummaryRow icon={User} label="Profissional" value={barber.name} />
               <SummaryRow
@@ -702,7 +702,7 @@ function PublicBooking() {
                 label="Cliente"
                 value={`${name} · ${phone} · ${cpf}`}
               />
-              <div className="flex items-center justify-between px-5 py-4">
+              <div className="flex items-center justify-between px-3.5 py-3">
                 <span className="text-sm text-muted-foreground">Valor</span>
                 <span className="font-display text-3xl text-primary">
                   {brl(service.price_cents)}
@@ -1036,7 +1036,7 @@ function SuccessScreen({
       <div className="w-full max-w-md">
         <div className="surface-card overflow-hidden">
           <div className="flex flex-col items-center border-b border-border/70 bg-primary/10 px-6 py-8 text-center">
-            <span className="flex size-16 items-center justify-center rounded-full bg-primary/20 text-primary">
+            <span className="flex size-16 items-center justify-center rounded-full bg-success/15 text-success ring-1 ring-success/30">
               <Check className="size-8" />
             </span>
             <h1 className="mt-4 font-display text-4xl leading-none">Agendamento confirmado</h1>
@@ -1044,7 +1044,7 @@ function SuccessScreen({
               Te esperamos na {shop.name}, {name.split(" ")[0]}!
             </p>
           </div>
-          <div className="divide-y divide-border/70">
+          <div className="space-y-2 p-3">
             <SummaryRow icon={Scissors} label="Serviço" value={service.name} />
             <SummaryRow icon={User} label="Profissional" value={barber.name} />
             <SummaryRow
@@ -1065,14 +1065,14 @@ function SuccessScreen({
                     : "No local (Pix, cartão ou dinheiro)"
               }
             />
-            <div className="flex items-center justify-between px-5 py-4">
+            <div className="flex items-center justify-between px-3.5 py-3">
               <span className="text-sm text-muted-foreground">Valor</span>
               <span className="font-display text-3xl text-primary">
                 {planCoveredAll ? "Incluso" : brl(usingPlan ? planUncoveredCents : service.price_cents)}
               </span>
             </div>
             {usingPlan && (
-              <p className="px-5 py-3 text-xs text-muted-foreground">
+              <p className="px-3.5 py-2 text-xs text-muted-foreground">
                 O crédito do seu plano só é descontado quando o atendimento for concluído. Se cancelar ou não
                 comparecer, nada é descontado.
               </p>
