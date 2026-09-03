@@ -28,7 +28,7 @@ export const LEGAL_LINKS = [
 ] as const;
 
 export function formatLegalDate(iso: string = LEGAL.lastUpdated) {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y = 2026, m = 1, d = 1] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",

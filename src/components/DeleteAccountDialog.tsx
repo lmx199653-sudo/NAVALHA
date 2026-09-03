@@ -47,7 +47,7 @@ export function DeleteAccountDialog({ className, triggerLabel = "Excluir minha c
       await supabase.auth.signOut().catch(() => undefined);
       window.location.href = "/auth?deleted=1";
     },
-    onError: (e) => toast.error(friendlyError(e)),
+    onError: (e) => toast.error(friendlyError((e as Error)?.message)),
   });
 
   const ready = confirmation.trim().toUpperCase() === "EXCLUIR";
