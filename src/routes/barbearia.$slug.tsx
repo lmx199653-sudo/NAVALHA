@@ -268,7 +268,7 @@ function PublicBooking() {
         };
       }
       if (!shop) return null;
-      const [services, barbers, hours, breaks] = await Promise.all([
+      const [services, barbers, hours, breaks, accepting] = await Promise.all([
         supabase
           .from("services")
           .select("*")
@@ -285,8 +285,10 @@ function PublicBooking() {
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
         supabase.rpc("public_breaks", { _slug: slug }),
+        supabase.rpc("public_shop_accepting", { _slug: slug }),
       ]);
       return {
+        accepting: accepting.data !== false,
         shop: shop as Shop,
         services: (services.data ?? []) as Service[],
         barbers: (barbers.data ?? []) as Barber[],
@@ -456,6 +458,20 @@ function PublicBooking() {
   }
 
   const { shop, services, barbers } = data;
+
+  // Conta da barbearia suspensa por cobrança: página segue visível, sem novos agendamentos.
+  if ("accepting" in data && data.accepting === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <EmptyState
+          icon={MapPin}
+          title={shop.name}
+          description="Esta barbearia está temporariamente indisponível para novos agendamentos online. Entre em contato diretamente com a barbearia."
+        />
+      </div>
+    );
+  }
+
   const whatsappLink = shop.whatsapp
     ? `https://wa.me/55${shop.whatsapp.replace(/\D/g, "")}`
     : shop.phone
