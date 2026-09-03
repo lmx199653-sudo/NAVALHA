@@ -192,7 +192,7 @@ function Dashboard() {
         <ErrorState onRetry={() => refetch()} />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <StatCard size="hero" label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" hint={`${brl(revToday)} previstos hoje`} loading={isLoading} />
             <StatCard size="hero" label="Faturamento do dia" value={brl(revToday)} icon={Coins} loading={isLoading} />
             <StatCard size="hero" label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" loading={isLoading} />
