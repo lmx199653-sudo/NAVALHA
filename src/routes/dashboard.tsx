@@ -251,9 +251,6 @@ function Dashboard() {
             />
           </div>
 
-          <div className="mt-4">
-            <BillingSummaryCard />
-          </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <div className="surface-card p-4 lg:col-span-2">
