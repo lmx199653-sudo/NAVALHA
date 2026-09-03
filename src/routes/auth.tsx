@@ -588,6 +588,20 @@ function AuthPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-[#5B6168]">Sem cartão de crédito</p>
+        <p className="mt-3 text-center text-[11px] leading-relaxed text-[#5B6168]">
+          Ao continuar, você concorda com os{" "}
+          <Link to="/termos" className="underline underline-offset-2 hover:text-[#A0A6AC]">
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link to="/privacidade" className="underline underline-offset-2 hover:text-[#A0A6AC]">
+            Política de Privacidade
+          </Link>
+          .{" "}
+          <Link to="/suporte" className="underline underline-offset-2 hover:text-[#A0A6AC]">
+            Suporte
+          </Link>
+        </p>
       </div>
 
       <style>{`
