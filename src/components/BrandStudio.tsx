@@ -25,7 +25,14 @@ type Props = {
   allowLogoUpload?: boolean;
 };
 
-export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLogoUpload = true }: Props) {
+export function BrandStudio({
+  shopName,
+  value,
+  onChange,
+  onSave,
+  saving,
+  allowLogoUpload = true,
+}: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [custom, setCustom] = useState(false);
 
@@ -81,7 +88,11 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
 
       <div className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-3">
-          <ColorField label="Cor principal" value={value.accent_color} onChange={(v) => patch({ accent_color: v })} />
+          <ColorField
+            label="Cor principal"
+            value={value.accent_color}
+            onChange={(v) => patch({ accent_color: v })}
+          />
           {custom && (
             <>
               <ColorField
@@ -89,7 +100,11 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
                 value={value.secondary_color}
                 onChange={(v) => patch({ secondary_color: v })}
               />
-              <ColorField label="Cor de fundo" value={value.bg_color} onChange={(v) => patch({ bg_color: v })} />
+              <ColorField
+                label="Cor de fundo"
+                value={value.bg_color}
+                onChange={(v) => patch({ bg_color: v })}
+              />
             </>
           )}
         </div>
@@ -105,7 +120,9 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
                   onClick={() => patch({ font_family: f.value })}
                   className={cn(
                     "rounded-full border px-3 py-1.5 text-xs transition-colors",
-                    value.font_family === f.value ? "border-primary bg-primary/10 text-primary" : "border-border",
+                    value.font_family === f.value
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border",
                   )}
                 >
                   {f.label}
@@ -161,7 +178,10 @@ export function BrandStudio({ shopName, value, onChange, onSave, saving, allowLo
 
       <div className="flex items-center gap-3 rounded-lg border border-border p-3">
         <span className="text-xs text-muted-foreground">Pré-visualização</span>
-        <div className="flex items-center gap-2 rounded-md px-3 py-2" style={{ backgroundColor: value.bg_color }}>
+        <div
+          className="flex items-center gap-2 rounded-md px-3 py-2"
+          style={{ backgroundColor: value.bg_color }}
+        >
           {value.logo_url ? (
             <img src={value.logo_url} alt="Logo" className="size-7 object-contain" />
           ) : (
@@ -203,7 +223,11 @@ function ColorField({
           className="size-9 cursor-pointer rounded-md border border-input bg-transparent"
           aria-label={label}
         />
-        <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono text-xs" />
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="font-mono text-xs"
+        />
       </div>
     </div>
   );

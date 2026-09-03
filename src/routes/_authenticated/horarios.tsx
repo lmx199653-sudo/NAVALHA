@@ -183,7 +183,11 @@ function HoursPage() {
               </div>
             ))}
           </div>
-          <Button className="mt-4" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
+          <Button
+            className="mt-4"
+            disabled={saveHours.isPending}
+            onClick={() => saveHours.mutate()}
+          >
             Salvar horários
           </Button>
         </section>

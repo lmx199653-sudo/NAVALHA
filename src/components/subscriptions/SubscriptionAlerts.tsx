@@ -24,7 +24,10 @@ import {
 } from "@/lib/subscription-alerts";
 
 const TONE: Record<"danger" | "warning" | "info" | "gold", { pill: string; bar: string }> = {
-  danger: { pill: "border-destructive/40 bg-destructive/15 text-destructive", bar: "bg-destructive" },
+  danger: {
+    pill: "border-destructive/40 bg-destructive/15 text-destructive",
+    bar: "bg-destructive",
+  },
   warning: { pill: "border-warning/40 bg-warning/15 text-warning", bar: "bg-warning" },
   info: { pill: "border-border bg-secondary text-muted-foreground", bar: "bg-muted-foreground/60" },
   gold: { pill: "border-primary/40 bg-primary/10 text-primary", bar: "bg-primary" },
@@ -103,7 +106,9 @@ export function SubscriptionAlerts({
                   onClick={() => setFilter(filter === c.key ? "all" : c.key)}
                   className={cn(
                     "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
-                    filter === c.key ? TONE[c.tone].pill : "border-border text-muted-foreground hover:text-foreground",
+                    filter === c.key
+                      ? TONE[c.tone].pill
+                      : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {c.label} · {c.count}
@@ -182,7 +187,18 @@ function AlertItem({
     <li className="surface-row relative flex flex-col gap-3 overflow-hidden p-3 pl-4 sm:flex-row sm:items-center sm:justify-between">
       <span className={cn("absolute inset-y-0 left-0 w-1", tone.bar)} />
       <div className="flex min-w-0 items-start gap-3">
-        <Icon className={cn("mt-0.5 size-4 shrink-0", meta.tone === "gold" ? "text-primary" : meta.tone === "danger" ? "text-destructive" : meta.tone === "warning" ? "text-warning" : "text-muted-foreground")} />
+        <Icon
+          className={cn(
+            "mt-0.5 size-4 shrink-0",
+            meta.tone === "gold"
+              ? "text-primary"
+              : meta.tone === "danger"
+                ? "text-destructive"
+                : meta.tone === "warning"
+                  ? "text-warning"
+                  : "text-muted-foreground",
+          )}
+        />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <p className="truncate font-medium">{alert.title}</p>
@@ -211,7 +227,11 @@ function AlertItem({
       <div className="flex flex-wrap gap-1.5 sm:justify-end">
         {alert.actions.includes("charge") && phone && (
           <Button size="sm" variant="default" asChild>
-            <a href={wa(chargeMessage(alert.row, shopName, pixKey))} target="_blank" rel="noreferrer">
+            <a
+              href={wa(chargeMessage(alert.row, shopName, pixKey))}
+              target="_blank"
+              rel="noreferrer"
+            >
               <MessageCircle className="size-3.5" /> Cobrar
             </a>
           </Button>
@@ -234,7 +254,12 @@ function AlertItem({
           </Button>
         )}
         {alert.actions.includes("cancel") && (
-          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => onCancel(alert.row)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground"
+            onClick={() => onCancel(alert.row)}
+          >
             <XCircle className="size-3.5" /> Cancelar
           </Button>
         )}

@@ -62,7 +62,12 @@ function Onboarding() {
 
     const returning = "id, slug, name, onboarding_done";
     const { data, error } = shop
-      ? await supabase.from("barbershops").update(payload).eq("id", shop.id).select(returning).single()
+      ? await supabase
+          .from("barbershops")
+          .update(payload)
+          .eq("id", shop.id)
+          .select(returning)
+          .single()
       : await supabase.from("barbershops").insert(payload).select(returning).single();
 
     if (error || !data) {
@@ -73,7 +78,10 @@ function Onboarding() {
 
     await supabase
       .from("barbershop_members")
-      .upsert({ barbershop_id: data.id, user_id: userId, role: "owner" }, { onConflict: "barbershop_id,user_id" });
+      .upsert(
+        { barbershop_id: data.id, user_id: userId, role: "owner" },
+        { onConflict: "barbershop_id,user_id" },
+      );
 
     await supabase.from("business_hours").upsert(
       Array.from({ length: 7 }, (_, weekday) => ({
@@ -90,8 +98,14 @@ function Onboarding() {
     // o barbeiro pode editar, excluir ou adicionar os próprios normalmente.
     if (!shop) {
       const [{ count: servicesCount }, { count: barbersCount }] = await Promise.all([
-        supabase.from("services").select("id", { count: "exact", head: true }).eq("barbershop_id", data.id),
-        supabase.from("barbers").select("id", { count: "exact", head: true }).eq("barbershop_id", data.id),
+        supabase
+          .from("services")
+          .select("id", { count: "exact", head: true })
+          .eq("barbershop_id", data.id),
+        supabase
+          .from("barbers")
+          .select("id", { count: "exact", head: true })
+          .eq("barbershop_id", data.id),
       ]);
 
       if (!servicesCount) {
@@ -100,12 +114,27 @@ function Onboarding() {
 
       if (!barbersCount) {
         await supabase.from("barbers").insert([
-          { barbershop_id: data.id, name: "Barbeiro 1", commission_pct: 50, work_days: [1, 2, 3, 4, 5, 6], start_time: "09:00", end_time: "20:00", bio: "Especialista em cortes clássicos." },
-          { barbershop_id: data.id, name: "Barbeiro 2", commission_pct: 50, work_days: [1, 2, 3, 4, 5], start_time: "10:00", end_time: "19:00", bio: "Fade, degradê e barba." },
+          {
+            barbershop_id: data.id,
+            name: "Barbeiro 1",
+            commission_pct: 50,
+            work_days: [1, 2, 3, 4, 5, 6],
+            start_time: "09:00",
+            end_time: "20:00",
+            bio: "Especialista em cortes clássicos.",
+          },
+          {
+            barbershop_id: data.id,
+            name: "Barbeiro 2",
+            commission_pct: 50,
+            work_days: [1, 2, 3, 4, 5],
+            start_time: "10:00",
+            end_time: "19:00",
+            bio: "Fade, degradê e barba.",
+          },
         ]);
       }
     }
-
 
     await qc.invalidateQueries();
     setLoading(false);
@@ -122,7 +151,9 @@ function Onboarding() {
           <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/15">
             <Scissors className="size-6" />
           </span>
-          <h1 className="mt-4 font-display text-4xl leading-none sm:text-5xl">Configure sua barbearia</h1>
+          <h1 className="mt-4 font-display text-4xl leading-none sm:text-5xl">
+            Configure sua barbearia
+          </h1>
           <p className="mt-3 text-sm font-medium text-primary">
             Cadastre sua barbearia e faça login no app.
           </p>
@@ -183,20 +214,39 @@ function Onboarding() {
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="instagram">Instagram</Label>
-              <Input id="instagram" placeholder="@suabarbearia" value={form.instagram} onChange={(e) => setForm({ ...form, instagram: e.target.value })} />
+              <Input
+                id="instagram"
+                placeholder="@suabarbearia"
+                value={form.instagram}
+                onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="address">Endereço</Label>
-            <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+            <Input
+              id="address"
+              value={form.address}
+              onChange={(e) => setForm({ ...form, address: e.target.value })}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="description">Descrição</Label>
-            <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <Textarea
+              id="description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
           </div>
 
           <div className="rounded-xl border border-border p-4">
-            <BrandStudio shopName={form.name} value={brand} onChange={setBrand} allowLogoUpload={false} />
+            <BrandStudio
+              shopName={form.name}
+              value={brand}
+              onChange={setBrand}
+              allowLogoUpload={false}
+            />
           </div>
 
           <div className="flex w-full items-start gap-3 rounded-lg border border-border p-3.5 text-left text-sm">

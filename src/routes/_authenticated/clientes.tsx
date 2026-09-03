@@ -13,7 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState, ErrorState, CardSkeleton } from "@/components/ui/states";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, dateLabel, STATUS_LABEL } from "@/lib/format";
@@ -66,7 +72,9 @@ function CustomersPage() {
         supabase.from("customers").select("*").eq("barbershop_id", shop!.id).order("name"),
         supabase
           .from("appointments")
-          .select("id, customer_id, starts_at, price_cents, status, service_id, barber_id, use_benefit, benefit_kind")
+          .select(
+            "id, customer_id, starts_at, price_cents, status, service_id, barber_id, use_benefit, benefit_kind",
+          )
           .eq("barbershop_id", shop!.id)
           .order("starts_at", { ascending: false }),
         supabase.from("services").select("id, name").eq("barbershop_id", shop!.id),
@@ -235,7 +243,10 @@ function CustomersPage() {
       {isLoading && <CardSkeleton count={6} />}
 
       {!isLoading && isError && (
-        <ErrorState onRetry={() => refetch()} description="Não foi possível carregar os clientes." />
+        <ErrorState
+          onRetry={() => refetch()}
+          description="Não foi possível carregar os clientes."
+        />
       )}
 
       {!isLoading && !isError && rows.length === 0 && (
@@ -252,45 +263,45 @@ function CustomersPage() {
       )}
 
       {!isLoading && !isError && rows.length > 0 && (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {rows.map((r) => (
-          <button
-            key={r.customer.id}
-            onClick={() => setDetail(r.customer)}
-            className="surface-card p-4 text-left transition-colors hover:border-primary/50"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="truncate font-display text-2xl leading-none">{r.customer.name}</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {r.customer.phone} {r.customer.cpf ? `· ${cpfMask(r.customer.cpf)}` : ""}
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {rows.map((r) => (
+            <button
+              key={r.customer.id}
+              onClick={() => setDetail(r.customer)}
+              className="surface-card p-4 text-left transition-colors hover:border-primary/50"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate font-display text-2xl leading-none">{r.customer.name}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {r.customer.phone} {r.customer.cpf ? `· ${cpfMask(r.customer.cpf)}` : ""}
+                  </p>
+                </div>
+                <Badge variant="secondary" className="shrink-0 gap-1">
+                  <Star className="size-3 text-primary" /> {r.customer.points}
+                </Badge>
+              </div>
+              {r.subscription && r.plan && (
+                <p className="mt-2 text-xs text-primary">
+                  {r.plan.name} · {r.subscription.status === "active" ? "🟢 ativa" : "⚫ inativa"}
+                </p>
+              )}
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <p className="text-muted-foreground">
+                  Visitas: <span className="text-foreground">{r.visits}</span>
+                </p>
+                <p className="text-muted-foreground">
+                  Gasto: <span className="text-primary">{brl(r.total)}</span>
                 </p>
               </div>
-              <Badge variant="secondary" className="shrink-0 gap-1">
-                <Star className="size-3 text-primary" /> {r.customer.points}
-              </Badge>
-            </div>
-            {r.subscription && r.plan && (
-              <p className="mt-2 text-xs text-primary">
-                {r.plan.name} · {r.subscription.status === "active" ? "🟢 ativa" : "⚫ inativa"}
-              </p>
-            )}
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-              <p className="text-muted-foreground">
-                Visitas: <span className="text-foreground">{r.visits}</span>
-              </p>
-              <p className="text-muted-foreground">
-                Gasto: <span className="text-primary">{brl(r.total)}</span>
-              </p>
-            </div>
-            {r.daysSince !== null && r.daysSince > 30 && (
-              <p className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-xs text-destructive">
-                Cliente há {r.daysSince} dias sem voltar.
-              </p>
-            )}
-          </button>
-        ))}
-      </div>
+              {r.daysSince !== null && r.daysSince > 30 && (
+                <p className="mt-2 rounded-md bg-destructive/10 px-2 py-1 text-xs text-destructive">
+                  Cliente há {r.daysSince} dias sem voltar.
+                </p>
+              )}
+            </button>
+          ))}
+        </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -307,12 +318,20 @@ function CustomersPage() {
           >
             <div className="space-y-1.5">
               <Label>Nome completo</Label>
-              <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>WhatsApp</Label>
-                <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                <Input
+                  required
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>CPF</Label>
@@ -344,7 +363,11 @@ function CustomersPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Observações</Label>
-              <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <Textarea
+                rows={2}
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              />
             </div>
             <DialogFooter>
               <Button className="w-full sm:w-auto" disabled={save.isPending}>
@@ -373,22 +396,31 @@ function CustomersPage() {
               <TabsContent value="dados" className="space-y-4 pt-4">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <Field label="WhatsApp" value={detailRow.customer.phone ?? "—"} />
-                  <Field label="CPF" value={detailRow.customer.cpf ? cpfMask(detailRow.customer.cpf) : "—"} />
+                  <Field
+                    label="CPF"
+                    value={detailRow.customer.cpf ? cpfMask(detailRow.customer.cpf) : "—"}
+                  />
                   <Field label="E-mail" value={detailRow.customer.email ?? "—"} />
                   <Field
                     label="Nascimento"
-                    value={detailRow.customer.birth_date ? dateLabel(detailRow.customer.birth_date) : "—"}
+                    value={
+                      detailRow.customer.birth_date ? dateLabel(detailRow.customer.birth_date) : "—"
+                    }
                   />
                   <Field
                     label="Cadastrado em"
-                    value={detailRow.customer.created_at ? dateLabel(detailRow.customer.created_at) : "—"}
+                    value={
+                      detailRow.customer.created_at ? dateLabel(detailRow.customer.created_at) : "—"
+                    }
                   />
                   <Field label="Serviço favorito" value={detailRow.favorite ?? "—"} />
                   <Field label="Visitas" value={String(detailRow.visits)} />
                   <Field label="Total gasto" value={brl(detailRow.total)} />
                 </div>
                 {detailRow.customer.notes && (
-                  <p className="rounded-lg bg-secondary/50 p-3 text-xs">{detailRow.customer.notes}</p>
+                  <p className="rounded-lg bg-secondary/50 p-3 text-xs">
+                    {detailRow.customer.notes}
+                  </p>
                 )}
                 {detailRow.customer.phone && (
                   <Button asChild className="w-full">
@@ -444,7 +476,9 @@ function CustomersPage() {
                     <span className="text-muted-foreground">
                       {data?.services.find((s) => s.id === a.service_id)?.name}
                     </span>
-                    <span className="text-primary">{a.use_benefit ? "Plano" : brl(a.price_cents)}</span>
+                    <span className="text-primary">
+                      {a.use_benefit ? "Plano" : brl(a.price_cents)}
+                    </span>
                     <span className="text-muted-foreground">{STATUS_LABEL[a.status]}</span>
                   </div>
                 ))}
@@ -459,7 +493,9 @@ function CustomersPage() {
                     key={p.id}
                     className="surface-row flex items-center justify-between px-3 py-2 text-xs"
                   >
-                    <span>{p.paid_at ? dateLabel(p.paid_at) : p.due_date ? dateLabel(p.due_date) : "—"}</span>
+                    <span>
+                      {p.paid_at ? dateLabel(p.paid_at) : p.due_date ? dateLabel(p.due_date) : "—"}
+                    </span>
                     <span className="text-primary">{brl(p.amount_cents)}</span>
                     <span className="text-muted-foreground">{PAYMENT_STATUS[p.status]}</span>
                   </div>

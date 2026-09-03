@@ -109,7 +109,9 @@ export function buildAlerts(rows: SubscriptionRow[]): SubscriptionAlert[] {
           priority: 1,
           title: name,
           detail:
-            left === 0 ? "Ciclo termina hoje — renove para liberar créditos" : `Ciclo encerrado há ${Math.abs(left)} dia(s)`,
+            left === 0
+              ? "Ciclo termina hoje — renove para liberar créditos"
+              : `Ciclo encerrado há ${Math.abs(left)} dia(s)`,
           actions: ["renew", "notify", "cancel"],
           row,
           days: left,
@@ -173,7 +175,10 @@ export function summarizeAlerts(alerts: SubscriptionAlert[]) {
 export function chargeMessage(row: SubscriptionRow, shopName: string, pixKey?: string | null) {
   const name = row.customer?.name?.split(" ")[0] ?? "";
   const plan = row.plan?.name ?? "assinatura";
-  const value = (row.sub.price_cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const value = (row.sub.price_cents / 100).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
   const pix = pixKey ? `\n\nChave Pix: ${pixKey}` : "";
   return `Olá, ${name}! Aqui é da ${shopName}. O pagamento do seu plano ${plan} (${value}) está pendente. Pode regularizar quando puder para manter seus benefícios ativos?${pix}`;
 }

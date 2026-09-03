@@ -184,7 +184,9 @@ function AuthPage() {
 
     if (!data.session) {
       setTab("login");
-      toast.success("Conta criada! Confirme o link enviado para " + email + " e depois faça login.");
+      toast.success(
+        "Conta criada! Confirme o link enviado para " + email + " e depois faça login.",
+      );
       return;
     }
 
@@ -207,11 +209,17 @@ function AuthPage() {
   }
 
   async function resetPassword() {
-    if (!email) { toast.error("Informe seu e-mail primeiro."); return; }
+    if (!email) {
+      toast.error("Informe seu e-mail primeiro.");
+      return;
+    }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth`,
     });
-    if (error) { toast.error(friendlyError(error.message)); return; }
+    if (error) {
+      toast.error(friendlyError(error.message));
+      return;
+    }
     toast.success("Enviamos um link de recuperação para seu e-mail.");
   }
 
@@ -237,20 +245,28 @@ function AuthPage() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.5) 100%)" }}
+        style={{
+          background: "radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,0.5) 100%)",
+        }}
       />
 
       <div className="auth-card relative w-full max-w-[420px]">
         {/* Logo + identidade */}
         <div className="auth-logo mb-9 flex flex-col items-center text-center">
-          <Link to="/" className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-[1.02]">
+          <Link
+            to="/"
+            className="group flex items-center gap-2.5 transition-transform duration-300 hover:scale-[1.02]"
+          >
             <img
               src={logoAsset.url}
               alt="NAVALHA PRO"
               className="size-9 shrink-0 object-contain drop-shadow-[0_0_14px_oklch(0.78_0.13_85/0.35)]"
             />
             <span className="font-display text-[27px] leading-none tracking-tight text-white">
-              NAVALHA <span className="bg-gradient-to-b from-[oklch(0.86_0.12_85)] to-[oklch(0.72_0.13_85)] bg-clip-text text-transparent">PRO</span>
+              NAVALHA{" "}
+              <span className="bg-gradient-to-b from-[oklch(0.86_0.12_85)] to-[oklch(0.72_0.13_85)] bg-clip-text text-transparent">
+                PRO
+              </span>
             </span>
           </Link>
           <h1 className="mt-8 text-[24px] font-semibold leading-tight tracking-[-0.01em] text-[#F2F3F4]">
@@ -262,14 +278,15 @@ function AuthPage() {
         </div>
 
         {/* Card premium dark glass */}
-        <div
-          className="relative rounded-[22px] border border-white/[0.05] bg-[#101214]/90 p-7 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_40px_90px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:p-9"
-        >
+        <div className="relative rounded-[22px] border border-white/[0.05] bg-[#101214]/90 p-7 shadow-[0_1px_0_0_rgba(255,255,255,0.04)_inset,0_40px_90px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl sm:p-9">
           {/* brilho dourado sutil no topo */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-14 top-0 h-px"
-            style={{ background: "linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.45), transparent)" }}
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.45), transparent)",
+            }}
           />
 
           {/* Tabs segmented control */}
@@ -286,7 +303,10 @@ function AuthPage() {
               <button
                 key={t}
                 type="button"
-                onClick={() => { setTab(t); setFieldError(null); }}
+                onClick={() => {
+                  setTab(t);
+                  setFieldError(null);
+                }}
                 className={cn(
                   "relative z-10 rounded-[9px] px-3 py-2.5 text-[13.5px] font-medium tracking-[0.01em] transition-colors duration-200",
                   tab === t ? "text-[#F2F3F4]" : "text-[#6B7278] hover:text-[#AEB4BA]",
@@ -300,12 +320,18 @@ function AuthPage() {
           {tab === "login" && (
             <form onSubmit={signIn} className="auth-form space-y-4 pt-6" key="login">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm font-medium text-[#C6CBD1]">E-mail</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-[#C6CBD1]">
+                  E-mail
+                </Label>
                 <div className="group relative">
-                  <Mail className={cn(
-                    "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
-                    email ? "text-[oklch(0.78_0.13_85)]" : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
-                  )} />
+                  <Mail
+                    className={cn(
+                      "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                      email
+                        ? "text-[oklch(0.78_0.13_85)]"
+                        : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
+                    )}
+                  />
                   <Input
                     id="email"
                     type="email"
@@ -320,12 +346,18 @@ function AuthPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm font-medium text-[#C6CBD1]">Senha</Label>
+                <Label htmlFor="password" className="text-sm font-medium text-[#C6CBD1]">
+                  Senha
+                </Label>
                 <div className="group relative">
-                  <Lock className={cn(
-                    "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
-                    password ? "text-[oklch(0.78_0.13_85)]" : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
-                  )} />
+                  <Lock
+                    className={cn(
+                      "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                      password
+                        ? "text-[oklch(0.78_0.13_85)]"
+                        : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
+                    )}
+                  />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -349,7 +381,10 @@ function AuthPage() {
               </div>
 
               <div className="flex items-center justify-between gap-3">
-                <label htmlFor="remember" className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-[#9AA1A8] transition-colors hover:text-[#C6CBD1]">
+                <label
+                  htmlFor="remember"
+                  className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-[#9AA1A8] transition-colors hover:text-[#C6CBD1]"
+                >
                   <GoldCheckbox id="remember" checked={remember} onChange={setRemember} />
                   Lembrar de mim
                 </label>
@@ -391,12 +426,18 @@ function AuthPage() {
           {tab === "signup" && (
             <form onSubmit={signUp} className="auth-form space-y-4 pt-6" key="signup">
               <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-sm font-medium text-[#C6CBD1]">Seu nome</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-[#C6CBD1]">
+                  Seu nome
+                </Label>
                 <div className="group relative">
-                  <User className={cn(
-                    "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
-                    name ? "text-[oklch(0.78_0.13_85)]" : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
-                  )} />
+                  <User
+                    className={cn(
+                      "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                      name
+                        ? "text-[oklch(0.78_0.13_85)]"
+                        : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
+                    )}
+                  />
                   <Input
                     id="name"
                     required
@@ -409,12 +450,18 @@ function AuthPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email2" className="text-sm font-medium text-[#C6CBD1]">E-mail</Label>
+                <Label htmlFor="email2" className="text-sm font-medium text-[#C6CBD1]">
+                  E-mail
+                </Label>
                 <div className="group relative">
-                  <Mail className={cn(
-                    "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
-                    email ? "text-[oklch(0.78_0.13_85)]" : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
-                  )} />
+                  <Mail
+                    className={cn(
+                      "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                      email
+                        ? "text-[oklch(0.78_0.13_85)]"
+                        : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
+                    )}
+                  />
                   <Input
                     id="email2"
                     type="email"
@@ -428,12 +475,18 @@ function AuthPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password2" className="text-sm font-medium text-[#C6CBD1]">Senha</Label>
+                <Label htmlFor="password2" className="text-sm font-medium text-[#C6CBD1]">
+                  Senha
+                </Label>
                 <div className="group relative">
-                  <Lock className={cn(
-                    "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
-                    password ? "text-[oklch(0.78_0.13_85)]" : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
-                  )} />
+                  <Lock
+                    className={cn(
+                      "pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 transition-colors duration-200",
+                      password
+                        ? "text-[oklch(0.78_0.13_85)]"
+                        : "text-[#5B6168] group-focus-within:text-[oklch(0.78_0.13_85)]",
+                    )}
+                  />
                   <Input
                     id="password2"
                     type={showPassword ? "text" : "password"}
@@ -485,7 +538,9 @@ function AuthPage() {
 
           <div className="my-6 flex items-center gap-3">
             <span className="h-px flex-1 bg-white/[0.07]" />
-            <span className="text-[11px] font-medium uppercase tracking-widest text-[#5B6168]">ou continue com</span>
+            <span className="text-[11px] font-medium uppercase tracking-widest text-[#5B6168]">
+              ou continue com
+            </span>
             <span className="h-px flex-1 bg-white/[0.07]" />
           </div>
 
@@ -497,10 +552,22 @@ function AuthPage() {
             onClick={signInWithGoogle}
           >
             <svg className="size-4" viewBox="0 0 48 48" aria-hidden="true">
-              <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.9 2.6 13.8l7.8 6.1C12.3 13.7 17.6 9.5 24 9.5z" />
-              <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.6-4.9 7.3l7.6 5.9c4.4-4.1 7.1-10.2 7.1-17.5z" />
-              <path fill="#FBBC05" d="M10.4 28.1a14.5 14.5 0 0 1 0-9.2l-7.8-6.1a24 24 0 0 0 0 21.4l7.8-6.1z" />
-              <path fill="#34A853" d="M24 47.5c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.7-4.2-13.6-10.1l-7.8 6.1C6.5 42.1 14.6 47.5 24 47.5z" />
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.9 2.6 13.8l7.8 6.1C12.3 13.7 17.6 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.6-4.9 7.3l7.6 5.9c4.4-4.1 7.1-10.2 7.1-17.5z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.4 28.1a14.5 14.5 0 0 1 0-9.2l-7.8-6.1a24 24 0 0 0 0 21.4l7.8-6.1z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 47.5c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.7-4.2-13.6-10.1l-7.8 6.1C6.5 42.1 14.6 47.5 24 47.5z"
+              />
             </svg>
             Continuar com Google
           </Button>
@@ -509,7 +576,10 @@ function AuthPage() {
             Novo no NAVALHA PRO?{" "}
             <button
               type="button"
-              onClick={() => { setTab("signup"); setFieldError(null); }}
+              onClick={() => {
+                setTab("signup");
+                setFieldError(null);
+              }}
               className="font-semibold text-[oklch(0.78_0.13_85)] transition-colors duration-200 hover:text-[oklch(0.84_0.12_85)] hover:underline underline-offset-4"
             >
               Crie sua conta
@@ -517,9 +587,7 @@ function AuthPage() {
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#5B6168]">
-          Sem cartão de crédito
-        </p>
+        <p className="mt-6 text-center text-xs text-[#5B6168]">Sem cartão de crédito</p>
       </div>
 
       <style>{`

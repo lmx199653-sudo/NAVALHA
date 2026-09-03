@@ -69,7 +69,8 @@ function Dashboard() {
   const { data: shop, isSuccess, isError: isShopError } = useShop();
 
   useEffect(() => {
-    if (userId && (isSuccess || isShopError) && !shop) navigate({ to: "/onboarding", replace: true });
+    if (userId && (isSuccess || isShopError) && !shop)
+      navigate({ to: "/onboarding", replace: true });
   }, [userId, isSuccess, isShopError, shop, navigate]);
 
   const {
@@ -136,10 +137,8 @@ function Dashboard() {
     (c) => new Date(c.created_at as string) >= monthStart,
   ).length;
 
-  const serviceName = (id: string | null) =>
-    services.find((s) => s.id === id)?.name ?? "Serviço";
-  const barberName = (id: string | null) =>
-    barbers.find((b) => b.id === id)?.name ?? "Equipe";
+  const serviceName = (id: string | null) => services.find((s) => s.id === id)?.name ?? "Serviço";
+  const barberName = (id: string | null) => barbers.find((b) => b.id === id)?.name ?? "Equipe";
 
   const topService = Object.entries(
     monthAppts.reduce<Record<string, number>>((acc, a) => {
@@ -182,27 +181,66 @@ function Dashboard() {
   return (
     <AppShell
       title="Dashboard"
-      subtitle={
-        shop
-          ? `${shop.name} · /barbearia/${shop.slug}`
-          : "Carregando..."
-      }
+      subtitle={shop ? `${shop.name} · /barbearia/${shop.slug}` : "Carregando..."}
     >
       {isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-            <StatCard size="hero" label="Agendamentos hoje" value={todays.length} icon={CalendarCheck} tone="gold" hint={`${brl(revToday)} previstos hoje`} loading={isLoading} />
-            <StatCard size="hero" label="Faturamento do dia" value={brl(revToday)} icon={Coins} loading={isLoading} />
-            <StatCard size="hero" label="Faturamento do mês" value={brl(revMonth)} icon={TrendingUp} tone="success" loading={isLoading} />
-            <StatCard size="hero" label="Ticket médio" value={brl(ticket)} icon={Coins} loading={isLoading} />
+            <StatCard
+              size="hero"
+              label="Agendamentos hoje"
+              value={todays.length}
+              icon={CalendarCheck}
+              tone="gold"
+              hint={`${brl(revToday)} previstos hoje`}
+              loading={isLoading}
+            />
+            <StatCard
+              size="hero"
+              label="Faturamento do dia"
+              value={brl(revToday)}
+              icon={Coins}
+              loading={isLoading}
+            />
+            <StatCard
+              size="hero"
+              label="Faturamento do mês"
+              value={brl(revMonth)}
+              icon={TrendingUp}
+              tone="success"
+              loading={isLoading}
+            />
+            <StatCard
+              size="hero"
+              label="Ticket médio"
+              value={brl(ticket)}
+              icon={Coins}
+              loading={isLoading}
+            />
           </div>
 
           <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Clientes novos" value={newCustomers} icon={UserPlus} loading={isLoading} />
-            <StatCard label="Base de clientes" value={customers.length} icon={Users} loading={isLoading} />
-            <StatCard label="Taxa de ocupação" value={`${occupancy}%`} hint="hoje" icon={TrendingUp} loading={isLoading} />
+            <StatCard
+              label="Clientes novos"
+              value={newCustomers}
+              icon={UserPlus}
+              loading={isLoading}
+            />
+            <StatCard
+              label="Base de clientes"
+              value={customers.length}
+              icon={Users}
+              loading={isLoading}
+            />
+            <StatCard
+              label="Taxa de ocupação"
+              value={`${occupancy}%`}
+              hint="hoje"
+              icon={TrendingUp}
+              loading={isLoading}
+            />
             <StatCard
               label="Cancelamentos / faltas"
               value={`${canceled} / ${noShow}`}
@@ -225,7 +263,11 @@ function Dashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <XAxis
+                      dataKey="dia"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--color-muted-foreground)"
+                    />
                     <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
                     <Tooltip
                       contentStyle={{
@@ -267,7 +309,11 @@ function Dashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={days}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="dia" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <XAxis
+                      dataKey="dia"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--color-muted-foreground)"
+                    />
                     <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
                     <Tooltip
                       contentStyle={{
@@ -303,7 +349,10 @@ function Dashboard() {
                   />
                 ) : (
                   upcoming.map((a) => (
-                    <div key={a.id} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+                    <div
+                      key={a.id}
+                      className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
+                    >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{a.customer_name}</p>
                         <p className="truncate text-xs text-muted-foreground">
@@ -333,7 +382,10 @@ function Dashboard() {
                 />
               ) : (
                 barberRevenue.map(([name, cents], i) => (
-                  <div key={name} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+                  <div
+                    key={name}
+                    className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
+                  >
                     <div className="flex items-center gap-3">
                       <Badge variant={i === 0 ? "default" : "secondary"}>{i + 1}º</Badge>
                       <span className="text-sm">{name}</span>

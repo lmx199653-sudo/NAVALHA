@@ -49,7 +49,13 @@ const NAV_GROUPS = ["Operação", "Cadastros", "Negócio"] as const;
 
 const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
 
-function BrandMark({ shop, size = "md" }: { shop?: { name?: string | null; logo_url?: string | null } | null | undefined; size?: "md" | "sm" }) {
+function BrandMark({
+  shop,
+  size = "md",
+}: {
+  shop?: { name?: string | null; logo_url?: string | null } | null | undefined;
+  size?: "md" | "sm";
+}) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
       <span
@@ -119,7 +125,9 @@ export function AppShell({
         <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 py-4">
           {NAV_GROUPS.map((group) => (
             <div key={group}>
-              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">{group}</p>
+              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">
+                {group}
+              </p>
               <div className="space-y-0.5">
                 {NAV.filter((item) => item.group === group).map((item) => {
                   const active = pathname.startsWith(item.to);
@@ -139,7 +147,9 @@ export function AppShell({
                       <item.icon
                         className={cn(
                           "size-4 transition-colors",
-                          active ? "text-primary" : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
+                          active
+                            ? "text-primary"
+                            : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
                         )}
                       />
                       {item.label}
@@ -151,7 +161,9 @@ export function AppShell({
           ))}
           {!installed && (
             <div>
-              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">Cliente</p>
+              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">
+                Cliente
+              </p>
               <Link
                 to="/agendar"
                 className={cn(
@@ -183,7 +195,9 @@ export function AppShell({
               <div className="mb-1 lg:hidden">
                 <BrandMark shop={shop} size="sm" />
               </div>
-              <h1 className="truncate font-display text-[1.75rem] leading-none sm:text-3xl">{title}</h1>
+              <h1 className="truncate font-display text-[1.75rem] leading-none sm:text-3xl">
+                {title}
+              </h1>
               {subtitle && (
                 <p className="mt-1 truncate text-[13px] text-muted-foreground">{subtitle}</p>
               )}
@@ -259,7 +273,10 @@ export function AppShell({
                 Mais
               </button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="pb-safe max-h-[85vh] overflow-y-auto rounded-t-3xl border-border/70 bg-card px-0">
+            <SheetContent
+              side="bottom"
+              className="pb-safe max-h-[85vh] overflow-y-auto rounded-t-3xl border-border/70 bg-card px-0"
+            >
               <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-border" />
               <SheetHeader className="px-5 pb-2">
                 <SheetTitle className="flex items-center justify-center">

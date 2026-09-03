@@ -1,7 +1,10 @@
 /* Envio de Web Push (aes128gcm + VAPID) usando apenas Web Crypto — compatível com o runtime edge. */
 
 function b64urlToBytes(input: string): Uint8Array {
-  const b64 = input.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(input.length / 4) * 4, "=");
+  const b64 = input
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(input.length / 4) * 4, "=");
   const raw = atob(b64);
   const out = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
@@ -28,7 +31,9 @@ function concat(...parts: Uint8Array[]): Uint8Array {
 const enc = new TextEncoder();
 
 async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, length: number) {
-  const key = await crypto.subtle.importKey("raw", ikm as BufferSource, "HKDF", false, ["deriveBits"]);
+  const key = await crypto.subtle.importKey("raw", ikm as BufferSource, "HKDF", false, [
+    "deriveBits",
+  ]);
   const bits = await crypto.subtle.deriveBits(
     { name: "HKDF", hash: "SHA-256", salt: salt as BufferSource, info: info as BufferSource },
     key,
@@ -58,7 +63,13 @@ async function vapidHeaders(endpoint: string, publicKey: string, privateKey: str
     y: bytesToB64url(pub.slice(33, 65)),
     ext: true,
   };
-  const key = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve: "P-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
   const data = enc.encode(`${header}.${payload}`);
   const sig = new Uint8Array(
     await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, key, data as BufferSource),
@@ -73,7 +84,9 @@ async function encryptPayload(payload: string, p256dh: string, authSecret: strin
   const auth = b64urlToBytes(authSecret);
   const salt = crypto.getRandomValues(new Uint8Array(16));
 
-  const local = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
+  const local = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, [
+    "deriveBits",
+  ]);
   const localPub = new Uint8Array(await crypto.subtle.exportKey("raw", local.publicKey));
   const clientKey = await crypto.subtle.importKey(
     "raw",
@@ -95,7 +108,9 @@ async function encryptPayload(payload: string, p256dh: string, authSecret: strin
   const cek = await hkdf(salt, prk, enc.encode("Content-Encoding: aes128gcm\0"), 16);
   const nonce = await hkdf(salt, prk, enc.encode("Content-Encoding: nonce\0"), 12);
 
-  const aesKey = await crypto.subtle.importKey("raw", cek as BufferSource, "AES-GCM", false, ["encrypt"]);
+  const aesKey = await crypto.subtle.importKey("raw", cek as BufferSource, "AES-GCM", false, [
+    "encrypt",
+  ]);
   const plaintext = concat(enc.encode(payload), new Uint8Array([0x02]));
   const ciphertext = new Uint8Array(
     await crypto.subtle.encrypt(

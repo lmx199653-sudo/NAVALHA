@@ -33,7 +33,8 @@ export function PixQrCard({
   const [copied, setCopied] = useState<"code" | "key" | null>(null);
   const key = normalizePixKey(pixKey, pixKeyType);
   const payload = useMemo(
-    () => buildPixPayload({ key: pixKey, keyType: pixKeyType, holderName, amountCents, description }),
+    () =>
+      buildPixPayload({ key: pixKey, keyType: pixKeyType, holderName, amountCents, description }),
     [pixKey, pixKeyType, holderName, amountCents, description],
   );
 
@@ -49,7 +50,13 @@ export function PixQrCard({
   }
 
   return (
-    <div className={cn("rounded-xl border border-primary/40 bg-primary/5", compact ? "p-3" : "p-4", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-primary/40 bg-primary/5",
+        compact ? "p-3" : "p-4",
+        className,
+      )}
+    >
       <div className="flex items-center gap-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
           <ScanLine className="size-4" />
@@ -70,13 +77,20 @@ export function PixQrCard({
         </div>
         <div className="min-w-0 flex-1 space-y-2">
           <p className="text-xs text-muted-foreground">
-            Aponte a câmera do app do banco para o QR Code{amountCents ? " — o valor já vem preenchido" : ""}.
-            Ou use o código abaixo em “Pix copia e cola”.
+            Aponte a câmera do app do banco para o QR Code
+            {amountCents ? " — o valor já vem preenchido" : ""}. Ou use o código abaixo em “Pix
+            copia e cola”.
           </p>
           <code className="block max-h-16 overflow-hidden break-all rounded-lg bg-background/70 px-3 py-2 text-[10px] leading-tight text-muted-foreground">
             {payload}
           </code>
-          <Button type="button" size="sm" variant={showKey ? "outline" : "default"} onClick={() => copy("code")} className="w-full sm:w-auto">
+          <Button
+            type="button"
+            size="sm"
+            variant={showKey ? "outline" : "default"}
+            onClick={() => copy("code")}
+            className="w-full sm:w-auto"
+          >
             {copied === "code" ? <Check className="size-4" /> : <Copy className="size-4" />}
             {copied === "code" ? "Copiado" : "Copiar código Pix"}
           </Button>
@@ -84,7 +98,9 @@ export function PixQrCard({
       </div>
       {showKey && (
         <div className="mt-3 border-t border-primary/20 pt-3">
-          <p className="mb-1.5 text-xs text-muted-foreground">Ou copie a chave e pague pelo app do banco:</p>
+          <p className="mb-1.5 text-xs text-muted-foreground">
+            Ou copie a chave e pague pelo app do banco:
+          </p>
           <code className="block select-all break-all rounded-lg bg-background/70 px-3 py-2 text-sm">
             {key}
           </code>

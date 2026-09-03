@@ -54,14 +54,70 @@ const DEMO_SHOP: Shop = {
 };
 
 const DEMO_SERVICES: Service[] = [
-  { id: "demo-svc-01", name: "Corte Tesoura", description: "Corte tradicional com tesoura.", price_cents: 4500, duration_min: 45, image_url: null },
-  { id: "demo-svc-02", name: "Corte Máquina", description: "Corte com máquina e acabamento.", price_cents: 4000, duration_min: 40, image_url: null },
-  { id: "demo-svc-03", name: "Barba", description: "Barba completa com toalha quente.", price_cents: 3000, duration_min: 30, image_url: null },
-  { id: "demo-svc-04", name: "Navalhado", description: "Acabamento navalhado na zero.", price_cents: 2500, duration_min: 25, image_url: null },
-  { id: "demo-svc-05", name: "Sobrancelha", description: "Design de sobrancelha masculina.", price_cents: 2000, duration_min: 20, image_url: null },
-  { id: "demo-svc-06", name: "Pigmentação", description: "Pigmentação de barba ou cabelo.", price_cents: 6000, duration_min: 60, image_url: null },
-  { id: "demo-svc-07", name: "Reflexo", description: "Reflexo com produtos profissionais.", price_cents: 8000, duration_min: 90, image_url: null },
-  { id: "demo-svc-08", name: "Nevou", description: "Platinado/nevou masculino.", price_cents: 9000, duration_min: 120, image_url: null },
+  {
+    id: "demo-svc-01",
+    name: "Corte Tesoura",
+    description: "Corte tradicional com tesoura.",
+    price_cents: 4500,
+    duration_min: 45,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-02",
+    name: "Corte Máquina",
+    description: "Corte com máquina e acabamento.",
+    price_cents: 4000,
+    duration_min: 40,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-03",
+    name: "Barba",
+    description: "Barba completa com toalha quente.",
+    price_cents: 3000,
+    duration_min: 30,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-04",
+    name: "Navalhado",
+    description: "Acabamento navalhado na zero.",
+    price_cents: 2500,
+    duration_min: 25,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-05",
+    name: "Sobrancelha",
+    description: "Design de sobrancelha masculina.",
+    price_cents: 2000,
+    duration_min: 20,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-06",
+    name: "Pigmentação",
+    description: "Pigmentação de barba ou cabelo.",
+    price_cents: 6000,
+    duration_min: 60,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-07",
+    name: "Reflexo",
+    description: "Reflexo com produtos profissionais.",
+    price_cents: 8000,
+    duration_min: 90,
+    image_url: null,
+  },
+  {
+    id: "demo-svc-08",
+    name: "Nevou",
+    description: "Platinado/nevou masculino.",
+    price_cents: 9000,
+    duration_min: 120,
+    image_url: null,
+  },
 ];
 
 const DEMO_BARBERS: Barber[] = [
@@ -167,7 +223,6 @@ function maskCpf(v: string) {
     .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
 }
 
-
 function PublicBooking() {
   const { slug } = Route.useParams();
   const [step, setStep] = useState(0);
@@ -192,9 +247,6 @@ function PublicBooking() {
       duration_min: selected.reduce((t, s) => t + s.duration_min, 0),
     };
   }, [selected]);
-
-
-
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-shop", slug],
@@ -226,7 +278,9 @@ function PublicBooking() {
           .order("name"),
         supabase
           .from("barbers")
-          .select("id, barbershop_id, name, bio, photo_url, work_days, start_time, end_time, active")
+          .select(
+            "id, barbershop_id, name, bio, photo_url, work_days, start_time, end_time, active",
+          )
           .eq("barbershop_id", shop.id)
           .eq("active", true),
         supabase.from("business_hours").select("*").eq("barbershop_id", shop.id),
@@ -309,11 +363,20 @@ function PublicBooking() {
     () => new Set((eligibility?.services ?? []).filter((s) => s.covered).map((s) => s.service_id)),
     [eligibility],
   );
-  const planUncoveredCents = selected.filter((s) => !coveredIds.has(s.id)).reduce((t, s) => t + s.price_cents, 0);
+  const planUncoveredCents = selected
+    .filter((s) => !coveredIds.has(s.id))
+    .reduce((t, s) => t + s.price_cents, 0);
 
   const paymentChoice: PaymentChoice =
-    payment === "plan" ? (planEligible ? "plan" : shopHasPix ? "pix" : "on_site")
-    : shopHasPix ? payment : "on_site";
+    payment === "plan"
+      ? planEligible
+        ? "plan"
+        : shopHasPix
+          ? "pix"
+          : "on_site"
+      : shopHasPix
+        ? payment
+        : "on_site";
 
   const book = useMutation({
     mutationFn: async () => {
@@ -354,7 +417,6 @@ function PublicBooking() {
     onSuccess: () => setDone(true),
     onError: (e: Error) => toast.error(friendlyError(e.message) || "Horário indisponível"),
   });
-
 
   if (isLoading) {
     return (
@@ -530,7 +592,6 @@ function PublicBooking() {
           </section>
         )}
 
-
         {step === 1 && (
           <section className="space-y-3">
             <StepTitle title="Escolha o profissional" hint="Com quem você quer ser atendido?" />
@@ -572,7 +633,10 @@ function PublicBooking() {
 
         {step === 2 && (
           <section className="space-y-4">
-            <StepTitle title="Escolha data e horário" hint="Só aparecem horários realmente livres." />
+            <StepTitle
+              title="Escolha data e horário"
+              hint="Só aparecem horários realmente livres."
+            />
             <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
               {nextDays.map((d) => {
                 const active = dayKey(d) === dayKey(day);
@@ -681,7 +745,6 @@ function PublicBooking() {
                 Ver resumo
               </Button>
             </form>
-
           </section>
         )}
 
@@ -711,7 +774,12 @@ function PublicBooking() {
             </div>
             <div className="surface-card space-y-3 p-4">
               <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
-              <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
+              <div
+                className={cn(
+                  "grid gap-2",
+                  planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
+                )}
+              >
                 {shopHasPix && (
                   <PaymentOption
                     icon={QrCode}
@@ -755,14 +823,16 @@ function PublicBooking() {
                       {selected.map((s) => (
                         <li key={s.id} className="flex justify-between">
                           <span>{s.name}</span>
-                          <span>{coveredIds.has(s.id) ? "incluso no plano" : brl(s.price_cents)}</span>
+                          <span>
+                            {coveredIds.has(s.id) ? "incluso no plano" : brl(s.price_cents)}
+                          </span>
                         </li>
                       ))}
                     </ul>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    O crédito só é descontado quando o atendimento for concluído. Se cancelar ou não comparecer,
-                    nada é descontado.
+                    O crédito só é descontado quando o atendimento for concluído. Se cancelar ou não
+                    comparecer, nada é descontado.
                   </p>
                 </div>
               ) : paymentChoice === "pix" && shopHasPix ? (
@@ -776,13 +846,14 @@ function PublicBooking() {
                     description={service.name}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o barbeiro, e
-                    confirme o agendamento. Leve o comprovante no dia.
+                    Pague {brl(service.price_cents)} pelo QR Code ou copiando a chave, direto para o
+                    barbeiro, e confirme o agendamento. Leve o comprovante no dia.
                   </p>
                 </>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou dinheiro.
+                  Nada é cobrado agora. Você paga direto ao barbeiro no dia, por Pix, cartão ou
+                  dinheiro.
                 </p>
               )}
             </div>
@@ -862,7 +933,6 @@ function ShopHeader({ shop }: { shop: Shop }) {
             <p className="mt-1.5 text-xs text-muted-foreground">{shop.description}</p>
           )}
         </div>
-
 
         <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
           {shop.address && (
@@ -955,7 +1025,9 @@ function PaymentOption({
       aria-pressed={active}
       className={cn(
         "relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-colors min-h-24",
-        active ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border hover:border-primary/40",
+        active
+          ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+          : "border-border hover:border-primary/40",
       )}
     >
       {badge && (
@@ -966,7 +1038,9 @@ function PaymentOption({
       <span
         className={cn(
           "flex size-8 items-center justify-center rounded-lg ring-1",
-          active ? "bg-primary/20 text-primary ring-primary/30" : "bg-secondary/70 text-muted-foreground ring-border",
+          active
+            ? "bg-primary/20 text-primary ring-primary/30"
+            : "bg-secondary/70 text-muted-foreground ring-border",
         )}
       >
         <Icon className="size-4" />
@@ -1009,7 +1083,6 @@ function SuccessScreen({
     `Profissional: ${barber.name}`,
   )}&location=${encodeURIComponent(shop.address ?? shop.name)}`;
 
-
   const usingPlan = payment === "plan";
   const paidByPix = (payment === "pix" || payment === "pix_qr") && hasPix(shop);
   const planCoveredAll = usingPlan && planUncoveredCents === 0;
@@ -1029,7 +1102,6 @@ function SuccessScreen({
   const whatsappConfirmLink = whatsappLink
     ? `${whatsappLink}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
-
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -1068,13 +1140,15 @@ function SuccessScreen({
             <div className="flex items-center justify-between px-3.5 py-3">
               <span className="text-sm text-muted-foreground">Valor</span>
               <span className="font-display text-3xl text-primary">
-                {planCoveredAll ? "Incluso" : brl(usingPlan ? planUncoveredCents : service.price_cents)}
+                {planCoveredAll
+                  ? "Incluso"
+                  : brl(usingPlan ? planUncoveredCents : service.price_cents)}
               </span>
             </div>
             {usingPlan && (
               <p className="px-3.5 py-2 text-xs text-muted-foreground">
-                O crédito do seu plano só é descontado quando o atendimento for concluído. Se cancelar ou não
-                comparecer, nada é descontado.
+                O crédito do seu plano só é descontado quando o atendimento for concluído. Se
+                cancelar ou não comparecer, nada é descontado.
               </p>
             )}
           </div>
@@ -1091,8 +1165,8 @@ function SuccessScreen({
                   description={service.name}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Ainda não pagou? Escaneie o QR Code ou copie a chave acima e faça o Pix.
-                  Envie o comprovante pelo WhatsApp para agilizar a confirmação.
+                  Ainda não pagou? Escaneie o QR Code ou copie a chave acima e faça o Pix. Envie o
+                  comprovante pelo WhatsApp para agilizar a confirmação.
                 </p>
               </>
             )}

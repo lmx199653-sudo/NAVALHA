@@ -2,9 +2,11 @@
 export function friendlyError(message: string | null | undefined) {
   const m = (message ?? "").toLowerCase();
 
-
   // Chaves duplicadas
-  if (m.includes("barbershops_slug_key") || m.includes("duplicate key value") && m.includes("slug")) {
+  if (
+    m.includes("barbershops_slug_key") ||
+    (m.includes("duplicate key value") && m.includes("slug"))
+  ) {
     return "Este endereço já está em uso. Escolha outro nome para continuar.";
   }
   if (m.includes("customers_shop_cpf_unique")) return "Este CPF já está cadastrado.";
@@ -13,17 +15,31 @@ export function friendlyError(message: string | null | undefined) {
   }
 
   // Permissões
-  if (m.includes("permission denied") || m.includes("row-level security") || m.includes("não autorizado")) {
+  if (
+    m.includes("permission denied") ||
+    m.includes("row-level security") ||
+    m.includes("não autorizado")
+  ) {
     return "Você não tem permissão para esta operação. Faça login e tente novamente.";
   }
 
   // Dados inválidos / violação de constraint
-  if (m.includes("violates") || m.includes("constraint") || m.includes("check constraint") || m.includes("not-null")) {
+  if (
+    m.includes("violates") ||
+    m.includes("constraint") ||
+    m.includes("check constraint") ||
+    m.includes("not-null")
+  ) {
     return "Não foi possível salvar. Verifique os dados informados e tente novamente.";
   }
 
   // Conexão / timeout
-  if (m.includes("network") || m.includes("timeout") || m.includes("fetch") || m.includes("failed to fetch")) {
+  if (
+    m.includes("network") ||
+    m.includes("timeout") ||
+    m.includes("fetch") ||
+    m.includes("failed to fetch")
+  ) {
     return "Problema de conexão. Verifique sua internet e tente novamente.";
   }
 

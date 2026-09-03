@@ -33,7 +33,10 @@ function MarketingPage() {
     enabled: !!shop?.id,
     queryFn: async () => {
       const [customers, appts] = await Promise.all([
-        supabase.from("customers").select("id, name, phone, birth_date, points").eq("barbershop_id", shop!.id),
+        supabase
+          .from("customers")
+          .select("id, name, phone, birth_date, points")
+          .eq("barbershop_id", shop!.id),
         supabase
           .from("appointments")
           .select("customer_id, starts_at, status")
@@ -148,10 +151,22 @@ function CampaignCard({
           />
         ) : (
           people.slice(0, 10).map((c) => (
-            <div key={c.id} className="surface-row flex items-center justify-between gap-3 px-3.5 py-3">
+            <div
+              key={c.id}
+              className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
+            >
               <span className="truncate text-sm font-medium">{c.name}</span>
-              <Button size="sm" variant="ghost" asChild aria-label={`Enviar WhatsApp para ${c.name}`}>
-                <a href={wa(c.phone, message(c.name.split(" ")[0]!))} target="_blank" rel="noreferrer">
+              <Button
+                size="sm"
+                variant="ghost"
+                asChild
+                aria-label={`Enviar WhatsApp para ${c.name}`}
+              >
+                <a
+                  href={wa(c.phone, message(c.name.split(" ")[0]!))}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <MessageCircle className="size-4" />
                   <span className="hidden sm:inline">WhatsApp</span>
                 </a>

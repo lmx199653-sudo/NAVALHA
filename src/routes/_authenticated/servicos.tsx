@@ -3,7 +3,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Clock, ImagePlus, Link as LinkIcon, Pencil, Plus, Scissors, Trash2, Upload } from "lucide-react";
+import {
+  Check,
+  Clock,
+  ImagePlus,
+  Link as LinkIcon,
+  Pencil,
+  Plus,
+  Scissors,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -106,8 +116,12 @@ function ServicesPage() {
     toast.success("A imagem padrão será usada após salvar.");
   }
 
-
-  const { data: services, isLoading, isError, refetch } = useQuery({
+  const {
+    data: services,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["services", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -204,7 +218,10 @@ function ServicesPage() {
       {isLoading && <CardSkeleton count={6} />}
 
       {!isLoading && isError && (
-        <ErrorState onRetry={() => refetch()} description="Não foi possível carregar os serviços." />
+        <ErrorState
+          onRetry={() => refetch()}
+          description="Não foi possível carregar os serviços."
+        />
       )}
 
       {!isLoading && !isError && (services ?? []).length === 0 && (
@@ -221,47 +238,57 @@ function ServicesPage() {
       )}
 
       {!isLoading && !isError && (services ?? []).length > 0 && (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {(services ?? []).map((s) => (
-          <div key={s.id} className="surface-card p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex min-w-0 gap-3">
-                {(s.image_url || serviceImage(s.name)) && (
-                  <img
-                    src={s.image_url || serviceImage(s.name) || undefined}
-                    alt={`Serviço ${s.name}`}
-                    loading="lazy"
-                    className="size-16 shrink-0 rounded-xl object-cover object-top ring-1 ring-border/70"
-                  />
-                )}
-                <div className="min-w-0">
-                  <h3 className="truncate font-display text-2xl leading-none">{s.name}</h3>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{s.description}</p>
-                  <Badge variant={s.active ? "success" : "secondary"} className="mt-1.5">
-                    {s.active ? "Ativo" : "Inativo"}
-                  </Badge>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {(services ?? []).map((s) => (
+            <div key={s.id} className="surface-card p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 gap-3">
+                  {(s.image_url || serviceImage(s.name)) && (
+                    <img
+                      src={s.image_url || serviceImage(s.name) || undefined}
+                      alt={`Serviço ${s.name}`}
+                      loading="lazy"
+                      className="size-16 shrink-0 rounded-xl object-cover object-top ring-1 ring-border/70"
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <h3 className="truncate font-display text-2xl leading-none">{s.name}</h3>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{s.description}</p>
+                    <Badge variant={s.active ? "success" : "secondary"} className="mt-1.5">
+                      {s.active ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Editar ${s.name}`}
+                    onClick={() => openEdit(s)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label={`Excluir ${s.name}`}
+                    onClick={() => remove.mutate(s.id)}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" aria-label={`Editar ${s.name}`} onClick={() => openEdit(s)}>
-                  <Pencil className="size-4" />
-                </Button>
-                <Button size="icon" variant="ghost" aria-label={`Excluir ${s.name}`} onClick={() => remove.mutate(s.id)}>
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
+              <div className="mt-4 flex items-center justify-between">
+                <span className="font-display text-2xl text-primary">
+                  {s.price_cents > 0 ? brl(s.price_cents) : "Definir preço"}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="size-3" /> {s.duration_min} min
+                </span>
               </div>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="font-display text-2xl text-primary">
-                {s.price_cents > 0 ? brl(s.price_cents) : "Definir preço"}
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="size-3" /> {s.duration_min} min
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -281,20 +308,46 @@ function ServicesPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="service-name">Título do serviço</Label>
-              <Input id="service-name" required placeholder="Ex.: CORTE MÁQUINA" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                id="service-name"
+                required
+                placeholder="Ex.: CORTE MÁQUINA"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="service-description">Descrição</Label>
-              <Textarea id="service-description" rows={2} placeholder="O que está incluído neste serviço" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              <Textarea
+                id="service-description"
+                rows={2}
+                placeholder="O que está incluído neste serviço"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="service-price">Preço (R$)</Label>
-                <Input id="service-price" required inputMode="decimal" placeholder="0,00" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+                <Input
+                  id="service-price"
+                  required
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="service-duration">Duração (min)</Label>
-                <Input id="service-duration" type="number" min={5} step={5} value={form.duration} onChange={(e) => setForm({ ...form, duration: e.target.value })} />
+                <Input
+                  id="service-duration"
+                  type="number"
+                  min={5}
+                  step={5}
+                  value={form.duration}
+                  onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                />
               </div>
             </div>
 
@@ -302,18 +355,22 @@ function ServicesPage() {
               <Label>Foto do serviço</Label>
               <div className="grid gap-3 sm:grid-cols-[9rem_1fr]">
                 <div className="aspect-square overflow-hidden rounded-lg border border-border bg-secondary/50">
-                  {(form.image_url || serviceImage(form.name)) ? (
+                  {form.image_url || serviceImage(form.name) ? (
                     <img
                       src={form.image_url || serviceImage(form.name) || undefined}
                       alt="Prévia da foto do serviço"
                       className="size-full object-cover object-top"
                     />
                   ) : (
-                    <div className="flex size-full items-center justify-center text-muted-foreground"><ImagePlus className="size-8" /></div>
+                    <div className="flex size-full items-center justify-center text-muted-foreground">
+                      <ImagePlus className="size-8" />
+                    </div>
                   )}
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="service-photo" className="sr-only">Enviar nova foto</Label>
+                  <Label htmlFor="service-photo" className="sr-only">
+                    Enviar nova foto
+                  </Label>
                   <Input
                     id="service-photo"
                     type="file"
@@ -326,7 +383,8 @@ function ServicesPage() {
                     }}
                   />
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Upload className="size-3.5" /> {uploading ? "Enviando foto..." : "JPG, PNG, WebP ou GIF, até 10 MB"}
+                    <Upload className="size-3.5" />{" "}
+                    {uploading ? "Enviando foto..." : "JPG, PNG, WebP ou GIF, até 10 MB"}
                   </p>
                   <div className="flex items-center gap-2">
                     <LinkIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -337,7 +395,14 @@ function ServicesPage() {
                       onChange={(e) => setForm({ ...form, image_url: e.target.value })}
                     />
                     {form.image_url && (
-                      <Button type="button" size="icon" variant="ghost" aria-label="Remover foto personalizada" title="Remover foto personalizada" onClick={() => void clearCustomPhoto()}>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Remover foto personalizada"
+                        title="Remover foto personalizada"
+                        onClick={() => void clearCustomPhoto()}
+                      >
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     )}
@@ -346,7 +411,9 @@ function ServicesPage() {
               </div>
 
               <div>
-                <p className="mb-2 text-xs font-medium text-muted-foreground">Banco de imagens padrão</p>
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
+                  Banco de imagens padrão
+                </p>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                   {DEFAULT_SERVICE_IMAGES.map((image) => {
                     const chosen = form.image_url === image.url;
@@ -359,19 +426,33 @@ function ServicesPage() {
                         title={`Usar imagem de ${image.name}`}
                         onClick={() => setForm((f) => ({ ...f, image_url: image.url }))}
                       >
-                        <img src={image.url} alt={image.name} className="aspect-square w-full rounded object-cover object-top" />
+                        <img
+                          src={image.url}
+                          alt={image.name}
+                          className="aspect-square w-full rounded object-cover object-top"
+                        />
                         <span className="w-full truncate px-1 py-1 text-[10px]">{image.name}</span>
-                        {chosen && <span className="absolute right-1 top-1 rounded-full bg-primary p-1 text-primary-foreground"><Check className="size-3" /></span>}
+                        {chosen && (
+                          <span className="absolute right-1 top-1 rounded-full bg-primary p-1 text-primary-foreground">
+                            <Check className="size-3" />
+                          </span>
+                        )}
                       </Button>
                     );
                   })}
                 </div>
               </div>
-              <p className="text-[11px] text-muted-foreground">Ao remover a foto personalizada, a imagem padrão correspondente ao nome do serviço volta automaticamente.</p>
+              <p className="text-[11px] text-muted-foreground">
+                Ao remover a foto personalizada, a imagem padrão correspondente ao nome do serviço
+                volta automaticamente.
+              </p>
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <Label>Serviço ativo na página pública</Label>
-              <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+              <Switch
+                checked={form.active}
+                onCheckedChange={(v) => setForm({ ...form, active: v })}
+              />
             </div>
             <DialogFooter>
               <Button className="w-full sm:w-auto" disabled={save.isPending}>

@@ -143,9 +143,7 @@ function InstallAppPage() {
             )}
 
             <details className="text-xs text-muted-foreground">
-              <summary className="cursor-pointer hover:text-primary">
-                Uso outro navegador
-              </summary>
+              <summary className="cursor-pointer hover:text-primary">Uso outro navegador</summary>
               <ul className="mt-2 space-y-1">
                 <li>Chrome / Edge / Firefox (Android): menu ⋮ → Instalar app.</li>
                 <li>Samsung Internet: menu ☰ → Adicionar página a → Tela inicial.</li>

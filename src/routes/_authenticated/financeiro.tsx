@@ -33,7 +33,12 @@ const RANGES = [
   { label: "90 dias", days: 90 },
 ];
 
-const COLORS = ["oklch(0.78 0.13 85)", "oklch(0.68 0.12 75)", "oklch(0.58 0.1 70)", "oklch(0.45 0.07 80)"];
+const COLORS = [
+  "oklch(0.78 0.13 85)",
+  "oklch(0.68 0.12 75)",
+  "oklch(0.58 0.1 70)",
+  "oklch(0.45 0.07 80)",
+];
 
 function FinancePage() {
   const { data: shop } = useShop();
@@ -74,17 +79,16 @@ function FinancePage() {
       const key = a.starts_at.slice(0, 10);
       byDay.set(key, (byDay.get(key) ?? 0) + a.price_cents);
     });
-    const daily = [...byDay.entries()]
-      .sort()
-      .map(([date, cents]) => ({
-        date: date.slice(8, 10) + "/" + date.slice(5, 7),
-        valor: cents / 100,
-      }));
+    const daily = [...byDay.entries()].sort().map(([date, cents]) => ({
+      date: date.slice(8, 10) + "/" + date.slice(5, 7),
+      valor: cents / 100,
+    }));
 
     const byService = (data?.services ?? [])
       .map((s) => ({
         name: s.name,
-        value: done.filter((a) => a.service_id === s.id).reduce((t, a) => t + a.price_cents, 0) / 100,
+        value:
+          done.filter((a) => a.service_id === s.id).reduce((t, a) => t + a.price_cents, 0) / 100,
       }))
       .filter((s) => s.value > 0)
       .sort((a, b) => b.value - a.value);
@@ -151,10 +155,30 @@ function FinancePage() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Faturamento" value={brl(view.revenue)} icon={Wallet} loading={isLoading} />
-            <StatCard label="Ticket médio" value={brl(view.ticket)} icon={TrendingUp} loading={isLoading} />
-            <StatCard label="Atendimentos" value={String(view.done)} icon={CalendarDays} loading={isLoading} />
-            <StatCard label="Taxa de falta" value={`${view.noShowRate}%`} icon={Users} loading={isLoading} />
+            <StatCard
+              label="Faturamento"
+              value={brl(view.revenue)}
+              icon={Wallet}
+              loading={isLoading}
+            />
+            <StatCard
+              label="Ticket médio"
+              value={brl(view.ticket)}
+              icon={TrendingUp}
+              loading={isLoading}
+            />
+            <StatCard
+              label="Atendimentos"
+              value={String(view.done)}
+              icon={CalendarDays}
+              loading={isLoading}
+            />
+            <StatCard
+              label="Taxa de falta"
+              value={`${view.noShowRate}%`}
+              icon={Users}
+              loading={isLoading}
+            />
           </div>
 
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
@@ -164,7 +188,11 @@ function FinancePage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={view.daily}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 11 }}
+                      stroke="var(--color-muted-foreground)"
+                    />
                     <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
                     <Tooltip
                       contentStyle={{
@@ -186,7 +214,13 @@ function FinancePage() {
               <div className="mt-4 h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={view.byService} dataKey="value" nameKey="name" innerRadius={45} outerRadius={80}>
+                    <Pie
+                      data={view.byService}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={45}
+                      outerRadius={80}
+                    >
                       {view.byService.map((_, i) => (
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
                       ))}
