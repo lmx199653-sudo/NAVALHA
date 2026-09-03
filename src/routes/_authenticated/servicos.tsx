@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Check, Clock, ImagePlus, Link as LinkIcon, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { Check, Clock, ImagePlus, Link as LinkIcon, Pencil, Plus, Scissors, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -16,11 +16,14 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { brl } from "@/lib/format";
 import { DEFAULT_SERVICE_IMAGES, serviceImage } from "@/lib/service-images";
+import { Badge } from "@/components/ui/badge";
+import { EmptyState, ErrorState, CardSkeleton } from "@/components/ui/states";
 
 export const Route = createFileRoute("/_authenticated/servicos")({
   component: ServicesPage,
@@ -104,7 +107,7 @@ function ServicesPage() {
   }
 
 
-  const { data: services } = useQuery({
+  const { data: services, isLoading, isError, refetch } = useQuery({
     queryKey: ["services", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -198,6 +201,26 @@ function ServicesPage() {
         </Button>
       }
     >
+      {isLoading && <CardSkeleton count={6} />}
+
+      {!isLoading && isError && (
+        <ErrorState onRetry={() => refetch()} description="Não foi possível carregar os serviços." />
+      )}
+
+      {!isLoading && !isError && (services ?? []).length === 0 && (
+        <EmptyState
+          icon={Scissors}
+          title="Nenhum serviço cadastrado"
+          description="Cadastre os serviços oferecidos com preço e duração."
+          action={
+            <Button size="sm" onClick={openNew}>
+              <Plus className="size-4" /> Novo serviço
+            </Button>
+          }
+        />
+      )}
+
+      {!isLoading && !isError && (services ?? []).length > 0 && (
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {(services ?? []).map((s) => (
           <div key={s.id} className="surface-card p-4">
@@ -208,12 +231,15 @@ function ServicesPage() {
                     src={s.image_url || serviceImage(s.name) || undefined}
                     alt={`Serviço ${s.name}`}
                     loading="lazy"
-                    className="size-16 shrink-0 rounded-xl border border-border/70 object-cover object-top"
+                    className="size-16 shrink-0 rounded-xl object-cover object-top ring-1 ring-border/70"
                   />
                 )}
                 <div className="min-w-0">
-                  <h3 className="font-display text-2xl leading-none">{s.name}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>
+                  <h3 className="truncate font-display text-2xl leading-none">{s.name}</h3>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">{s.description}</p>
+                  <Badge variant={s.active ? "success" : "secondary"} className="mt-1.5">
+                    {s.active ? "Ativo" : "Inativo"}
+                  </Badge>
                 </div>
               </div>
               <div className="flex gap-1">
@@ -235,10 +261,8 @@ function ServicesPage() {
             </div>
           </div>
         ))}
-        {services?.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado.</p>
-        )}
       </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto">
@@ -349,9 +373,11 @@ function ServicesPage() {
               <Label>Serviço ativo na página pública</Label>
               <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
             </div>
-            <Button className="w-full" disabled={save.isPending}>
-              Salvar
-            </Button>
+            <DialogFooter>
+              <Button className="w-full sm:w-auto" disabled={save.isPending}>
+                {save.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

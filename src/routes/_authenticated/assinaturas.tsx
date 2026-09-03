@@ -524,29 +524,3 @@ function SubscriptionsPage() {
     </AppShell>
   );
 }
-
-function Metric({
-  label,
-  value,
-  highlight,
-  warn,
-}: {
-  label: string;
-  value: string;
-  highlight?: boolean;
-  warn?: boolean;
-}) {
-  return (
-    <div className="surface-card relative overflow-hidden p-4">
-      {highlight && (
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
-      )}
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p
-        className={cn("font-display text-2xl", highlight && "text-primary", warn && "text-warning")}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
