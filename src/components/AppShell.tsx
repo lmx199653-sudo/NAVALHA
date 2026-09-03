@@ -25,15 +25,11 @@ import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppCta } from "@/components/InstallAppCta";
 
-
-
 import { useBrand } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
-
-
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, group: "Operação" },
@@ -53,8 +49,38 @@ const NAV_GROUPS = ["Operação", "Cadastros", "Negócio"] as const;
 
 const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3]] as const;
 
-
-
+function BrandMark({ shop, size = "md" }: { shop?: { name?: string | null; logo_url?: string | null } | null; size?: "md" | "sm" }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2.5">
+      <span
+        className={cn(
+          "flex shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20",
+          size === "md" ? "size-9" : "size-8",
+        )}
+      >
+        <img
+          src={shop?.logo_url ?? logoAsset.url}
+          alt={shop?.name ? `Logo ${shop.name}` : "NAVALHA PRO"}
+          className={cn("object-contain", size === "md" ? "size-6" : "size-5")}
+        />
+      </span>
+      <span
+        className={cn(
+          "min-w-0 truncate font-display leading-none tracking-wide",
+          size === "md" ? "text-[1.35rem]" : "text-xl",
+        )}
+      >
+        {shop?.name ? (
+          shop.name.toUpperCase()
+        ) : (
+          <>
+            NAVALHA <span className="text-primary">PRO</span>
+          </>
+        )}
+      </span>
+    </div>
+  );
+}
 
 export function AppShell({
   title,
@@ -75,13 +101,6 @@ export function AppShell({
   const { installed } = usePwaInstall();
   useBrand(shop);
 
-  // Acesso total pelo site: o app instalado é apenas uma recomendação.
-
-
-
-
-
-
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
@@ -91,23 +110,16 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-56 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <div className="flex items-center gap-2.5 px-4 pb-5 pt-5">
-          <img
-            src={shop?.logo_url ?? logoAsset.url}
-            alt={shop?.name ? `Logo ${shop.name}` : "NAVALHA PRO"}
-            className="size-7 shrink-0 object-contain"
-          />
-          <span className="break-words font-display text-xl leading-tight tracking-wide">
-            {shop?.name ? shop.name.toUpperCase() : <>NAVALHA <span className="text-primary">PRO</span></>}
-          </span>
+      {/* Sidebar desktop */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+        <div className="px-4 pb-4 pt-5">
+          <BrandMark shop={shop} />
         </div>
-        <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-2.5">
+        <div className="gold-line mx-4 h-px opacity-60" />
+        <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto px-3 py-4">
           {NAV_GROUPS.map((group) => (
             <div key={group}>
-              <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
-                {group}
-              </p>
+              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">{group}</p>
               <div className="space-y-0.5">
                 {NAV.filter((item) => item.group === group).map((item) => {
                   const active = pathname.startsWith(item.to);
@@ -115,15 +127,21 @@ export function AppShell({
                     <Link
                       key={item.to}
                       to={item.to}
+                      aria-current={active ? "page" : undefined}
                       className={cn(
-                        "relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                        "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
                         active && "bg-sidebar-accent font-medium text-primary",
                       )}
                     >
                       {active && (
-                        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-primary" />
+                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-primary shadow-[0_0_10px_var(--color-primary)]" />
                       )}
-                      <item.icon className="size-4" />
+                      <item.icon
+                        className={cn(
+                          "size-4 transition-colors",
+                          active ? "text-primary" : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
+                        )}
+                      />
                       {item.label}
                     </Link>
                   );
@@ -133,44 +151,46 @@ export function AppShell({
           ))}
           {!installed && (
             <div>
-              <p className="px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
-                Cliente
-              </p>
+              <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">Cliente</p>
               <Link
                 to="/agendar"
                 className={cn(
-                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                  "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
                   pathname.startsWith("/agendar") && "bg-sidebar-accent font-medium text-primary",
                 )}
               >
-                <CalendarPlus className="size-4" />
+                <CalendarPlus className="size-4 text-sidebar-foreground/50 group-hover:text-sidebar-foreground" />
                 Página do cliente
               </Link>
             </div>
           )}
         </nav>
-        <div className="border-t border-sidebar-border p-2.5">
+        <div className="border-t border-sidebar-border p-3">
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-sidebar-foreground/60 transition-colors hover:text-destructive"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-sidebar-foreground/60 transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="size-4" /> Sair
           </button>
         </div>
       </aside>
 
-      <div className="lg:pl-56">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 sm:flex sm:flex-wrap sm:justify-between sm:px-6">
+      <div className="lg:pl-60">
+        {/* Header */}
+        <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:flex sm:flex-wrap sm:justify-between sm:px-6 sm:py-4">
             <div className="min-w-0">
-              <h1 className="truncate font-display text-3xl leading-none">{title}</h1>
+              <div className="mb-1 lg:hidden">
+                <BrandMark shop={shop} size="sm" />
+              </div>
+              <h1 className="truncate font-display text-[1.75rem] leading-none sm:text-3xl">{title}</h1>
               {subtitle && (
-                <p className="mt-1 break-words text-sm text-muted-foreground">{subtitle}</p>
+                <p className="mt-1 truncate text-[13px] text-muted-foreground">{subtitle}</p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {!canManage() && (
-                <span className="hidden rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground sm:inline">
+                <span className="hidden rounded-full border border-border/60 bg-muted/60 px-2.5 py-1 text-[11px] text-muted-foreground sm:inline">
                   Somente visualização
                 </span>
               )}
@@ -188,113 +208,120 @@ export function AppShell({
           </div>
         </header>
 
-        <main className="px-4 pb-28 pt-5 sm:px-6 lg:pb-10">
+        <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
           <InstallAppCta />
-          {children}
+          <div className="animate-rise">{children}</div>
         </main>
-
-
       </div>
 
-      
-
-
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-card/95 backdrop-blur lg:hidden">
-        {MOBILE_NAV.map((item) => {
-          const active = pathname.startsWith(item.to);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] text-muted-foreground",
-                active && "text-primary",
-              )}
-            >
-              <item.icon className="size-5" />
-              {item.label}
-            </Link>
-          );
-        })}
-        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetTrigger asChild>
-            <button
-              className={cn(
-                "flex flex-col items-center gap-1 py-2.5 text-[11px] text-muted-foreground",
-                !MOBILE_NAV.some((i) => pathname.startsWith(i.to)) && "text-primary",
-              )}
-            >
-              <Menu className="size-5" />
-              Mais
-            </button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto rounded-t-2xl">
-            <SheetHeader>
-              <SheetTitle className="flex items-center justify-center gap-2 break-words font-display text-2xl leading-tight">
-                <img
-                  src={shop?.logo_url ?? logoAsset.url}
-                  alt={shop?.name ? `Logo ${shop.name}` : "NAVALHA PRO"}
-                  className="size-6 shrink-0 object-contain"
-                />
-                {shop?.name ? shop.name.toUpperCase() : "NAVALHA PRO"}
-              </SheetTitle>
-            </SheetHeader>
-            <div className="grid grid-cols-3 gap-2 px-4 pb-6">
-              {!installed && (
-                <Link
-                  to="/agendar"
-                  onClick={() => setMenuOpen(false)}
+      {/* Bottom nav mobile */}
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-card/90 backdrop-blur-xl lg:hidden">
+        <div className="grid grid-cols-5">
+          {MOBILE_NAV.map((item) => {
+            const active = pathname.startsWith(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground transition-colors",
+                  active && "text-primary",
+                )}
+              >
+                {active && <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />}
+                <span
                   className={cn(
-                    "flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-foreground/80",
-                    pathname.startsWith("/agendar") && "border-primary/50 text-primary",
+                    "flex size-7 items-center justify-center rounded-lg transition-colors",
+                    active && "bg-primary/12",
                   )}
                 >
-                  <CalendarPlus className="size-5" />
-                  <span className="leading-tight">Página do cliente</span>
-                </Link>
-              )}
-              {NAV.map((item) => {
-                const active = pathname.startsWith(item.to);
-                return (
+                  <item.icon className="size-5" />
+                </span>
+                {item.label}
+              </Link>
+            );
+          })}
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                className={cn(
+                  "relative flex min-h-[60px] flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground",
+                  !MOBILE_NAV.some((i) => pathname.startsWith(i.to)) && "text-primary",
+                )}
+              >
+                {!MOBILE_NAV.some((i) => pathname.startsWith(i.to)) && (
+                  <span className="absolute top-0 h-0.5 w-8 rounded-full bg-primary" />
+                )}
+                <span className="flex size-7 items-center justify-center rounded-lg">
+                  <Menu className="size-5" />
+                </span>
+                Mais
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="pb-safe max-h-[85vh] overflow-y-auto rounded-t-3xl border-border/70 bg-card px-0">
+              <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-border" />
+              <SheetHeader className="px-5 pb-2">
+                <SheetTitle className="flex items-center justify-center">
+                  <BrandMark shop={shop} size="sm" />
+                </SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-3 gap-2 px-4 pb-6">
+                {!installed && (
                   <Link
-                    key={item.to}
-                    to={item.to}
+                    to="/agendar"
                     onClick={() => setMenuOpen(false)}
                     className={cn(
-                      "flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-foreground/80",
-                      active && "border-primary/50 text-primary",
+                      "surface-row flex flex-col items-center gap-2 px-2 py-4 text-center text-xs text-foreground/85",
+                      pathname.startsWith("/agendar") && "border-primary/50 text-primary",
                     )}
                   >
-                    <item.icon className="size-5" />
-                    <span className="leading-tight">{item.label}</span>
+                    <CalendarPlus className="size-5" />
+                    <span className="leading-tight">Página do cliente</span>
                   </Link>
-                );
-              })}
-              {!installed && (
-                <Link
-                  to="/instalar-app"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-primary/50 bg-secondary/40 px-2 py-4 text-center text-xs text-primary"
+                )}
+                {NAV.map((item) => {
+                  const active = pathname.startsWith(item.to);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setMenuOpen(false)}
+                      className={cn(
+                        "surface-row flex flex-col items-center gap-2 px-2 py-4 text-center text-xs text-foreground/85",
+                        active && "border-primary/50 bg-primary/10 text-primary",
+                      )}
+                    >
+                      <item.icon className="size-5" />
+                      <span className="leading-tight">{item.label}</span>
+                    </Link>
+                  );
+                })}
+                {!installed && (
+                  <Link
+                    to="/instalar-app"
+                    onClick={() => setMenuOpen(false)}
+                    className="surface-row flex flex-col items-center gap-2 border-primary/50 px-2 py-4 text-center text-xs text-primary"
+                  >
+                    <Smartphone className="size-5" />
+                    <span className="leading-tight">Instalar APP</span>
+                  </Link>
+                )}
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void signOut();
+                  }}
+                  className="surface-row flex flex-col items-center gap-2 px-2 py-4 text-center text-xs text-destructive"
                 >
-                  <Smartphone className="size-5" />
-                  <span className="leading-tight">Instalar APP</span>
-                </Link>
-              )}
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  void signOut();
-                }}
-                className="flex flex-col items-center gap-2 rounded-xl border border-border bg-secondary/40 px-2 py-4 text-center text-xs text-destructive"
-              >
-                <LogOut className="size-5" />
-                <span className="leading-tight">Sair</span>
-              </button>
-            </div>
-          </SheetContent>
-        </Sheet>
+                  <LogOut className="size-5" />
+                  <span className="leading-tight">Sair</span>
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </nav>
-
     </div>
   );
 }
