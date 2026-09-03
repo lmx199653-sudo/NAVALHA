@@ -410,8 +410,21 @@ function AgendaPage() {
         </div>
       </div>
 
-      {view === "day" && (
-        <div className="surface-card divide-y divide-border overflow-hidden rounded-2xl">
+      {isLoading && <ListSkeleton rows={5} />}
+      {isError && <ErrorState onRetry={() => void refetch()} />}
+
+      {!isLoading && !isError && view === "day" && appts.length === 0 && (
+        <EmptyState
+          compact
+          icon={CalendarDays}
+          title="Dia livre"
+          description="Nenhum agendamento para esta data. Arraste ou clique em Novo para adicionar."
+          className="mb-4"
+        />
+      )}
+
+      {!isLoading && !isError && view === "day" && (
+        <div className="surface-card divide-y divide-border/60 overflow-hidden rounded-2xl">
           {HOURS.map((hour) => {
             const slotAppts = appts.filter((a) => new Date(a.starts_at).getHours() === hour);
             return (

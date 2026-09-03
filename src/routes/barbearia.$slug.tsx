@@ -18,6 +18,8 @@ import {
   User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
+import { Landmark, Wallet } from "lucide-react";
 import { serviceImages } from "@/lib/service-images";
 import { notifyNewAppointment } from "@/lib/notify.functions";
 import { Button } from "@/components/ui/button";
@@ -194,7 +196,7 @@ function PublicBooking() {
 
 
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-shop", slug],
     queryFn: async () => {
       const { data: shop } = await supabase
@@ -356,17 +358,37 @@ function PublicBooking() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        Carregando…
+      <div className="mx-auto max-w-2xl px-4 pt-10">
+        <div className="surface-card animate-rise space-y-4 p-5">
+          <div className="skeleton-shimmer h-20 w-20 rounded-2xl" />
+          <div className="skeleton-shimmer h-6 w-2/3 rounded" />
+          <div className="skeleton-shimmer h-4 w-1/2 rounded" />
+        </div>
+        <CardSkeleton count={3} />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <ErrorState
+          title="Não foi possível carregar a barbearia"
+          description="Verifique sua conexão e tente novamente."
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-2 px-4 text-center">
-        <h1 className="font-display text-4xl">Barbearia não encontrada</h1>
-        <p className="text-sm text-muted-foreground">Confira o link com a barbearia.</p>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <EmptyState
+          icon={MapPin}
+          title="Barbearia não encontrada"
+          description="Confira o link com a barbearia."
+        />
       </div>
     );
   }
