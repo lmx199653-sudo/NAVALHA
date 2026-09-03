@@ -20,6 +20,7 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SegurancaDadosRouteImport } from './routes/seguranca-dados'
 import { Route as SuporteRouteImport } from './routes/suporte'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as DotwellKnownAssetlinksDotjsonRouteImport } from './routes/[.]well-known/assetlinks[.]json'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
 import { Route as AuthenticatedBarbeirosRouteImport } from './routes/_authenticated/barbeiros'
@@ -88,6 +89,12 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotwellKnownAssetlinksDotjsonRoute =
+  DotwellKnownAssetlinksDotjsonRouteImport.update({
+    id: '/.well-known/assetlinks.json',
+    path: '/.well-known/assetlinks.json',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   id: '/agenda',
   path: '/agenda',
@@ -167,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
+  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -192,6 +200,7 @@ export interface FileRoutesByTo {
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
+  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -219,6 +228,7 @@ export interface FileRoutesById {
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
   '/termos': typeof TermosRoute
+  '/.well-known/assetlinks.json': typeof DotwellKnownAssetlinksDotjsonRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/_authenticated/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/seguranca-dados'
     | '/suporte'
     | '/termos'
+    | '/.well-known/assetlinks.json'
     | '/agenda'
     | '/assinaturas'
     | '/barbeiros'
@@ -271,6 +282,7 @@ export interface FileRouteTypes {
     | '/seguranca-dados'
     | '/suporte'
     | '/termos'
+    | '/.well-known/assetlinks.json'
     | '/agenda'
     | '/assinaturas'
     | '/barbeiros'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/seguranca-dados'
     | '/suporte'
     | '/termos'
+    | '/.well-known/assetlinks.json'
     | '/_authenticated/agenda'
     | '/_authenticated/assinaturas'
     | '/_authenticated/barbeiros'
@@ -324,6 +337,7 @@ export interface RootRouteChildren {
   SegurancaDadosRoute: typeof SegurancaDadosRoute
   SuporteRoute: typeof SuporteRoute
   TermosRoute: typeof TermosRoute
+  DotwellKnownAssetlinksDotjsonRoute: typeof DotwellKnownAssetlinksDotjsonRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
 }
 
@@ -404,6 +418,13 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/assetlinks.json': {
+      id: '/.well-known/assetlinks.json'
+      path: '/.well-known/assetlinks.json'
+      fullPath: '/.well-known/assetlinks.json'
+      preLoaderRoute: typeof DotwellKnownAssetlinksDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
@@ -545,6 +566,7 @@ const rootRouteChildren: RootRouteChildren = {
   SegurancaDadosRoute: SegurancaDadosRoute,
   SuporteRoute: SuporteRoute,
   TermosRoute: TermosRoute,
+  DotwellKnownAssetlinksDotjsonRoute: DotwellKnownAssetlinksDotjsonRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
 }
 export const routeTree = rootRouteImport
