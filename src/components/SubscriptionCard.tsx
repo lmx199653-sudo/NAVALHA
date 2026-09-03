@@ -9,7 +9,9 @@ import {
   type Subscription,
 } from "@/lib/subscriptions";
 
-function statusBadgeVariant(status: Subscription["status"]): "success" | "warning" | "destructive" | "secondary" {
+function statusBadgeVariant(
+  status: Subscription["status"],
+): "success" | "warning" | "destructive" | "secondary" {
   if (status === "active") return "success";
   if (status === "pending" || status === "suspended") return "warning";
   if (status === "cancelled") return "secondary";

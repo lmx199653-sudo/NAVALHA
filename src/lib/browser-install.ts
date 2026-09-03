@@ -20,7 +20,9 @@ export type InstallGuide = {
   needsOtherBrowser: boolean;
 };
 
-export function detectMobileBrowser(ua = typeof navigator !== "undefined" ? navigator.userAgent : ""): MobileBrowser {
+export function detectMobileBrowser(
+  ua = typeof navigator !== "undefined" ? navigator.userAgent : "",
+): MobileBrowser {
   const s = ua.toLowerCase();
   const isIos =
     /iphone|ipad|ipod/.test(s) ||
@@ -30,7 +32,9 @@ export function detectMobileBrowser(ua = typeof navigator !== "undefined" ? navi
   const isAndroid = /android/.test(s);
 
   const inApp =
-    /fban|fbav|fb_iab|instagram|line\/|micromessenger|twitter|linkedinapp|snapchat|tiktok|pinterest|gsa\//.test(s) ||
+    /fban|fbav|fb_iab|instagram|line\/|micromessenger|twitter|linkedinapp|snapchat|tiktok|pinterest|gsa\//.test(
+      s,
+    ) ||
     (/\bwv\b/.test(s) && isAndroid);
 
   if (inApp) return "inapp";

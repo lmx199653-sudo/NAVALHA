@@ -61,7 +61,9 @@ import {
 
 type View = "menu" | "pay" | "plan" | "edit" | "history";
 
-function statusBadgeVariant(status: SubscriptionStatus): "success" | "warning" | "destructive" | "secondary" {
+function statusBadgeVariant(
+  status: SubscriptionStatus,
+): "success" | "warning" | "destructive" | "secondary" {
   if (status === "active") return "success";
   if (status === "pending" || status === "suspended") return "warning";
   if (status === "cancelled") return "secondary";

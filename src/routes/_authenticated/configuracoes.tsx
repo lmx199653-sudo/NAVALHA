@@ -115,13 +115,14 @@ function SettingsPage() {
         .eq("barbershop_id", shop!.id)
         .order("weekday");
       const rows = (data ?? []) as Hours[];
-      return WEEKDAYS.map((_, i) =>
-        rows.find((r) => r.weekday === i) ?? {
-          weekday: i,
-          open_time: "09:00",
-          close_time: "20:00",
-          closed: i === 0,
-        },
+      return WEEKDAYS.map(
+        (_, i) =>
+          rows.find((r) => r.weekday === i) ?? {
+            weekday: i,
+            open_time: "09:00",
+            close_time: "20:00",
+            closed: i === 0,
+          },
       );
     },
   });
@@ -142,7 +143,6 @@ function SettingsPage() {
           address: form.address,
           description: form.description,
           cover_url: form.cover_url || null,
-
         })
         .eq("id", shop!.id);
       if (error) throw error;
@@ -183,7 +183,11 @@ function SettingsPage() {
     },
     onSuccess: (_, clear) => {
       qc.invalidateQueries({ queryKey: ["shop"] });
-      toast.success(clear ? "Chave Pix removida" : `Chave Pix (${pixTypeLabel(detected?.ok ? detected.type : null)}) salva`);
+      toast.success(
+        clear
+          ? "Chave Pix removida"
+          : `Chave Pix (${pixTypeLabel(detected?.ok ? detected.type : null)}) salva`,
+      );
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
@@ -240,29 +244,48 @@ function SettingsPage() {
             >
               <div className="space-y-1.5">
                 <Label>Nome</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Link público (slug)</Label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>WhatsApp</Label>
-                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Input
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Endereço</Label>
-                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                  <Input
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Descrição</Label>
-                <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                <Textarea
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Capa (URL)</Label>
-                <Input value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} />
+                <Input
+                  value={form.cover_url}
+                  onChange={(e) => setForm({ ...form, cover_url: e.target.value })}
+                />
                 <p className="text-xs text-muted-foreground">
                   A logo é definida acima, em “Identidade visual”.
                 </p>
@@ -329,7 +352,11 @@ function SettingsPage() {
                         detected.ok ? "text-primary" : "text-destructive",
                       )}
                     >
-                      {detected.ok ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                      {detected.ok ? (
+                        <CheckCircle2 className="size-3.5" />
+                      ) : (
+                        <AlertCircle className="size-3.5" />
+                      )}
                       {detected.ok ? (
                         <>
                           Tipo identificado: <strong>{pixTypeLabel(detected.type)}</strong>
@@ -365,7 +392,10 @@ function SettingsPage() {
                       Remover
                     </Button>
                   )}
-                  <Button className="w-full sm:w-auto" disabled={savePix.isPending || !detected?.ok}>
+                  <Button
+                    className="w-full sm:w-auto"
+                    disabled={savePix.isPending || !detected?.ok}
+                  >
                     {savePix.isPending ? "Salvando..." : "Salvar chave Pix"}
                   </Button>
                 </div>
@@ -392,8 +422,13 @@ function SettingsPage() {
               <SectionHeader icon={Clock} title="Horário de funcionamento" />
               <div className="mt-3 space-y-2">
                 {(localHours ?? []).map((h, i) => (
-                  <div key={h.weekday} className="surface-row flex flex-wrap items-center gap-2 px-3.5 py-2.5">
-                    <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{WEEKDAYS[h.weekday]}</span>
+                  <div
+                    key={h.weekday}
+                    className="surface-row flex flex-wrap items-center gap-2 px-3.5 py-2.5"
+                  >
+                    <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">
+                      {WEEKDAYS[h.weekday]}
+                    </span>
                     <Input
                       type="time"
                       className="h-9 w-auto min-w-0 flex-1"
@@ -428,7 +463,12 @@ function SettingsPage() {
                 ))}
               </div>
               <div className="mt-3 flex justify-end">
-                <Button size="sm" className="w-full sm:w-auto" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto"
+                  disabled={saveHours.isPending}
+                  onClick={() => saveHours.mutate()}
+                >
                   {saveHours.isPending ? "Salvando..." : "Salvar horários"}
                 </Button>
               </div>

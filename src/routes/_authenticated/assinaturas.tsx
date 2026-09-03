@@ -79,7 +79,9 @@ export const Route = createFileRoute("/_authenticated/assinaturas")({
 
 type StatusFilter = "all" | "attention" | "active" | "inactive";
 
-function statusBadgeVariant(status: Subscription["status"]): "success" | "warning" | "destructive" | "secondary" {
+function statusBadgeVariant(
+  status: Subscription["status"],
+): "success" | "warning" | "destructive" | "secondary" {
   if (status === "active") return "success";
   if (status === "pending" || status === "suspended") return "warning";
   if (status === "cancelled") return "secondary";
@@ -371,7 +373,9 @@ function SubscriptionsPage() {
             {!isLoading && filtered.length === 0 && (
               <EmptyState
                 icon={rows.length === 0 ? Users : Search}
-                title={rows.length === 0 ? "Nenhum assinante ainda" : "Nenhuma assinatura encontrada"}
+                title={
+                  rows.length === 0 ? "Nenhum assinante ainda" : "Nenhuma assinatura encontrada"
+                }
                 description={
                   rows.length === 0
                     ? "Crie um plano e vincule seu primeiro cliente para começar a recorrência."
@@ -392,84 +396,90 @@ function SubscriptionsPage() {
             )}
 
             <div className="space-y-2">
-              {!isLoading && filtered.map((row) => {
-                const { sub, customer, plan, balance } = row;
-                const status = SUB_STATUS[sub.status] ?? SUB_STATUS.pending;
-                const dueIn = daysUntil(balance?.period_end ?? sub.next_payment);
-                const dueLabel = balance?.period_end
-                  ? dateLabel(balance.period_end)
-                  : sub.next_payment
-                    ? dateLabel(sub.next_payment)
-                    : "—";
-                const pending = sub.payment_status !== "paid" ? pendingPaymentOf(row) : null;
-                const hasAlert = attentionIds.has(sub.id);
-                const closed = sub.status === "cancelled" || sub.status === "expired";
-                return (
-                  <button
-                    key={sub.id}
-                    type="button"
-                    onClick={() => setManageId(sub.id)}
-                    className={cn(
-                      "surface-row group flex w-full flex-col gap-2 p-3.5 text-left sm:flex-row sm:items-center sm:justify-between",
-                      hasAlert && "border-primary/30 bg-primary/[0.03]",
-                      closed && "opacity-60",
-                    )}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-medium">{customer?.name ?? "Cliente"}</p>
-                        <Badge variant={statusBadgeVariant(sub.status)} className="h-5 px-1.5 text-[10px]">
-                          {status.label}
-                        </Badge>
-                        <Badge
-                          variant={sub.payment_status === "paid" ? "success" : "warning"}
-                          className="h-5 px-1.5 text-[10px]"
-                        >
-                          {PAYMENT_STATUS[sub.payment_status]}
-                        </Badge>
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
-                        {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
-                      </p>
-                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span>
-                          Vence:{" "}
-                          <b
-                            className={cn(
-                              "text-foreground",
-                              dueIn !== null && dueIn <= 5 && "text-warning",
-                              dueIn !== null && dueIn < 0 && "text-destructive",
-                            )}
+              {!isLoading &&
+                filtered.map((row) => {
+                  const { sub, customer, plan, balance } = row;
+                  const status = SUB_STATUS[sub.status] ?? SUB_STATUS.pending;
+                  const dueIn = daysUntil(balance?.period_end ?? sub.next_payment);
+                  const dueLabel = balance?.period_end
+                    ? dateLabel(balance.period_end)
+                    : sub.next_payment
+                      ? dateLabel(sub.next_payment)
+                      : "—";
+                  const pending = sub.payment_status !== "paid" ? pendingPaymentOf(row) : null;
+                  const hasAlert = attentionIds.has(sub.id);
+                  const closed = sub.status === "cancelled" || sub.status === "expired";
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setManageId(sub.id)}
+                      className={cn(
+                        "surface-row group flex w-full flex-col gap-2 p-3.5 text-left sm:flex-row sm:items-center sm:justify-between",
+                        hasAlert && "border-primary/30 bg-primary/[0.03]",
+                        closed && "opacity-60",
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-medium">
+                            {customer?.name ?? "Cliente"}
+                          </p>
+                          <Badge
+                            variant={statusBadgeVariant(sub.status)}
+                            className="h-5 px-1.5 text-[10px]"
                           >
-                            {dueLabel}
-                          </b>
-                        </span>
-                        <span>
-                          Cortes:{" "}
-                          <b className="text-foreground">
-                            {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
-                          </b>
-                        </span>
-                        <span>
-                          Barbas:{" "}
-                          <b className="text-foreground">
-                            {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
-                          </b>
-                        </span>
-                        {pending && (
-                          <span className="inline-flex items-center gap-1 text-warning">
-                            <Clock3 className="size-3" /> Pendente {brl(pending.amount_cents)}
+                            {status.label}
+                          </Badge>
+                          <Badge
+                            variant={sub.payment_status === "paid" ? "success" : "warning"}
+                            className="h-5 px-1.5 text-[10px]"
+                          >
+                            {PAYMENT_STATUS[sub.payment_status]}
+                          </Badge>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {plan?.name ?? "—"} · {brl(sub.price_cents)} ·{" "}
+                          {customer?.cpf ? cpfMask(customer.cpf) : "sem CPF"}
+                        </p>
+                        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <span>
+                            Vence:{" "}
+                            <b
+                              className={cn(
+                                "text-foreground",
+                                dueIn !== null && dueIn <= 5 && "text-warning",
+                                dueIn !== null && dueIn < 0 && "text-destructive",
+                              )}
+                            >
+                              {dueLabel}
+                            </b>
                           </span>
-                        )}
+                          <span>
+                            Cortes:{" "}
+                            <b className="text-foreground">
+                              {balance ? `${balance.cuts_left}/${balance.cuts_credits}` : "—"}
+                            </b>
+                          </span>
+                          <span>
+                            Barbas:{" "}
+                            <b className="text-foreground">
+                              {balance ? `${balance.beards_left}/${balance.beards_credits}` : "—"}
+                            </b>
+                          </span>
+                          {pending && (
+                            <span className="inline-flex items-center gap-1 text-warning">
+                              <Clock3 className="size-3" /> Pendente {brl(pending.amount_cents)}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors group-hover:border-primary/50 group-hover:text-primary sm:self-center">
-                      <Settings2 className="size-3.5" /> Gerenciar
-                    </span>
-                  </button>
-                );
-              })}
+                      <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-lg border border-border px-2.5 py-1.5 text-xs font-medium transition-colors group-hover:border-primary/50 group-hover:text-primary sm:self-center">
+                        <Settings2 className="size-3.5" /> Gerenciar
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           </div>
         </TabsContent>

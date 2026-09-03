@@ -99,7 +99,9 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${statusTone[status] ?? statusTone[FALLBACK_STATUS]}`}
     >
-      <span className={`size-1.5 rounded-full ${statusDot[status] ?? statusDot[FALLBACK_STATUS]}`} />
+      <span
+        className={`size-1.5 rounded-full ${statusDot[status] ?? statusDot[FALLBACK_STATUS]}`}
+      />
       {STATUS_LABEL[status] ?? status}
     </span>
   );
@@ -175,7 +177,11 @@ function AgendaPage() {
           .order("starts_at"),
         supabase.from("barbers").select("*").eq("barbershop_id", shop!.id).eq("active", true),
         supabase.from("services").select("*").eq("barbershop_id", shop!.id).eq("active", true),
-        supabase.from("customers").select("id, name, phone").eq("barbershop_id", shop!.id).order("name"),
+        supabase
+          .from("customers")
+          .select("id, name, phone")
+          .eq("barbershop_id", shop!.id)
+          .order("name"),
       ]);
       return {
         appts: appts.data ?? [],
@@ -195,9 +201,18 @@ function AgendaPage() {
       .channel(`agenda-${shop.id}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "appointments", filter: `barbershop_id=eq.${shop.id}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "appointments",
+          filter: `barbershop_id=eq.${shop.id}`,
+        },
         (payload) => {
-          const row = payload.new as { customer_name?: string; starts_at?: string; source?: string };
+          const row = payload.new as {
+            customer_name?: string;
+            starts_at?: string;
+            source?: string;
+          };
           qc.invalidateQueries({ queryKey: ["agenda"] });
           if (row?.source === "online") {
             const when = row.starts_at
@@ -289,7 +304,9 @@ function AgendaPage() {
       setConfirmDone(null);
       setEditing(null);
       if (result?.consumed) {
-        const label = result.benefit_kind ? BENEFIT_LABEL[result.benefit_kind].toLowerCase() : "benefício";
+        const label = result.benefit_kind
+          ? BENEFIT_LABEL[result.benefit_kind].toLowerCase()
+          : "benefício";
         toast.success(`Atendimento concluído. 1 ${label} descontado.`, {
           description: `Saldo restante: ${result.left}`,
         });
@@ -306,7 +323,9 @@ function AgendaPage() {
     mutationFn: (id: string) => refundAppointmentBenefit(id, "Correção do atendimento"),
     onSuccess: (r) => {
       qc.invalidateQueries({ queryKey: ["agenda"] });
-      toast.success(r?.refunded ? "Crédito estornado para o cliente." : "Nenhum crédito a estornar.");
+      toast.success(
+        r?.refunded ? "Crédito estornado para o cliente." : "Nenhum crédito a estornar.",
+      );
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
   });
@@ -403,7 +422,12 @@ function AgendaPage() {
           <Button variant="outline" size="icon" onClick={() => shift(-1)} className="rounded-full">
             <ChevronLeft className="size-4" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setAnchor(new Date())} className="rounded-full">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAnchor(new Date())}
+            className="rounded-full"
+          >
             Hoje
           </Button>
           <Button variant="outline" size="icon" onClick={() => shift(1)} className="rounded-full">
@@ -478,10 +502,14 @@ function AgendaPage() {
                               {a.customer_name}
                             </p>
                             {service && (
-                              <p className="truncate text-xs text-muted-foreground/80">{service.name}</p>
+                              <p className="truncate text-xs text-muted-foreground/80">
+                                {service.name}
+                              </p>
                             )}
                           </div>
-                          <span className="shrink-0 text-sm font-semibold">{brl(a.price_cents)}</span>
+                          <span className="shrink-0 text-sm font-semibold">
+                            {brl(a.price_cents)}
+                          </span>
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-2">
                           <span className="inline-flex items-center gap-1 rounded-md bg-background/40 px-1.5 py-0.5 text-xs font-medium backdrop-blur-sm">
@@ -510,15 +538,24 @@ function AgendaPage() {
               (a) => new Date(a.starts_at).toDateString() === day.toDateString(),
             );
             return (
-              <div key={i} className={`surface-card p-4 ${isToday(day) ? "border-primary/30 bg-primary/[0.03]" : ""}`}>
+              <div
+                key={i}
+                className={`surface-card p-4 ${isToday(day) ? "border-primary/30 bg-primary/[0.03]" : ""}`}
+              >
                 <div className="flex items-baseline justify-between">
                   <p className="font-display text-xl tracking-wide">
                     {WEEKDAYS[day.getDay()]}{" "}
-                    <span className={`text-sm ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}>
+                    <span
+                      className={`text-sm ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}
+                    >
                       {day.getDate()}
                     </span>
                   </p>
-                  {isToday(day) && <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">Hoje</span>}
+                  {isToday(day) && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-primary">
+                      Hoje
+                    </span>
+                  )}
                 </div>
                 <div className="mt-3 space-y-2.5">
                   {list.length === 0 && <p className="text-xs text-muted-foreground">Livre</p>}
@@ -536,7 +573,9 @@ function AgendaPage() {
                         </div>
                         <p className="mt-1 truncate text-sm font-medium">{a.customer_name}</p>
                         {service && (
-                          <p className="truncate text-[11px] text-muted-foreground/80">{service.name}</p>
+                          <p className="truncate text-[11px] text-muted-foreground/80">
+                            {service.name}
+                          </p>
                         )}
                         <div className="mt-1.5">
                           <StatusBadge status={a.status} />
@@ -554,50 +593,60 @@ function AgendaPage() {
       {view === "month" && (
         <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
           {WEEKDAYS.map((w) => (
-            <div key={w} className="pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div
+              key={w}
+              className="pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+            >
               {w.slice(0, 3)}
             </div>
           ))}
           {Array.from({ length: range.start.getDay() }, (_, i) => (
             <div key={`pad-${i}`} />
           ))}
-          {Array.from(
-            { length: new Date(range.end.getTime() - 1).getDate() },
-            (_, i) => {
-              const day = new Date(range.start);
-              day.setDate(i + 1);
-              const list = appts.filter(
-                (a) => new Date(a.starts_at).toDateString() === day.toDateString(),
-              );
-              return (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setAnchor(day);
-                    setView("day");
-                  }}
-                  className={`surface-card flex min-h-20 flex-col p-2.5 text-left transition-colors hover:border-primary/30 ${isToday(day) ? "border-primary/40 bg-primary/[0.04]" : ""}`}
+          {Array.from({ length: new Date(range.end.getTime() - 1).getDate() }, (_, i) => {
+            const day = new Date(range.start);
+            day.setDate(i + 1);
+            const list = appts.filter(
+              (a) => new Date(a.starts_at).toDateString() === day.toDateString(),
+            );
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  setAnchor(day);
+                  setView("day");
+                }}
+                className={`surface-card flex min-h-20 flex-col p-2.5 text-left transition-colors hover:border-primary/30 ${isToday(day) ? "border-primary/40 bg-primary/[0.04]" : ""}`}
+              >
+                <span
+                  className={`text-sm font-semibold ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}
                 >
-                  <span className={`text-sm font-semibold ${isToday(day) ? "text-primary" : "text-muted-foreground"}`}>
-                    {i + 1}
-                  </span>
-                  {list.length > 0 && (
-                    <div className="mt-auto flex flex-wrap items-center gap-1.5">
-                      {Array.from(new Set(list.map((a) => a.status))).map((s) => (
-                        <span key={s} className={`size-2 rounded-full ${statusDot[s] ?? statusDot[FALLBACK_STATUS]}`} title={STATUS_LABEL[s]} />
-                      ))}
-                      <span className="text-[11px] font-medium text-muted-foreground">{list.length}</span>
-                    </div>
-                  )}
-                </button>
-              );
-            },
-          )}
+                  {i + 1}
+                </span>
+                {list.length > 0 && (
+                  <div className="mt-auto flex flex-wrap items-center gap-1.5">
+                    {Array.from(new Set(list.map((a) => a.status))).map((s) => (
+                      <span
+                        key={s}
+                        className={`size-2 rounded-full ${statusDot[s] ?? statusDot[FALLBACK_STATUS]}`}
+                        title={STATUS_LABEL[s]}
+                      />
+                    ))}
+                    <span className="text-[11px] font-medium text-muted-foreground">
+                      {list.length}
+                    </span>
+                  </div>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-border bg-secondary/30 px-4 py-3">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Status</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Status
+        </span>
         {[
           { status: "confirmed", label: "Confirmado" },
           { status: "scheduled", label: "Pendente" },
@@ -629,7 +678,11 @@ function AgendaPage() {
                   label="Horário"
                   value={`${timeLabel(selected.starts_at)} · ${durationMin(selected.starts_at, selected.ends_at)} min`}
                 />
-                <Info label="Valor" value={brl(selected.price_cents)} valueClass="font-semibold text-primary" />
+                <Info
+                  label="Valor"
+                  value={brl(selected.price_cents)}
+                  valueClass="font-semibold text-primary"
+                />
                 <Info
                   label="Serviço"
                   value={data?.services.find((s) => s.id === selected.service_id)?.name ?? "—"}
@@ -648,7 +701,9 @@ function AgendaPage() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Ações</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ações
+                </p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     size="sm"
@@ -668,7 +723,11 @@ function AgendaPage() {
                       window.open(
                         waLink(
                           selected.customer_phone,
-                          reminderText(shop?.name ?? "barbearia", selected.customer_name, selected.starts_at),
+                          reminderText(
+                            shop?.name ?? "barbearia",
+                            selected.customer_name,
+                            selected.starts_at,
+                          ),
                         ),
                         "_blank",
                       )
@@ -711,7 +770,11 @@ function AgendaPage() {
                   >
                     <X className="size-4" /> Cancelar
                   </Button>
-                  <Button size="sm" variant="destructive" onClick={() => remove.mutate(selected.id)}>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => remove.mutate(selected.id)}
+                  >
                     <Ban className="size-4" /> Excluir
                   </Button>
                 </div>
@@ -762,33 +825,40 @@ function AgendaPage() {
                       <p>Serviço: {service?.name ?? "—"}</p>
                       {appt.use_benefit && !appt.benefit_processed ? (
                         <p className="text-primary">
-                          1 {BENEFIT_LABEL[(appt.benefit_kind ?? "cut") as BenefitKind].toLowerCase()} será
-                          descontado da assinatura.
+                          1{" "}
+                          {BENEFIT_LABEL[(appt.benefit_kind ?? "cut") as BenefitKind].toLowerCase()}{" "}
+                          será descontado da assinatura.
                         </p>
                       ) : appt.benefit_processed ? (
-                        <p className="text-muted-foreground">Benefício já processado — não será descontado novamente.</p>
+                        <p className="text-muted-foreground">
+                          Benefício já processado — não será descontado novamente.
+                        </p>
                       ) : (
                         <>
-                          <p className="text-muted-foreground">Atendimento avulso: {brl(appt.price_cents)}.</p>
+                          <p className="text-muted-foreground">
+                            Atendimento avulso: {brl(appt.price_cents)}.
+                          </p>
                           <div className="pt-3">
                             <p className="mb-2 text-xs uppercase tracking-wide text-muted-foreground">
                               Como o cliente pagou?
                             </p>
                             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                              {(["pix", "pix_qr", "card", "cash"] as LocalPaymentMethod[]).map((m) => (
-                                <button
-                                  key={m}
-                                  type="button"
-                                  onClick={() => setPayMethod(m)}
-                                  className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-                                    payMethod === m
-                                      ? "border-primary bg-primary/15 text-primary"
-                                      : "border-border text-muted-foreground hover:border-primary/40"
-                                  }`}
-                                >
-                                  {PAYMENT_METHOD_LABEL[m]}
-                                </button>
-                              ))}
+                              {(["pix", "pix_qr", "card", "cash"] as LocalPaymentMethod[]).map(
+                                (m) => (
+                                  <button
+                                    key={m}
+                                    type="button"
+                                    onClick={() => setPayMethod(m)}
+                                    className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+                                      payMethod === m
+                                        ? "border-primary bg-primary/15 text-primary"
+                                        : "border-border text-muted-foreground hover:border-primary/40"
+                                    }`}
+                                  >
+                                    {PAYMENT_METHOD_LABEL[m]}
+                                  </button>
+                                ),
+                              )}
                             </div>
                             {payMethod === "pix" && hasPix(shop) && (
                               <PixKeyCard
@@ -813,14 +883,16 @@ function AgendaPage() {
                             )}
                             {(payMethod === "pix" || payMethod === "pix_qr") && !hasPix(shop) && (
                               <p className="mt-2 text-xs text-muted-foreground">
-                                Cadastre sua chave Pix em Configurações para mostrá-la aqui ao cliente.
+                                Cadastre sua chave Pix em Configurações para mostrá-la aqui ao
+                                cliente.
                               </p>
                             )}
                             {(appt.payment_method === "pix" || appt.payment_method === "pix_qr") &&
                               appt.source === "online" && (
                                 <p className="mt-2 text-xs text-primary">
-                                  Cliente escolheu pagar via {PAYMENT_METHOD_LABEL[appt.payment_method]} ao
-                                  agendar — confira o comprovante.
+                                  Cliente escolheu pagar via{" "}
+                                  {PAYMENT_METHOD_LABEL[appt.payment_method]} ao agendar — confira o
+                                  comprovante.
                                 </p>
                               )}
                           </div>
@@ -847,7 +919,9 @@ function AgendaPage() {
 function Info({ label, value, valueClass }: { label: string; value: string; valueClass?: string }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className={`mt-0.5 text-sm ${valueClass ?? ""}`}>{value}</p>
     </div>
   );
@@ -1038,7 +1112,8 @@ function AppointmentForm({
         <div className="rounded-xl border border-border p-3 text-sm">
           {!planActive ? (
             <p className="text-muted-foreground">
-              ⚫ Assinatura inativa ou expirada — atendimento cobrado normalmente ({brl(service.price_cents)}).
+              ⚫ Assinatura inativa ou expirada — atendimento cobrado normalmente (
+              {brl(service.price_cents)}).
             </p>
           ) : !includedInPlan ? (
             <p className="text-muted-foreground">
@@ -1046,18 +1121,20 @@ function AppointmentForm({
             </p>
           ) : left <= 0 ? (
             <div className="space-y-2">
-              <p className="text-destructive">🔴 Limite de {BENEFIT_LABEL[benefitKind!].toLowerCase()}s atingido</p>
+              <p className="text-destructive">
+                🔴 Limite de {BENEFIT_LABEL[benefitKind!].toLowerCase()}s atingido
+              </p>
               <p className="text-xs text-muted-foreground">
-                Este cliente já utilizou todos os créditos deste ciclo. Você pode continuar como atendimento
-                avulso ({brl(service.price_cents)}).
+                Este cliente já utilizou todos os créditos deste ciclo. Você pode continuar como
+                atendimento avulso ({brl(service.price_cents)}).
               </p>
             </div>
           ) : (
             <div className="space-y-2">
               <p className="text-success">🟢 Incluso no plano — valor cobrado: {brl(0)}</p>
               <p className="text-xs text-muted-foreground">
-                1 crédito de {BENEFIT_LABEL[benefitKind!].toLowerCase()} será utilizado somente após a conclusão do
-                atendimento ({left} disponível(is)).
+                1 crédito de {BENEFIT_LABEL[benefitKind!].toLowerCase()} será utilizado somente após
+                a conclusão do atendimento ({left} disponível(is)).
               </p>
               <label className="flex items-center gap-2 text-xs">
                 <input

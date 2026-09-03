@@ -8,7 +8,6 @@ import { friendlyError } from "@/lib/errors";
 
 export type BenefitKind = "cut" | "beard" | "extra";
 
-
 export const BENEFIT_LABEL: Record<BenefitKind, string> = {
   cut: "Corte",
   beard: "Barba",
@@ -61,22 +60,30 @@ export type CycleBalance = {
   extras_left: number;
 };
 
-export type SubscriptionStatus =
-  | "active"
-  | "pending"
-  | "suspended"
-  | "cancelled"
-  | "expired";
+export type SubscriptionStatus = "active" | "pending" | "suspended" | "cancelled" | "expired";
 
 export type PaymentStatus = "paid" | "pending" | "failed" | "refunded" | "cancelled";
 
-export const SUB_STATUS: Record<SubscriptionStatus, { label: string; dot: string; tone: string }> = {
-  active: { label: "Ativa", dot: "🟢", tone: "bg-success/15 text-success border-success/40" },
-  pending: { label: "Pendente", dot: "🟡", tone: "bg-warning/15 text-warning border-warning/40" },
-  suspended: { label: "Suspensa", dot: "🟠", tone: "bg-warning/15 text-warning border-warning/40" },
-  cancelled: { label: "Cancelada", dot: "⚫", tone: "bg-muted text-muted-foreground border-border" },
-  expired: { label: "Expirada", dot: "🔴", tone: "bg-destructive/15 text-destructive border-destructive/40" },
-};
+export const SUB_STATUS: Record<SubscriptionStatus, { label: string; dot: string; tone: string }> =
+  {
+    active: { label: "Ativa", dot: "🟢", tone: "bg-success/15 text-success border-success/40" },
+    pending: { label: "Pendente", dot: "🟡", tone: "bg-warning/15 text-warning border-warning/40" },
+    suspended: {
+      label: "Suspensa",
+      dot: "🟠",
+      tone: "bg-warning/15 text-warning border-warning/40",
+    },
+    cancelled: {
+      label: "Cancelada",
+      dot: "⚫",
+      tone: "bg-muted text-muted-foreground border-border",
+    },
+    expired: {
+      label: "Expirada",
+      dot: "🔴",
+      tone: "bg-destructive/15 text-destructive border-destructive/40",
+    },
+  };
 
 export const PAYMENT_STATUS: Record<PaymentStatus, string> = {
   paid: "Pago",
@@ -168,14 +175,20 @@ export type CpfLookup = {
 };
 
 export async function lookupCustomerByCpf(shopId: string, cpf: string): Promise<CpfLookup> {
-  const { data, error } = await supabase.rpc("customer_by_cpf", { _shop: shopId, _cpf: cpfDigits(cpf) });
+  const { data, error } = await supabase.rpc("customer_by_cpf", {
+    _shop: shopId,
+    _cpf: cpfDigits(cpf),
+  });
   if (error) throw new Error(friendlyError(error.message));
   return (data ?? { found: false }) as unknown as CpfLookup;
 }
 
 export type LocalPaymentMethod = "pix" | "pix_qr" | "card" | "cash";
 
-export async function completeAppointment(appointmentId: string, paymentMethod?: LocalPaymentMethod) {
+export async function completeAppointment(
+  appointmentId: string,
+  paymentMethod?: LocalPaymentMethod,
+) {
   const { data, error } = await supabase.rpc("complete_appointment", {
     _appointment_id: appointmentId,
     ...(paymentMethod ? { _payment_method: paymentMethod } : {}),
@@ -228,6 +241,3 @@ export async function renewCycle(subscriptionId: string): Promise<RenewedCycle |
 }
 
 export { friendlyError };
-
-
-

@@ -44,7 +44,13 @@ export const DEFAULT_BRAND: Brand = {
 
 function hexToRgb(hex: string) {
   const clean = hex.replace("#", "");
-  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  const full =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : clean;
   const n = Number.parseInt(full.slice(0, 6) || "000000", 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }

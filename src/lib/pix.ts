@@ -45,7 +45,8 @@ export function isValidCnpj(input: string) {
   const d = input.replace(/\D/g, "");
   if (d.length !== 14 || allSameDigits(d)) return false;
   const calc = (len: number) => {
-    const weights = len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const weights =
+      len === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
     let sum = 0;
     for (let i = 0; i < len; i++) sum += Number(d[i]) * weights[i]!;
     const r = sum % 11;
@@ -58,8 +59,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const EVP_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type PixDetection =
-  | { ok: true; type: PixKeyType; normalized: string }
-  | { ok: false; reason: string };
+  { ok: true; type: PixKeyType; normalized: string } | { ok: false; reason: string };
 
 /**
  * Identifica automaticamente o tipo da chave Pix e valida.
@@ -70,23 +70,28 @@ export function detectPixKey(raw: string): PixDetection {
   if (!k) return { ok: false, reason: "Informe a chave Pix." };
 
   if (k.includes("@")) {
-    if (EMAIL_RE.test(k) && k.length <= 77) return { ok: true, type: "email", normalized: k.toLowerCase() };
+    if (EMAIL_RE.test(k) && k.length <= 77)
+      return { ok: true, type: "email", normalized: k.toLowerCase() };
     return { ok: false, reason: "E-mail inválido." };
   }
 
   if (EVP_RE.test(k)) return { ok: true, type: "random", normalized: k.toLowerCase() };
 
   const digits = k.replace(/\D/g, "");
-  const looksLikePhone = k.startsWith("+") || /[()\s-]/.test(k) || (digits.length === 11 && !isValidCpf(digits));
+  const looksLikePhone =
+    k.startsWith("+") || /[()\s-]/.test(k) || (digits.length === 11 && !isValidCpf(digits));
 
   if (k.startsWith("+")) {
     const d = digits.startsWith("55") ? digits.slice(2) : digits;
-    if (d.length === 10 || d.length === 11) return { ok: true, type: "phone", normalized: `+55${d}` };
+    if (d.length === 10 || d.length === 11)
+      return { ok: true, type: "phone", normalized: `+55${d}` };
     return { ok: false, reason: "Celular inválido. Use DDD + número." };
   }
 
-  if (digits.length === 11 && isValidCpf(digits)) return { ok: true, type: "cpf", normalized: digits };
-  if (digits.length === 14 && isValidCnpj(digits)) return { ok: true, type: "cnpj", normalized: digits };
+  if (digits.length === 11 && isValidCpf(digits))
+    return { ok: true, type: "cpf", normalized: digits };
+  if (digits.length === 14 && isValidCnpj(digits))
+    return { ok: true, type: "cnpj", normalized: digits };
 
   if (digits.length === 13 && digits.startsWith("55")) {
     return { ok: true, type: "phone", normalized: `+${digits}` };
@@ -95,10 +100,17 @@ export function detectPixKey(raw: string): PixDetection {
     return { ok: true, type: "phone", normalized: `+55${digits}` };
   }
 
-  if (/^[0-9a-z-]{32,36}$/i.test(k)) return { ok: false, reason: "Chave aleatória inválida. Copie-a exatamente como aparece no seu banco." };
+  if (/^[0-9a-z-]{32,36}$/i.test(k))
+    return {
+      ok: false,
+      reason: "Chave aleatória inválida. Copie-a exatamente como aparece no seu banco.",
+    };
   if (digits.length === 11) return { ok: false, reason: "CPF inválido. Confira os dígitos." };
   if (digits.length === 14) return { ok: false, reason: "CNPJ inválido. Confira os dígitos." };
-  return { ok: false, reason: "Não reconhecemos essa chave. Use CPF, CNPJ, celular, e-mail ou chave aleatória." };
+  return {
+    ok: false,
+    reason: "Não reconhecemos essa chave. Use CPF, CNPJ, celular, e-mail ou chave aleatória.",
+  };
 }
 
 /** Chave Pix pronta para colar no app do banco (sem máscara em CPF/CNPJ/celular). */
@@ -162,7 +174,9 @@ export function buildPixPayload(opts: {
     tlv("26", mai) +
     tlv("52", "0000") +
     tlv("53", "986") +
-    (opts.amountCents && opts.amountCents > 0 ? tlv("54", (opts.amountCents / 100).toFixed(2)) : "") +
+    (opts.amountCents && opts.amountCents > 0
+      ? tlv("54", (opts.amountCents / 100).toFixed(2))
+      : "") +
     tlv("58", "BR") +
     tlv("59", name) +
     tlv("60", "SAO PAULO") +

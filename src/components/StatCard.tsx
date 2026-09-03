@@ -46,7 +46,12 @@ export function StatCard({
         <div className="flex items-center justify-between gap-2">
           <span className="eyebrow truncate">{label}</span>
           {Icon && (
-            <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-lg ring-1", iconTone)}>
+            <span
+              className={cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg ring-1",
+                iconTone,
+              )}
+            >
               <Icon className="size-4" />
             </span>
           )}
@@ -54,7 +59,12 @@ export function StatCard({
         {loading ? (
           <Skeleton className="mt-4 h-10 w-2/3" />
         ) : (
-          <p className={cn("mt-3 truncate font-display text-4xl leading-none sm:text-[2.75rem]", toneClass)}>
+          <p
+            className={cn(
+              "mt-3 truncate font-display text-4xl leading-none sm:text-[2.75rem]",
+              toneClass,
+            )}
+          >
             {value}
           </p>
         )}
@@ -72,7 +82,9 @@ export function StatCard({
       {loading ? (
         <Skeleton className="mt-2 h-6 w-1/2" />
       ) : (
-        <p className={cn("mt-1.5 truncate font-display text-2xl leading-none", toneClass)}>{value}</p>
+        <p className={cn("mt-1.5 truncate font-display text-2xl leading-none", toneClass)}>
+          {value}
+        </p>
       )}
       {hint && <p className="mt-0.5 truncate text-[11px] text-muted-foreground/70">{hint}</p>}
     </div>

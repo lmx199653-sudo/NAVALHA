@@ -28,7 +28,11 @@ export function usePwaInstall() {
   const promptInstall = useCallback(() => promptNativeInstall(), []);
 
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
-  const isIos = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && typeof navigator !== "undefined" && (navigator as unknown as { maxTouchPoints?: number }).maxTouchPoints! > 1);
+  const isIos =
+    /iphone|ipad|ipod/i.test(ua) ||
+    (/Macintosh/.test(ua) &&
+      typeof navigator !== "undefined" &&
+      (navigator as unknown as { maxTouchPoints?: number }).maxTouchPoints! > 1);
 
   return { canInstall: state.canInstall, installed: state.installed, promptInstall, isIos };
 }

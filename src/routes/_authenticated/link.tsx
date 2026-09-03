@@ -27,7 +27,9 @@ function ClientLinkPage() {
       <div className="mx-auto max-w-2xl">
         <div className="surface-card surface-card-hover overflow-hidden ring-1 ring-primary/20">
           <div className="border-b border-primary/20 bg-primary/10 px-5 py-6 text-center">
-            <h2 className="font-display text-3xl text-gold-gradient">Seu link de agendamento está pronto!</h2>
+            <h2 className="font-display text-3xl text-gold-gradient">
+              Seu link de agendamento está pronto!
+            </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               Envie este link para seus clientes. Eles podem escolher o serviço, profissional e
               horários disponíveis e confirmar o agendamento online.

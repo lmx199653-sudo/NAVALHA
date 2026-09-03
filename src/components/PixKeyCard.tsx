@@ -16,7 +16,14 @@ type Props = {
 };
 
 /** Exibe a chave Pix do barbeiro com botão de copiar — o pagamento vai direto para ele. */
-export function PixKeyCard({ pixKey, pixKeyType, holderName, amountCents, compact, className }: Props) {
+export function PixKeyCard({
+  pixKey,
+  pixKeyType,
+  holderName,
+  amountCents,
+  compact,
+  className,
+}: Props) {
   const [copied, setCopied] = useState(false);
   const key = normalizePixKey(pixKey, pixKeyType);
 
@@ -32,7 +39,13 @@ export function PixKeyCard({ pixKey, pixKeyType, holderName, amountCents, compac
   }
 
   return (
-    <div className={cn("rounded-xl border border-primary/40 bg-primary/5", compact ? "p-3" : "p-4", className)}>
+    <div
+      className={cn(
+        "rounded-xl border border-primary/40 bg-primary/5",
+        compact ? "p-3" : "p-4",
+        className,
+      )}
+    >
       <div className="flex items-center gap-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
           <QrCode className="size-4" />

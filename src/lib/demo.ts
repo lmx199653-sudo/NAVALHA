@@ -23,11 +23,15 @@ export async function seedDemoData(shopId: string) {
     .insert(defaultServiceRows(shopId))
     .select();
 
-
   const { data: barbers } = await supabase
     .from("barbers")
     .insert([
-      { barbershop_id: shopId, name: "João Ferraz", bio: "Especialista em degradê", commission_pct: 45 },
+      {
+        barbershop_id: shopId,
+        name: "João Ferraz",
+        bio: "Especialista em degradê",
+        commission_pct: 45,
+      },
       { barbershop_id: shopId, name: "Pedro Alves", bio: "Barba e navalha", commission_pct: 40 },
       { barbershop_id: shopId, name: "Caio Mendes", bio: "Cortes clássicos", commission_pct: 40 },
     ])
@@ -89,8 +93,21 @@ export async function seedDemoData(shopId: string) {
   await supabase.from("appointments").insert(appointments);
 
   await supabase.from("subscription_plans").insert([
-    { barbershop_id: shopId, name: "Plano Corte Mensal", price_cents: 7990, cuts_included: 4, benefits: "4 cortes por mês + prioridade na agenda" },
-    { barbershop_id: shopId, name: "Plano Black", price_cents: 11990, cuts_included: 4, beards_included: 4, benefits: "4 cortes + 4 barbas + 10% em produtos" },
+    {
+      barbershop_id: shopId,
+      name: "Plano Corte Mensal",
+      price_cents: 7990,
+      cuts_included: 4,
+      benefits: "4 cortes por mês + prioridade na agenda",
+    },
+    {
+      barbershop_id: shopId,
+      name: "Plano Black",
+      price_cents: 11990,
+      cuts_included: 4,
+      beards_included: 4,
+      benefits: "4 cortes + 4 barbas + 10% em produtos",
+    },
   ]);
 
   await supabase.from("loyalty_rewards").insert([

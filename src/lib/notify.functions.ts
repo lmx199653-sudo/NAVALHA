@@ -25,16 +25,25 @@ export const notifyNewAppointment = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (!appt || appt.source !== "online") return { ok: false, sent: 0 };
-    if (Date.now() - new Date(appt.created_at).getTime() > 5 * 60_000) return { ok: false, sent: 0 };
+    if (Date.now() - new Date(appt.created_at).getTime() > 5 * 60_000)
+      return { ok: false, sent: 0 };
 
-    const [{ data: shop }, { data: service }, { data: owner }, { data: members }] = await Promise.all([
-      supabaseAdmin.from("barbershops").select("name, owner_id").eq("id", appt.barbershop_id).maybeSingle(),
-      appt.service_id
-        ? supabaseAdmin.from("services").select("name").eq("id", appt.service_id).maybeSingle()
-        : Promise.resolve({ data: null as { name: string } | null }),
-      Promise.resolve({ data: null }),
-      supabaseAdmin.from("barbershop_members").select("user_id").eq("barbershop_id", appt.barbershop_id),
-    ]);
+    const [{ data: shop }, { data: service }, { data: owner }, { data: members }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("barbershops")
+          .select("name, owner_id")
+          .eq("id", appt.barbershop_id)
+          .maybeSingle(),
+        appt.service_id
+          ? supabaseAdmin.from("services").select("name").eq("id", appt.service_id).maybeSingle()
+          : Promise.resolve({ data: null as { name: string } | null }),
+        Promise.resolve({ data: null }),
+        supabaseAdmin
+          .from("barbershop_members")
+          .select("user_id")
+          .eq("barbershop_id", appt.barbershop_id),
+      ]);
     void owner;
 
     const userIds = new Set<string>();
@@ -82,5 +91,4 @@ export const notifyNewAppointment = createServerFn({ method: "POST" })
     if (stale.length) await supabaseAdmin.from("push_subscriptions").delete().in("endpoint", stale);
 
     return { ok: true, sent };
-
   });

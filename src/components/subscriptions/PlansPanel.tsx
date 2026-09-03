@@ -26,12 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { brl } from "@/lib/format";
 import { CpfCustomerLookup } from "@/components/CpfCustomerLookup";
-import {
-  createSubscription,
-  friendlyError,
-  type CpfLookup,
-  type Plan,
-} from "@/lib/subscriptions";
+import { createSubscription, friendlyError, type CpfLookup, type Plan } from "@/lib/subscriptions";
 
 const EMPTY = {
   name: "",
@@ -63,7 +58,11 @@ export function PlansPanel() {
     enabled: !!shop?.id,
     queryFn: async () => {
       const [plans, subs] = await Promise.all([
-        supabase.from("subscription_plans").select("*").eq("barbershop_id", shop!.id).order("price_cents"),
+        supabase
+          .from("subscription_plans")
+          .select("*")
+          .eq("barbershop_id", shop!.id)
+          .order("price_cents"),
         supabase
           .from("customer_subscriptions")
           .select("id, plan_id, status")
@@ -110,7 +109,11 @@ export function PlansPanel() {
       const cycle = Number(form.cycle);
       if (form.name.trim().length < 2) throw new Error("Informe o nome do plano.");
       if (!Number.isFinite(price) || price <= 0) throw new Error("Informe um preço válido.");
-      for (const [label, v] of [["cortes", cuts], ["barbas", beards], ["extras", extras]] as const) {
+      for (const [label, v] of [
+        ["cortes", cuts],
+        ["barbas", beards],
+        ["extras", extras],
+      ] as const) {
         if (!Number.isInteger(v) || v < 0) throw new Error(`Quantidade de ${label} inválida.`);
       }
       if (!Number.isInteger(cycle) || cycle < 1) throw new Error("Duração do ciclo inválida.");
@@ -195,7 +198,9 @@ export function PlansPanel() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-display text-xl leading-tight">Planos</p>
-          <p className="text-xs text-muted-foreground">Crie planos recorrentes e vincule clientes</p>
+          <p className="text-xs text-muted-foreground">
+            Crie planos recorrentes e vincule clientes
+          </p>
         </div>
         <Button size="sm" onClick={openCreate}>
           <Plus className="size-4" /> Novo plano
@@ -221,67 +226,75 @@ export function PlansPanel() {
           }
         />
       ) : (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {plans.map((plan) => {
-          const active = subscribersOf(plan.id).filter((s) => s.status === "active").length;
-          return (
-            <div key={plan.id} className="surface-card surface-card-hover space-y-3 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-display text-2xl">{plan.name}</p>
-                  <p className="font-display text-xl text-primary">
-                    {brl(plan.price_cents)}
-                    <span className="text-xs font-sans font-normal text-muted-foreground"> / {plan.cycle_days} dias</span>
-                  </p>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {plans.map((plan) => {
+            const active = subscribersOf(plan.id).filter((s) => s.status === "active").length;
+            return (
+              <div key={plan.id} className="surface-card surface-card-hover space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-display text-2xl">{plan.name}</p>
+                    <p className="font-display text-xl text-primary">
+                      {brl(plan.price_cents)}
+                      <span className="text-xs font-sans font-normal text-muted-foreground">
+                        {" "}
+                        / {plan.cycle_days} dias
+                      </span>
+                    </p>
+                  </div>
+                  <Badge variant={plan.active ? "default" : "outline"}>
+                    {plan.active ? "Ativo" : "Inativo"}
+                  </Badge>
                 </div>
-                <Badge variant={plan.active ? "default" : "outline"}>
-                  {plan.active ? "Ativo" : "Inativo"}
-                </Badge>
+                <ul className="space-y-1 text-sm text-muted-foreground">
+                  <li>{plan.cuts_included} corte(s) inclusos</li>
+                  <li>{plan.beards_included} barba(s) inclusas</li>
+                  {plan.extras_included > 0 && <li>{plan.extras_included} extra(s)</li>}
+                  {plan.benefits && <li className="text-foreground/80">{plan.benefits}</li>}
+                </ul>
+                <p className="text-xs text-muted-foreground">{active} assinante(s) ativo(s)</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    disabled={!plan.active}
+                    onClick={() => {
+                      setEnrollPlan(plan);
+                      setLookup(null);
+                    }}
+                  >
+                    <UserPlus className="size-4" /> Assinar cliente
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(plan)}>
+                    <Pencil className="size-4" /> Editar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => toggleActive.mutate(plan)}>
+                    <Power className="size-4" /> {plan.active ? "Desativar" : "Ativar"}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(plan)}>
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-              <ul className="space-y-1 text-sm text-muted-foreground">
-                <li>{plan.cuts_included} corte(s) inclusos</li>
-                <li>{plan.beards_included} barba(s) inclusas</li>
-                {plan.extras_included > 0 && <li>{plan.extras_included} extra(s)</li>}
-                {plan.benefits && <li className="text-foreground/80">{plan.benefits}</li>}
-              </ul>
-              <p className="text-xs text-muted-foreground">{active} assinante(s) ativo(s)</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  disabled={!plan.active}
-                  onClick={() => {
-                    setEnrollPlan(plan);
-                    setLookup(null);
-                  }}
-                >
-                  <UserPlus className="size-4" /> Assinar cliente
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => openEdit(plan)}>
-                  <Pencil className="size-4" /> Editar
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => toggleActive.mutate(plan)}>
-                  <Power className="size-4" /> {plan.active ? "Desativar" : "Ativar"}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(plan)}>
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
       )}
 
       {/* criar/editar plano */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">{editing ? "Editar plano" : "Novo plano"}</DialogTitle>
+            <DialogTitle className="font-display text-2xl">
+              {editing ? "Editar plano" : "Novo plano"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Nome do plano</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
@@ -351,9 +364,14 @@ export function PlansPanel() {
             <div className="flex items-center justify-between rounded-lg border border-border p-3">
               <div>
                 <p className="text-sm font-medium">Plano ativo</p>
-                <p className="text-xs text-muted-foreground">Planos inativos não recebem novas assinaturas.</p>
+                <p className="text-xs text-muted-foreground">
+                  Planos inativos não recebem novas assinaturas.
+                </p>
               </div>
-              <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+              <Switch
+                checked={form.active}
+                onCheckedChange={(v) => setForm({ ...form, active: v })}
+              />
             </div>
             <Button className="w-full" disabled={save.isPending} onClick={() => save.mutate()}>
               {save.isPending && <Loader2 className="size-4 animate-spin" />} Salvar plano
@@ -366,7 +384,9 @@ export function PlansPanel() {
       <Dialog open={!!enrollPlan} onOpenChange={(v) => !v && setEnrollPlan(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">Assinar cliente — {enrollPlan?.name}</DialogTitle>
+            <DialogTitle className="font-display text-2xl">
+              Assinar cliente — {enrollPlan?.name}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <CpfCustomerLookup shopId={shop?.id} onResult={(r) => setLookup(r)} />
@@ -380,7 +400,8 @@ export function PlansPanel() {
               disabled={!lookup?.customer || subscribe.isPending}
               onClick={() => subscribe.mutate()}
             >
-              {subscribe.isPending && <Loader2 className="size-4 animate-spin" />} Confirmar assinatura
+              {subscribe.isPending && <Loader2 className="size-4 animate-spin" />} Confirmar
+              assinatura
             </Button>
           </div>
         </DialogContent>
