@@ -7,7 +7,7 @@ import { Scissors, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
 import { slugify } from "@/lib/format";
-import { defaultServiceRows } from "@/lib/default-services";
+import { seedStarterData } from "@/lib/starter-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,45 +94,14 @@ function Onboarding() {
       { onConflict: "barbershop_id,weekday" },
     );
 
-    // Conta nova já vem com serviços e barbeiros de exemplo salvos no banco;
-    // o barbeiro pode editar, excluir ou adicionar os próprios normalmente.
+    // Conta nova já vem com serviços, barbeiros, 3 planos de teste e 2 clientes
+    // de demonstração (com assinaturas ativas e agendamentos). Cada etapa checa
+    // se já existem dados antes de inserir — nunca duplica em barbearias existentes.
     if (!shop) {
-      const [{ count: servicesCount }, { count: barbersCount }] = await Promise.all([
-        supabase
-          .from("services")
-          .select("id", { count: "exact", head: true })
-          .eq("barbershop_id", data.id),
-        supabase
-          .from("barbers")
-          .select("id", { count: "exact", head: true })
-          .eq("barbershop_id", data.id),
-      ]);
-
-      if (!servicesCount) {
-        await supabase.from("services").insert(defaultServiceRows(data.id));
-      }
-
-      if (!barbersCount) {
-        await supabase.from("barbers").insert([
-          {
-            barbershop_id: data.id,
-            name: "Barbeiro 1",
-            commission_pct: 50,
-            work_days: [1, 2, 3, 4, 5, 6],
-            start_time: "09:00",
-            end_time: "20:00",
-            bio: "Especialista em cortes clássicos.",
-          },
-          {
-            barbershop_id: data.id,
-            name: "Barbeiro 2",
-            commission_pct: 50,
-            work_days: [1, 2, 3, 4, 5],
-            start_time: "10:00",
-            end_time: "19:00",
-            bio: "Fade, degradê e barba.",
-          },
-        ]);
+      try {
+        await seedStarterData(data.id);
+      } catch {
+        // Dados de exemplo são opcionais: nunca bloqueiam a criação da barbearia.
       }
     }
 
