@@ -27,7 +27,7 @@ import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
-import { BillingSummaryCard } from "@/components/BillingSummaryCard";
+
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
