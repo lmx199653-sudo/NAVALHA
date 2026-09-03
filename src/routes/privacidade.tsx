@@ -63,9 +63,7 @@ function PrivacyPage() {
             Registros de erro e diagnóstico (tipo de dispositivo, navegador, versão do app) para
             manter o serviço estável.
           </li>
-          <li>
-            Identificador de notificações push, apenas se você ativar as notificações no app.
-          </li>
+          <li>Identificador de notificações push, apenas se você ativar as notificações no app.</li>
         </ul>
         <p>
           <strong>Não coletamos</strong> localização precisa, contatos do aparelho, fotos além das
@@ -117,13 +115,13 @@ function PrivacyPage() {
         <p>
           Mantemos os dados enquanto a conta estiver ativa. Você pode excluir sua conta e todos os
           dados a qualquer momento em <strong>Configurações → Excluir minha conta</strong> dentro do
-          app ou pela página <Link to="/excluir-conta">Excluir conta</Link>. A exclusão é
-          definitiva e concluída em até {LEGAL.deletionDeadlineDays} dias, salvo dados que devamos
-          guardar por obrigação legal.
+          app ou pela página <Link to="/excluir-conta">Excluir conta</Link>. A exclusão é definitiva
+          e concluída em até {LEGAL.deletionDeadlineDays} dias, salvo dados que devamos guardar por
+          obrigação legal.
         </p>
         <p>
-          Clientes de uma barbearia podem solicitar a remoção dos seus dados diretamente à
-          barbearia ou pelo e-mail <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>.
+          Clientes de uma barbearia podem solicitar a remoção dos seus dados diretamente à barbearia
+          ou pelo e-mail <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>.
         </p>
       </LegalSection>
 
