@@ -27,37 +27,45 @@ export function InstallAppCta() {
   }
 
   return (
-    <div className="surface-card relative mb-4 flex flex-col gap-3 border-primary/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3 pr-6">
-        <span className="rounded-lg bg-primary/15 p-2 text-primary">
-          <Smartphone className="size-5" />
-        </span>
-        <div>
-          <p className="font-display text-xl leading-tight">Gerencie pelo celular</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            Instale o Navalha Pro na tela inicial. Abre mais rápido, funciona em tela cheia e
-            recebe avisos de novos agendamentos. Você pode continuar usando pelo navegador.
-          </p>
-        </div>
+    <div className="surface-card relative mb-4 flex items-center gap-3 border-primary/30 p-3.5 sm:p-4">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary ring-1 ring-primary/15">
+        <Smartphone className="size-4.5" />
+      </span>
+      <div className="min-w-0 flex-1 pr-6 sm:pr-0">
+        <p className="truncate font-display text-lg leading-tight">Gerencie pelo celular</p>
+        <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+          Instale o Navalha Pro na tela inicial e receba avisos de novos agendamentos.
+        </p>
       </div>
-      <div className="flex shrink-0 gap-2">
+      <div className="hidden shrink-0 gap-2 sm:flex">
         {canInstall && !isIos ? (
           <Button size="sm" onClick={() => void promptInstall()}>
-            Instalar app
+            Instalar
           </Button>
         ) : (
           <Button size="sm" asChild>
-            <Link to="/instalar-app">Instalar app</Link>
+            <Link to="/instalar-app">Instalar</Link>
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={dismiss}>
           Agora não
         </Button>
       </div>
+      <div className="absolute inset-x-3 bottom-3 flex gap-2 sm:hidden">
+        {canInstall && !isIos ? (
+          <Button size="sm" className="flex-1" onClick={() => void promptInstall()}>
+            Instalar
+          </Button>
+        ) : (
+          <Button size="sm" className="flex-1" asChild>
+            <Link to="/instalar-app">Instalar</Link>
+          </Button>
+        )}
+      </div>
       <button
         onClick={dismiss}
         aria-label="Dispensar"
-        className="absolute right-2 top-2 text-muted-foreground hover:text-foreground sm:hidden"
+        className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
       >
         <X className="size-4" />
       </button>

@@ -3,7 +3,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, Copy, ExternalLink, LogOut, QrCode } from "lucide-react";
+import {
+  AlertCircle,
+  Building2,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ExternalLink,
+  Link2,
+  LogOut,
+  QrCode,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
 import { AppShell } from "@/components/AppShell";
@@ -12,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { SectionHeader } from "@/components/ui/states";
 import { WEEKDAYS } from "@/lib/format";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import { DEFAULT_BRAND, type Brand } from "@/lib/brand";
@@ -203,232 +214,239 @@ function SettingsPage() {
 
   return (
     <AppShell title="Configurações" subtitle="Dados da barbearia, link público e horários">
-      <div className="surface-card mb-4 p-4">
-        <BrandStudio
-          shopName={form.name}
-          value={brand}
-          onChange={(b) => {
-            setBrand(b);
-            if (shop && b.logo_url && b.logo_url !== brand.logo_url) saveBrand.mutate(b);
-          }}
-          onSave={async (b) => saveBrand.mutateAsync(b)}
-          saving={saveBrand.isPending}
-        />
-
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="surface-card p-4">
-          <h3 className="font-display text-2xl">Dados da barbearia</h3>
-          <form
-            className="mt-4 space-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              saveShop.mutate();
+      <div className="space-y-4 pb-24 sm:pb-0">
+        <div className="surface-card p-4 sm:p-5">
+          <BrandStudio
+            shopName={form.name}
+            value={brand}
+            onChange={(b) => {
+              setBrand(b);
+              if (shop && b.logo_url && b.logo_url !== brand.logo_url) saveBrand.mutate(b);
             }}
-          >
-            <div className="space-y-2">
-              <Label>Nome</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Link público (slug)</Label>
-              <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>WhatsApp</Label>
-                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Endereço</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label>Capa (URL)</Label>
-              <Input value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} />
-              <p className="text-xs text-muted-foreground">
-                A logo é definida acima, em “Identidade visual”.
-              </p>
-            </div>
-
-            <Button disabled={saveShop.isPending}>Salvar dados</Button>
-          </form>
+            onSave={async (b) => saveBrand.mutateAsync(b)}
+            saving={saveBrand.isPending}
+          />
         </div>
 
-        <div className="space-y-4">
-          <div className="surface-card p-4">
-            <h3 className="font-display text-2xl">Seu link de agendamento</h3>
-            <p className="mt-2 break-all rounded-lg bg-secondary/60 p-3 text-xs text-primary">
-              {publicUrl}
-            </p>
-            <div className="mt-3 flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  navigator.clipboard.writeText(publicUrl);
-                  toast.success("Link copiado");
-                }}
-              >
-                <Copy className="size-4" /> Copiar
-              </Button>
-              <Button size="sm" variant="outline" asChild>
-                <a href={publicUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="size-4" /> Abrir
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="surface-card p-4">
-            <div className="flex items-center gap-2">
-              <QrCode className="size-5 text-primary" />
-              <h3 className="font-display text-2xl">Pix — receba direto na sua conta</h3>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Sua chave aparece para o cliente ao agendar online e na conclusão do atendimento — como chave
-              para copiar ou QR Code. O pagamento cai direto para você, sem intermediários.
-            </p>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="surface-card p-4 sm:p-5">
+            <SectionHeader icon={Building2} title="Dados da barbearia" />
             <form
               className="mt-4 space-y-3"
               onSubmit={(e) => {
                 e.preventDefault();
-                savePix.mutate(false);
+                saveShop.mutate();
               }}
             >
-              <div className="space-y-2">
-                <Label>Chave Pix</Label>
-                <Input
-                  value={pix.key}
-                  onChange={(e) => setPix({ ...pix, key: e.target.value })}
-                  placeholder="CPF, CNPJ, celular, e-mail ou chave aleatória"
-                  autoComplete="off"
-                />
-                {detected && (
-                  <p
-                    className={cn(
-                      "flex items-center gap-1.5 text-xs",
-                      detected.ok ? "text-primary" : "text-destructive",
-                    )}
-                  >
-                    {detected.ok ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
-                    {detected.ok ? (
-                      <>
-                        Tipo identificado: <strong>{pixTypeLabel(detected.type)}</strong>
-                        <span className="text-muted-foreground"> · {detected.normalized}</span>
-                      </>
-                    ) : (
-                      detected.reason
-                    )}
-                  </p>
-                )}
-                {!detected && (
-                  <p className="text-xs text-muted-foreground">
-                    O tipo da chave é identificado automaticamente ao digitar.
-                  </p>
-                )}
+              <div className="space-y-1.5">
+                <Label>Nome</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
-              <div className="space-y-2">
-                <Label>Nome do titular (opcional)</Label>
-                <Input
-                  value={pix.holder}
-                  onChange={(e) => setPix({ ...pix, holder: e.target.value })}
-                  placeholder="Como aparece no banco"
-                />
+              <div className="space-y-1.5">
+                <Label>Link público (slug)</Label>
+                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
               </div>
-              <div className="flex gap-2">
-                <Button disabled={savePix.isPending || !detected?.ok}>Salvar chave Pix</Button>
-                {shop?.pix_key && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={savePix.isPending}
-                    onClick={() => savePix.mutate(true)}
-                  >
-                    Remover
-                  </Button>
-                )}
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>WhatsApp</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Endereço</Label>
+                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Descrição</Label>
+                <Textarea rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Capa (URL)</Label>
+                <Input value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} />
+                <p className="text-xs text-muted-foreground">
+                  A logo é definida acima, em “Identidade visual”.
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button className="w-full sm:w-auto" disabled={saveShop.isPending}>
+                  {saveShop.isPending ? "Salvando..." : "Salvar dados"}
+                </Button>
               </div>
             </form>
-            {shop?.pix_key && (
-              <div className="mt-4 space-y-3">
-                <PixKeyCard
-                  compact
-                  pixKey={shop.pix_key}
-                  pixKeyType={shop.pix_key_type}
-                  holderName={shop.pix_holder_name}
-                />
-                <PixQrCard
-                  compact
-                  pixKey={shop.pix_key}
-                  pixKeyType={shop.pix_key_type}
-                  holderName={shop.pix_holder_name}
-                />
-              </div>
-            )}
           </div>
 
-          <div className="surface-card p-4">
-            <h3 className="font-display text-2xl">Horário de funcionamento</h3>
-            <div className="mt-3 space-y-2">
-              {(localHours ?? []).map((h, i) => (
-                <div key={h.weekday} className="flex items-center gap-2">
-                  <span className="w-24 text-xs text-muted-foreground">{WEEKDAYS[h.weekday]}</span>
+          <div className="space-y-4">
+            <div className="surface-card p-4 sm:p-5">
+              <SectionHeader icon={Link2} title="Seu link de agendamento" />
+              <p className="mt-3 break-all rounded-lg bg-secondary/60 p-3 text-xs text-primary">
+                {publicUrl}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    navigator.clipboard.writeText(publicUrl);
+                    toast.success("Link copiado");
+                  }}
+                >
+                  <Copy className="size-4" /> Copiar
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <a href={publicUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" /> Abrir
+                  </a>
+                </Button>
+              </div>
+            </div>
+
+            <div className="surface-card p-4 sm:p-5">
+              <SectionHeader
+                icon={QrCode}
+                title="Pix — receba direto na sua conta"
+                description="Sua chave aparece para o cliente ao agendar online e na conclusão do atendimento — como chave para copiar ou QR Code. O pagamento cai direto para você, sem intermediários."
+              />
+              <form
+                className="mt-4 space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  savePix.mutate(false);
+                }}
+              >
+                <div className="space-y-1.5">
+                  <Label>Chave Pix</Label>
                   <Input
-                    type="time"
-                    className="h-9"
-                    value={h.open_time.slice(0, 5)}
-                    disabled={h.closed}
-                    onChange={(e) => {
-                      const next = [...localHours!];
-                      next[i] = { ...h, open_time: e.target.value };
-                      setLocalHours(next);
-                    }}
+                    value={pix.key}
+                    onChange={(e) => setPix({ ...pix, key: e.target.value })}
+                    placeholder="CPF, CNPJ, celular, e-mail ou chave aleatória"
+                    autoComplete="off"
                   />
+                  {detected && (
+                    <p
+                      className={cn(
+                        "flex items-center gap-1.5 text-xs",
+                        detected.ok ? "text-primary" : "text-destructive",
+                      )}
+                    >
+                      {detected.ok ? <CheckCircle2 className="size-3.5" /> : <AlertCircle className="size-3.5" />}
+                      {detected.ok ? (
+                        <>
+                          Tipo identificado: <strong>{pixTypeLabel(detected.type)}</strong>
+                          <span className="text-muted-foreground"> · {detected.normalized}</span>
+                        </>
+                      ) : (
+                        detected.reason
+                      )}
+                    </p>
+                  )}
+                  {!detected && (
+                    <p className="text-xs text-muted-foreground">
+                      O tipo da chave é identificado automaticamente ao digitar.
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Nome do titular (opcional)</Label>
                   <Input
-                    type="time"
-                    className="h-9"
-                    value={h.close_time.slice(0, 5)}
-                    disabled={h.closed}
-                    onChange={(e) => {
-                      const next = [...localHours!];
-                      next[i] = { ...h, close_time: e.target.value };
-                      setLocalHours(next);
-                    }}
-                  />
-                  <Switch
-                    checked={!h.closed}
-                    onCheckedChange={(v) => {
-                      const next = [...localHours!];
-                      next[i] = { ...h, closed: !v };
-                      setLocalHours(next);
-                    }}
+                    value={pix.holder}
+                    onChange={(e) => setPix({ ...pix, holder: e.target.value })}
+                    placeholder="Como aparece no banco"
                   />
                 </div>
-              ))}
+                <div className="flex flex-wrap justify-end gap-2">
+                  {shop?.pix_key && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={savePix.isPending}
+                      onClick={() => savePix.mutate(true)}
+                    >
+                      Remover
+                    </Button>
+                  )}
+                  <Button className="w-full sm:w-auto" disabled={savePix.isPending || !detected?.ok}>
+                    {savePix.isPending ? "Salvando..." : "Salvar chave Pix"}
+                  </Button>
+                </div>
+              </form>
+              {shop?.pix_key && (
+                <div className="mt-4 space-y-3">
+                  <PixKeyCard
+                    compact
+                    pixKey={shop.pix_key}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name}
+                  />
+                  <PixQrCard
+                    compact
+                    pixKey={shop.pix_key}
+                    pixKeyType={shop.pix_key_type}
+                    holderName={shop.pix_holder_name}
+                  />
+                </div>
+              )}
             </div>
-            <Button className="mt-3" size="sm" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
-              Salvar horários
+
+            <div className="surface-card p-4 sm:p-5">
+              <SectionHeader icon={Clock} title="Horário de funcionamento" />
+              <div className="mt-3 space-y-2">
+                {(localHours ?? []).map((h, i) => (
+                  <div key={h.weekday} className="surface-row flex flex-wrap items-center gap-2 px-3.5 py-2.5">
+                    <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground">{WEEKDAYS[h.weekday]}</span>
+                    <Input
+                      type="time"
+                      className="h-9 w-auto min-w-0 flex-1"
+                      value={h.open_time.slice(0, 5)}
+                      disabled={h.closed}
+                      onChange={(e) => {
+                        const next = [...localHours!];
+                        next[i] = { ...h, open_time: e.target.value };
+                        setLocalHours(next);
+                      }}
+                    />
+                    <Input
+                      type="time"
+                      className="h-9 w-auto min-w-0 flex-1"
+                      value={h.close_time.slice(0, 5)}
+                      disabled={h.closed}
+                      onChange={(e) => {
+                        const next = [...localHours!];
+                        next[i] = { ...h, close_time: e.target.value };
+                        setLocalHours(next);
+                      }}
+                    />
+                    <Switch
+                      checked={!h.closed}
+                      onCheckedChange={(v) => {
+                        const next = [...localHours!];
+                        next[i] = { ...h, closed: !v };
+                        setLocalHours(next);
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex justify-end">
+                <Button size="sm" className="w-full sm:w-auto" disabled={saveHours.isPending} onClick={() => saveHours.mutate()}>
+                  {saveHours.isPending ? "Salvando..." : "Salvar horários"}
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={async () => {
+                await qc.cancelQueries();
+                qc.clear();
+                await supabase.auth.signOut();
+                window.location.href = "/auth";
+              }}
+            >
+              <LogOut className="size-4" /> Sair da conta
             </Button>
           </div>
-
-          <Button
-            variant="outline"
-            onClick={async () => {
-              await qc.cancelQueries();
-              qc.clear();
-              await supabase.auth.signOut();
-              window.location.href = "/auth";
-            }}
-          >
-            <LogOut className="size-4" /> Sair da conta
-          </Button>
         </div>
       </div>
     </AppShell>

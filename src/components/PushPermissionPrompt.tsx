@@ -88,7 +88,7 @@ export function PushPermissionPrompt() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 p-3 sm:bottom-4 sm:left-auto sm:right-4 sm:w-96 sm:p-0">
-      <div className="relative rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur">
+      <div className="surface-card relative border-primary/25 p-4 shadow-2xl backdrop-blur">
         <button
           onClick={later}
           aria-label="Agora não"
@@ -97,7 +97,7 @@ export function PushPermissionPrompt() {
           <X className="size-4" />
         </button>
         <div className="flex items-start gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary ring-1 ring-primary/15">
             <Bell className="size-5" />
           </span>
           <div className="space-y-1 pr-6">
@@ -131,4 +131,3 @@ export function PushPermissionPrompt() {
     </div>
   );
 }
-

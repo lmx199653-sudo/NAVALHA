@@ -70,8 +70,8 @@ function InstallAppPage() {
 
   return (
     <div className="grid-noise flex min-h-screen flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md space-y-8 text-center">
-        <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary/15 text-primary">
+      <div className="w-full max-w-md space-y-6 text-center">
+        <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/20">
           <Smartphone className="size-10" />
         </div>
 
@@ -109,17 +109,21 @@ function InstallAppPage() {
         )}
 
         {!installed && showManual && guide && (
-          <div className="space-y-4 rounded-xl border border-border bg-secondary/40 p-4 text-left">
+          <div className="surface-card space-y-4 p-5 text-left">
             <div>
-              <p className="flex items-center gap-2 text-sm font-medium text-foreground">
-                <ListOrdered className="size-4 text-primary" />
+              <p className="flex items-center gap-2.5 text-sm font-medium text-foreground">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary ring-1 ring-primary/15">
+                  <ListOrdered className="size-4" />
+                </span>
                 Como instalar no {guide.label}
               </p>
-              <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
+              <ol className="mt-3 space-y-2">
                 {guide.steps.map((step, i) => (
-                  <li key={step} className="flex gap-2">
-                    <span className="font-display text-primary">{i + 1}.</span>
-                    <span>{step}</span>
+                  <li key={step} className="surface-row flex items-start gap-3 px-3.5 py-3">
+                    <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-sm text-primary">
+                      {i + 1}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{step}</span>
                   </li>
                 ))}
               </ol>
@@ -128,11 +132,11 @@ function InstallAppPage() {
             {guide.needsOtherBrowser && (
               <div className="flex flex-wrap gap-2">
                 <Button variant="secondary" size="sm" onClick={copyLink}>
-                  <Copy className="mr-2 size-4" /> Copiar link
+                  <Copy className="size-4" /> Copiar link
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
                   <a href="/instalar-app" target="_blank" rel="noreferrer">
-                    <ExternalLink className="mr-2 size-4" /> Abrir no navegador
+                    <ExternalLink className="size-4" /> Abrir no navegador
                   </a>
                 </Button>
               </div>
