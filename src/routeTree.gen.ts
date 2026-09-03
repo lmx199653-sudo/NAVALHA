@@ -14,7 +14,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExcluirContaRouteImport } from './routes/excluir-conta'
 import { Route as InstalarAppRouteImport } from './routes/instalar-app'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as SegurancaDadosRouteImport } from './routes/seguranca-dados'
+import { Route as SuporteRouteImport } from './routes/suporte'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
 import { Route as AuthenticatedBarbeirosRouteImport } from './routes/_authenticated/barbeiros'
@@ -53,9 +58,34 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExcluirContaRoute = ExcluirContaRouteImport.update({
+  id: '/excluir-conta',
+  path: '/excluir-conta',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InstalarAppRoute = InstalarAppRouteImport.update({
   id: '/instalar-app',
   path: '/instalar-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaDadosRoute = SegurancaDadosRouteImport.update({
+  id: '/seguranca-dados',
+  path: '/seguranca-dados',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuporteRoute = SuporteRouteImport.update({
+  id: '/suporte',
+  path: '/suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
@@ -131,7 +161,12 @@ export interface FileRoutesByFullPath {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/excluir-conta': typeof ExcluirContaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/seguranca-dados': typeof SegurancaDadosRoute
+  '/suporte': typeof SuporteRoute
+  '/termos': typeof TermosRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -151,7 +186,12 @@ export interface FileRoutesByTo {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/excluir-conta': typeof ExcluirContaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/seguranca-dados': typeof SegurancaDadosRoute
+  '/suporte': typeof SuporteRoute
+  '/termos': typeof TermosRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -173,7 +213,12 @@ export interface FileRoutesById {
   '/agendar': typeof AgendarRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
+  '/excluir-conta': typeof ExcluirContaRoute
   '/instalar-app': typeof InstalarAppRoute
+  '/privacidade': typeof PrivacidadeRoute
+  '/seguranca-dados': typeof SegurancaDadosRoute
+  '/suporte': typeof SuporteRoute
+  '/termos': typeof TermosRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/_authenticated/barbeiros': typeof AuthenticatedBarbeirosRoute
@@ -195,7 +240,12 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
+    | '/excluir-conta'
     | '/instalar-app'
+    | '/privacidade'
+    | '/seguranca-dados'
+    | '/suporte'
+    | '/termos'
     | '/agenda'
     | '/assinaturas'
     | '/barbeiros'
@@ -215,7 +265,12 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
+    | '/excluir-conta'
     | '/instalar-app'
+    | '/privacidade'
+    | '/seguranca-dados'
+    | '/suporte'
+    | '/termos'
     | '/agenda'
     | '/assinaturas'
     | '/barbeiros'
@@ -236,7 +291,12 @@ export interface FileRouteTypes {
     | '/agendar'
     | '/auth'
     | '/dashboard'
+    | '/excluir-conta'
     | '/instalar-app'
+    | '/privacidade'
+    | '/seguranca-dados'
+    | '/suporte'
+    | '/termos'
     | '/_authenticated/agenda'
     | '/_authenticated/assinaturas'
     | '/_authenticated/barbeiros'
@@ -258,7 +318,12 @@ export interface RootRouteChildren {
   AgendarRoute: typeof AgendarRoute
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
+  ExcluirContaRoute: typeof ExcluirContaRoute
   InstalarAppRoute: typeof InstalarAppRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
+  SegurancaDadosRoute: typeof SegurancaDadosRoute
+  SuporteRoute: typeof SuporteRoute
+  TermosRoute: typeof TermosRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
 }
 
@@ -299,11 +364,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/excluir-conta': {
+      id: '/excluir-conta'
+      path: '/excluir-conta'
+      fullPath: '/excluir-conta'
+      preLoaderRoute: typeof ExcluirContaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/instalar-app': {
       id: '/instalar-app'
       path: '/instalar-app'
       fullPath: '/instalar-app'
       preLoaderRoute: typeof InstalarAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca-dados': {
+      id: '/seguranca-dados'
+      path: '/seguranca-dados'
+      fullPath: '/seguranca-dados'
+      preLoaderRoute: typeof SegurancaDadosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/suporte': {
+      id: '/suporte'
+      path: '/suporte'
+      fullPath: '/suporte'
+      preLoaderRoute: typeof SuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/agenda': {
@@ -439,7 +539,12 @@ const rootRouteChildren: RootRouteChildren = {
   AgendarRoute: AgendarRoute,
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
+  ExcluirContaRoute: ExcluirContaRoute,
   InstalarAppRoute: InstalarAppRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
+  SegurancaDadosRoute: SegurancaDadosRoute,
+  SuporteRoute: SuporteRoute,
+  TermosRoute: TermosRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
 }
 export const routeTree = rootRouteImport
