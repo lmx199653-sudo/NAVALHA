@@ -79,6 +79,13 @@ export const Route = createFileRoute("/_authenticated/assinaturas")({
 
 type StatusFilter = "all" | "attention" | "active" | "inactive";
 
+function statusBadgeVariant(status: Subscription["status"]): "success" | "warning" | "destructive" | "secondary" {
+  if (status === "active") return "success";
+  if (status === "pending" || status === "suspended") return "warning";
+  if (status === "cancelled") return "secondary";
+  return "destructive";
+}
+
 function SubscriptionsPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
@@ -403,28 +410,20 @@ function SubscriptionsPage() {
                     type="button"
                     onClick={() => setManageId(sub.id)}
                     className={cn(
-                      "group flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors hover:border-primary/40 sm:flex-row sm:items-center sm:justify-between",
-                      hasAlert ? "border-primary/30 bg-primary/[0.03]" : "border-border",
+                      "surface-row group flex w-full flex-col gap-2 p-3.5 text-left sm:flex-row sm:items-center sm:justify-between",
+                      hasAlert && "border-primary/30 bg-primary/[0.03]",
                       closed && "opacity-60",
                     )}
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate font-medium">{customer?.name ?? "Cliente"}</p>
-                        <Badge
-                          variant="outline"
-                          className={cn("h-5 px-1.5 text-[10px]", status.tone)}
-                        >
+                        <p className="truncate text-sm font-medium">{customer?.name ?? "Cliente"}</p>
+                        <Badge variant={statusBadgeVariant(sub.status)} className="h-5 px-1.5 text-[10px]">
                           {status.label}
                         </Badge>
                         <Badge
-                          variant="outline"
-                          className={cn(
-                            "h-5 px-1.5 text-[10px]",
-                            sub.payment_status === "paid"
-                              ? "border-success/40 bg-success/15 text-success"
-                              : "border-warning/40 bg-warning/15 text-warning",
-                          )}
+                          variant={sub.payment_status === "paid" ? "success" : "warning"}
+                          className="h-5 px-1.5 text-[10px]"
                         >
                           {PAYMENT_STATUS[sub.payment_status]}
                         </Badge>

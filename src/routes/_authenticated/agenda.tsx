@@ -157,7 +157,7 @@ function AgendaPage() {
     return { start, end };
   }, [anchor, view]);
 
-  const { data } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["agenda", shop?.id, range.start.toISOString(), range.end.toISOString()],
     enabled: !!shop?.id,
     refetchInterval: 15_000,

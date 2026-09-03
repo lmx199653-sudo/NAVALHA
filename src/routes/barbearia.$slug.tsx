@@ -714,6 +714,7 @@ function PublicBooking() {
               <div className={cn("grid gap-2", planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
                 {shopHasPix && (
                   <PaymentOption
+                    icon={QrCode}
                     active={paymentChoice === "pix"}
                     title="Pagar com Pix"
                     hint="QR Code ou chave · agora"
@@ -723,6 +724,7 @@ function PublicBooking() {
                 )}
                 {planEligible && (
                   <PaymentOption
+                    icon={Sparkles}
                     active={paymentChoice === "plan"}
                     title="Usar meu plano"
                     hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
@@ -731,6 +733,7 @@ function PublicBooking() {
                   />
                 )}
                 <PaymentOption
+                  icon={Wallet}
                   active={paymentChoice === "on_site"}
                   title="Pagar no local"
                   hint="Pix, cartão ou dinheiro"
@@ -921,7 +924,7 @@ function SummaryRow({
   value: string;
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5">
+    <div className="surface-row grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3.5 py-3">
       <span className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
         <Icon className="size-4 shrink-0 text-primary" /> {label}
       </span>
@@ -931,12 +934,14 @@ function SummaryRow({
 }
 
 function PaymentOption({
+  icon: Icon,
   active,
   title,
   hint,
   badge,
   onClick,
 }: {
+  icon: typeof QrCode;
   active: boolean;
   title: string;
   hint: string;
@@ -947,9 +952,10 @@ function PaymentOption({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "relative rounded-xl border p-3 text-left transition-colors",
-        active ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+        "relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-colors min-h-24",
+        active ? "border-primary bg-primary/10 ring-2 ring-primary/30" : "border-border hover:border-primary/40",
       )}
     >
       {badge && (
@@ -957,8 +963,18 @@ function PaymentOption({
           {badge}
         </span>
       )}
-      <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      <span
+        className={cn(
+          "flex size-8 items-center justify-center rounded-lg ring-1",
+          active ? "bg-primary/20 text-primary ring-primary/30" : "bg-secondary/70 text-muted-foreground ring-border",
+        )}
+      >
+        <Icon className="size-4" />
+      </span>
+      <div>
+        <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+      </div>
     </button>
   );
 }
