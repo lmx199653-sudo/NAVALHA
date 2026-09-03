@@ -144,7 +144,7 @@ export function SupportThread({
   });
 
   return (
-    <div className="surface-card flex h-[calc(100dvh-14.5rem)] min-h-[420px] flex-col overflow-hidden lg:h-[calc(100dvh-11rem)]">
+    <div className="surface-card flex h-[calc(100dvh-15rem)] min-h-[420px] flex-col overflow-hidden lg:h-[calc(100dvh-13.5rem)]">
       {/* Cabeçalho */}
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5 sm:px-4">
         {onBack && (
