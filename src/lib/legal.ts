@@ -7,7 +7,7 @@ export const LEGAL = {
   appName: "NAVALHA PRO",
   developerName: "NAVALHA PRO",
   supportEmail: "pronavalha@gmail.com",
-  privacyEmail: "privacidade@navalhapro.com.br",
+  privacyEmail: "pronavalha@gmail.com",
   websiteUrl: "https://pronavalha.lovable.app",
   /** Data da última revisão dos documentos legais (ISO). */
   lastUpdated: "2026-09-03",
