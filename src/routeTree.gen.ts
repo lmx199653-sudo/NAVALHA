@@ -24,6 +24,7 @@ import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAssinaturasRouteImport } from './routes/_authenticated/assinaturas'
 import { Route as AuthenticatedBarbeirosRouteImport } from './routes/_authenticated/barbeiros'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCobrancaRouteImport } from './routes/_authenticated/cobranca'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedHorariosRouteImport } from './routes/_authenticated/horarios'
@@ -110,6 +111,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCobrancaRoute = AuthenticatedCobrancaRouteImport.update({
+  id: '/cobranca',
+  path: '/cobranca',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/cobranca': typeof AuthenticatedCobrancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/horarios': typeof AuthenticatedHorariosRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/cobranca': typeof AuthenticatedCobrancaRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/horarios': typeof AuthenticatedHorariosRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/_authenticated/assinaturas': typeof AuthenticatedAssinaturasRoute
   '/_authenticated/barbeiros': typeof AuthenticatedBarbeirosRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/cobranca': typeof AuthenticatedCobrancaRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/horarios': typeof AuthenticatedHorariosRoute
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/assinaturas'
     | '/barbeiros'
     | '/clientes'
+    | '/cobranca'
     | '/configuracoes'
     | '/financeiro'
     | '/horarios'
@@ -286,6 +296,7 @@ export interface FileRouteTypes {
     | '/assinaturas'
     | '/barbeiros'
     | '/clientes'
+    | '/cobranca'
     | '/configuracoes'
     | '/financeiro'
     | '/horarios'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assinaturas'
     | '/_authenticated/barbeiros'
     | '/_authenticated/clientes'
+    | '/_authenticated/cobranca'
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
     | '/_authenticated/horarios'
@@ -448,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cobranca': {
+      id: '/_authenticated/cobranca'
+      path: '/cobranca'
+      fullPath: '/cobranca'
+      preLoaderRoute: typeof AuthenticatedCobrancaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -526,6 +545,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinaturasRoute: typeof AuthenticatedAssinaturasRoute
   AuthenticatedBarbeirosRoute: typeof AuthenticatedBarbeirosRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedCobrancaRoute: typeof AuthenticatedCobrancaRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedHorariosRoute: typeof AuthenticatedHorariosRoute
@@ -541,6 +561,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinaturasRoute: AuthenticatedAssinaturasRoute,
   AuthenticatedBarbeirosRoute: AuthenticatedBarbeirosRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedCobrancaRoute: AuthenticatedCobrancaRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedHorariosRoute: AuthenticatedHorariosRoute,
