@@ -106,6 +106,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -170,6 +177,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audit_logs_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       barbers: {
@@ -220,6 +234,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "barbers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       barbershop_members: {
@@ -247,6 +268,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barbershop_members_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
         ]
@@ -362,6 +390,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "billing_accounts_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: true
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       billing_cycles: {
@@ -407,6 +442,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
         ]
@@ -475,6 +517,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_invoices_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
           {
@@ -569,6 +618,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "billing_usages_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "billing_usages_cycle_id_fkey"
             columns: ["cycle_id"]
             isOneToOne: false
@@ -648,6 +704,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "business_hours_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       campaigns: {
@@ -687,6 +750,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaigns_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
         ]
@@ -752,6 +822,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "customer_subscriptions_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "customer_subscriptions_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -812,6 +889,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customers_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       loyalty_rewards: {
@@ -845,6 +929,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_rewards_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
         ]
@@ -915,6 +1006,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "push_subscriptions_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       schedule_breaks: {
@@ -969,6 +1067,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "schedule_breaks_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       services: {
@@ -1019,6 +1124,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "services_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       subscription_cycles: {
@@ -1067,6 +1179,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
           {
@@ -1127,6 +1246,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
           {
@@ -1206,6 +1332,13 @@ export type Database = {
             referencedRelation: "barbershops"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "subscription_plans_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
         ]
       }
       subscription_usages: {
@@ -1280,6 +1413,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "subscription_usages_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscription_usages_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
@@ -1318,6 +1458,75 @@ export type Database = {
       }
     }
     Views: {
+      public_barbershops: {
+        Row: {
+          accent_color: string | null
+          address: string | null
+          bg_color: string | null
+          brand_style: string | null
+          brand_symbol: string | null
+          cover_url: string | null
+          created_at: string | null
+          description: string | null
+          font_family: string | null
+          has_pix: boolean | null
+          id: string | null
+          instagram: string | null
+          logo_url: string | null
+          name: string | null
+          onboarding_done: boolean | null
+          phone: string | null
+          secondary_color: string | null
+          slug: string | null
+          template: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          address?: string | null
+          bg_color?: string | null
+          brand_style?: string | null
+          brand_symbol?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          font_family?: string | null
+          has_pix?: never
+          id?: string | null
+          instagram?: string | null
+          logo_url?: string | null
+          name?: string | null
+          onboarding_done?: boolean | null
+          phone?: string | null
+          secondary_color?: string | null
+          slug?: string | null
+          template?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          address?: string | null
+          bg_color?: string | null
+          brand_style?: string | null
+          brand_symbol?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          font_family?: string | null
+          has_pix?: never
+          id?: string | null
+          instagram?: string | null
+          logo_url?: string | null
+          name?: string | null
+          onboarding_done?: boolean | null
+          phone?: string | null
+          secondary_color?: string | null
+          slug?: string | null
+          template?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       subscription_cycle_balances: {
         Row: {
           barbershop_id: string | null
@@ -1342,6 +1551,13 @@ export type Database = {
             columns: ["barbershop_id"]
             isOneToOne: false
             referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_cycles_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "public_barbershops"
             referencedColumns: ["id"]
           },
           {
@@ -1461,6 +1677,14 @@ export type Database = {
         Returns: Json
       }
       public_shop_accepting: { Args: { _slug: string }; Returns: boolean }
+      public_shop_pix: {
+        Args: { _slug: string }
+        Returns: {
+          pix_holder_name: string
+          pix_key: string
+          pix_key_type: string
+        }[]
+      }
       refund_appointment_benefit: {
         Args: { _appointment_id: string; _reason?: string }
         Returns: Json
