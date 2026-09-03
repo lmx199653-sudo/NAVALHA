@@ -131,7 +131,7 @@ function SupportChatPage() {
       title="Suporte"
       subtitle="Fale com a equipe NAVALHA PRO"
       action={
-        <Button size="sm" onClick={() => setOpen(true)}>
+        <Button size="sm" aria-label="Nova conversa" onClick={() => setOpen(true)}>
           <MessageSquarePlus className="size-4" />
           <span className="hidden sm:inline">Nova conversa</span>
         </Button>
