@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { MessageCircle, Plus, Search, Star } from "lucide-react";
+import { MessageCircle, Plus, Search, Star, Users } from "lucide-react";
 
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { EmptyState, ErrorState, CardSkeleton } from "@/components/ui/states";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { brl, dateLabel, STATUS_LABEL } from "@/lib/format";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
@@ -57,7 +58,7 @@ function CustomersPage() {
   const [form, setForm] = useState(EMPTY);
   const [detail, setDetail] = useState<Customer | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["customers", shop?.id],
     enabled: !!shop?.id,
     queryFn: async () => {
@@ -231,23 +232,26 @@ function CustomersPage() {
         />
       </div>
 
-      {isLoading && (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
-        </div>
+      {isLoading && <CardSkeleton count={6} />}
+
+      {!isLoading && isError && (
+        <ErrorState onRetry={() => refetch()} description="Não foi possível carregar os clientes." />
       )}
 
-      {!isLoading && rows.length === 0 && (
-        <div className="surface-card p-10 text-center">
-          <p className="font-display text-2xl">Nenhum cliente encontrado</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Cadastre clientes com CPF para identificá-los rapidamente no atendimento.
-          </p>
-        </div>
+      {!isLoading && !isError && rows.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="Nenhum cliente encontrado"
+          description="Cadastre clientes com CPF para identificá-los rapidamente no atendimento."
+          action={
+            <Button size="sm" onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> Novo cliente
+            </Button>
+          }
+        />
       )}
 
+      {!isLoading && !isError && rows.length > 0 && (
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {rows.map((r) => (
           <button
@@ -287,6 +291,7 @@ function CustomersPage() {
           </button>
         ))}
       </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -300,16 +305,16 @@ function CustomersPage() {
               save.mutate();
             }}
           >
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Nome completo</Label>
               <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label>WhatsApp</Label>
                 <Input required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>CPF</Label>
                 <Input
                   inputMode="numeric"
@@ -319,8 +324,8 @@ function CustomersPage() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label>Nascimento</Label>
                 <Input
                   type="date"
@@ -328,7 +333,7 @@ function CustomersPage() {
                   onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label>E-mail</Label>
                 <Input
                   type="email"
@@ -337,13 +342,15 @@ function CustomersPage() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label>Observações</Label>
               <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
-            <Button className="w-full" disabled={save.isPending}>
-              Salvar
-            </Button>
+            <DialogFooter>
+              <Button className="w-full sm:w-auto" disabled={save.isPending}>
+                {save.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -413,7 +420,7 @@ function CustomersPage() {
                 {(detailData?.usages ?? []).map((u) => (
                   <div
                     key={u.id}
-                    className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2 text-xs"
+                    className="surface-row flex items-center justify-between px-3 py-2 text-xs"
                   >
                     <span>{dateLabel(u.created_at)}</span>
                     <span>{BENEFIT_LABEL[u.benefit_kind]}</span>
@@ -431,7 +438,7 @@ function CustomersPage() {
                 {detailRow.history.slice(0, 20).map((a) => (
                   <div
                     key={a.id}
-                    className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2 text-xs"
+                    className="surface-row flex items-center justify-between px-3 py-2 text-xs"
                   >
                     <span>{dateLabel(a.starts_at)}</span>
                     <span className="text-muted-foreground">
@@ -450,7 +457,7 @@ function CustomersPage() {
                 {detailPayments.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between rounded-lg bg-secondary/50 px-3 py-2 text-xs"
+                    className="surface-row flex items-center justify-between px-3 py-2 text-xs"
                   >
                     <span>{p.paid_at ? dateLabel(p.paid_at) : p.due_date ? dateLabel(p.due_date) : "—"}</span>
                     <span className="text-primary">{brl(p.amount_cents)}</span>
