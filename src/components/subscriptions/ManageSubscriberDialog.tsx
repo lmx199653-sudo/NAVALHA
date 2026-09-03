@@ -490,10 +490,7 @@ function Body({
           ) : (
             <ul className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
               {(history.data ?? []).map((h) => (
-                <li
-                  key={h.id}
-                  className="flex items-start gap-3 rounded-lg border border-border bg-background/40 p-2.5"
-                >
+                <li key={h.id} className="surface-row flex items-start gap-3 p-2.5">
                   <span
                     className={cn(
                       "mt-1.5 size-2 shrink-0 rounded-full",
@@ -528,7 +525,7 @@ function Body({
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-background/40 p-2.5">
-      <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="eyebrow mb-1">{label}</p>
       {children}
     </div>
   );
@@ -537,7 +534,7 @@ function Info({ label, children }: { label: string; children: React.ReactNode })
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/[0.03] p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-primary">{title}</p>
+      <p className="eyebrow text-primary">{title}</p>
       {children}
     </div>
   );

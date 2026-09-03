@@ -223,7 +223,7 @@ export function NewSubscriberDialog({
                         onChange={(e) => setTerm(e.target.value)}
                       />
                     </div>
-                    <div className="max-h-48 divide-y divide-border overflow-y-auto rounded-xl border border-border">
+                    <div className="max-h-48 space-y-1.5 overflow-y-auto rounded-xl border border-border p-1.5">
                       {matches.length === 0 && (
                         <div className="p-3 text-sm text-muted-foreground">
                           Nenhum cliente encontrado.{" "}
@@ -243,7 +243,7 @@ export function NewSubscriberDialog({
                             key={c.id}
                             type="button"
                             onClick={() => setCustomer(c)}
-                            className="surface-row flex w-full items-center justify-between gap-2 border-0 px-2.5 py-2.5 text-left"
+                            className="surface-row flex w-full items-center justify-between gap-2 px-2.5 py-2.5 text-left"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium">{c.name}</p>
