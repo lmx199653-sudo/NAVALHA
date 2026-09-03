@@ -243,7 +243,7 @@ export function NewSubscriberDialog({
                             key={c.id}
                             type="button"
                             onClick={() => setCustomer(c)}
-                            className="flex w-full items-center justify-between gap-2 p-2.5 text-left transition-colors hover:bg-secondary/60"
+                            className="surface-row flex w-full items-center justify-between gap-2 border-0 px-2.5 py-2.5 text-left"
                           >
                             <div className="min-w-0">
                               <p className="truncate text-sm font-medium">{c.name}</p>

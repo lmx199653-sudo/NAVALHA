@@ -47,11 +47,11 @@ export function PixKeyCard({ pixKey, pixKeyType, holderName, amountCents, compac
           <span className="font-display text-2xl text-primary">{brl(amountCents)}</span>
         )}
       </div>
-      <div className="mt-3 flex items-center gap-2">
-        <code className="min-w-0 flex-1 select-all break-all rounded-lg bg-background/70 px-3 py-2 text-sm">
+      <div className="mt-3 space-y-2">
+        <code className="block select-all break-all rounded-lg bg-background/70 px-3 py-2 text-sm">
           {key}
         </code>
-        <Button type="button" size={compact ? "sm" : "default"} onClick={copy} className="shrink-0">
+        <Button type="button" size={compact ? "sm" : "default"} onClick={copy} className="w-full">
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           {copied ? "Copiado" : "Copiar"}
         </Button>
