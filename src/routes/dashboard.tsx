@@ -249,20 +249,40 @@ function Dashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[22rem]">
-                <div className="surface-row px-3.5 py-3">
-                  <span className="eyebrow text-[10px]">Mês</span>
-                  <p className="mt-1.5 truncate font-display text-2xl leading-none text-success">
-                    {brl(revMonth)}
-                  </p>
+              <div className="lg:w-[22rem]">
+                <div className="flex gap-1 rounded-full bg-secondary/60 p-1">
+                  {PERIODS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setPeriod(p.key)}
+                      className={cn(
+                        "flex-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-colors",
+                        period === p.key
+                          ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
-                <div className="surface-row px-3.5 py-3">
-                  <span className="eyebrow text-[10px]">Ticket médio</span>
-                  <p className="mt-1.5 truncate font-display text-2xl leading-none">
-                    {brl(ticket)}
-                  </p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="surface-row px-3.5 py-3">
+                    <span className="eyebrow text-[10px]">Faturamento</span>
+                    <p className="mt-1.5 truncate font-display text-2xl leading-none text-success">
+                      {brl(periodRevenue)}
+                    </p>
+                  </div>
+                  <div className="surface-row px-3.5 py-3">
+                    <span className="eyebrow text-[10px]">Ticket médio</span>
+                    <p className="mt-1.5 truncate font-display text-2xl leading-none">
+                      {brl(periodTicket)}
+                    </p>
+                  </div>
                 </div>
               </div>
+
             </div>
 
             {/* Ações rápidas — alvos grandes no celular */}
