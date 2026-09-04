@@ -174,34 +174,36 @@ export function AppShell({
                 {group}
               </p>
               <div className="space-y-0.5">
-                {navItems.filter((item) => item.group === group).map((item) => {
-                  const active = pathname.startsWith(item.to);
-                  return (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                        active && "bg-sidebar-accent font-medium text-primary",
-                      )}
-                    >
-                      {active && (
-                        <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-primary shadow-[0_0_10px_var(--color-primary)]" />
-                      )}
-                      <item.icon
+                {navItems
+                  .filter((item) => item.group === group)
+                  .map((item) => {
+                    const active = pathname.startsWith(item.to);
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        aria-current={active ? "page" : undefined}
                         className={cn(
-                          "size-4 transition-colors",
-                          active
-                            ? "text-primary"
-                            : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
+                          "group relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                          active && "bg-sidebar-accent font-medium text-primary",
                         )}
-                      />
-                      {item.label}
-                      <NavBadge count={navBadges[item.to]} />
-                    </Link>
-                  );
-                })}
+                      >
+                        {active && (
+                          <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-primary shadow-[0_0_10px_var(--color-primary)]" />
+                        )}
+                        <item.icon
+                          className={cn(
+                            "size-4 transition-colors",
+                            active
+                              ? "text-primary"
+                              : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground",
+                          )}
+                        />
+                        {item.label}
+                        <NavBadge count={navBadges[item.to]} />
+                      </Link>
+                    );
+                  })}
               </div>
             </div>
           ))}
@@ -269,7 +271,6 @@ export function AppShell({
         </header>
 
         <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
-          
           <BillingBanner />
           <div className="animate-rise">{children}</div>
         </main>

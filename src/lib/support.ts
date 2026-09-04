@@ -16,7 +16,12 @@ export type SupportConversation = {
   support_unread: number;
   resolved_at: string | null;
   created_at: string;
-  barbershops?: { name: string; slug: string; phone: string | null; whatsapp: string | null } | null;
+  barbershops?: {
+    name: string;
+    slug: string;
+    phone: string | null;
+    whatsapp: string | null;
+  } | null;
   profiles?: { full_name: string | null; email: string | null; phone: string | null } | null;
 };
 
@@ -41,10 +46,7 @@ export type AppNotification = {
   created_at: string;
 };
 
-export const SUPPORT_STATUS: Record<
-  SupportStatus,
-  { label: string; tone: string; dot: string }
-> = {
+export const SUPPORT_STATUS: Record<SupportStatus, { label: string; tone: string; dot: string }> = {
   new: {
     label: "Novo",
     tone: "border-primary/40 bg-primary/10 text-primary",
@@ -94,10 +96,18 @@ export async function fetchInbox(): Promise<SupportConversation[]> {
   if (ids.length === 0) return rows;
   // Dados básicos do barbeiro (nome, e-mail, telefone) — visíveis só para a equipe de suporte.
   const { data: users } = await db.rpc("support_user_info", { _user_ids: ids });
-  const byId = new Map<string, { full_name: string | null; email: string | null; phone: string | null }>(
-    ((users ?? []) as { user_id: string; full_name: string | null; email: string | null; phone: string | null }[]).map(
-      (u) => [u.user_id, { full_name: u.full_name, email: u.email, phone: u.phone }],
-    ),
+  const byId = new Map<
+    string,
+    { full_name: string | null; email: string | null; phone: string | null }
+  >(
+    (
+      (users ?? []) as {
+        user_id: string;
+        full_name: string | null;
+        email: string | null;
+        phone: string | null;
+      }[]
+    ).map((u) => [u.user_id, { full_name: u.full_name, email: u.email, phone: u.phone }]),
   );
   return rows.map((r) => ({ ...r, profiles: byId.get(r.user_id) ?? null }));
 }

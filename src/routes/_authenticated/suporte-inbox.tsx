@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/suporte-inbox")({
   validateSearch: (s: Record<string, unknown>) => ({
-    c: typeof s['c'] === "string" ? s['c'] : undefined,
+    c: typeof s["c"] === "string" ? s["c"] : undefined,
   }),
   component: SupportInboxPage,
 });
@@ -93,8 +93,11 @@ function SupportInboxPage() {
   const unreadTotal = (convs ?? []).reduce((t, cv) => t + cv.support_unread, 0);
 
   const patch = useMutation({
-    mutationFn: (input: { id: string; data: Parameters<typeof updateConversation>[1]; msg: string }) =>
-      updateConversation(input.id, input.data).then(() => input.msg),
+    mutationFn: (input: {
+      id: string;
+      data: Parameters<typeof updateConversation>[1];
+      msg: string;
+    }) => updateConversation(input.id, input.data).then(() => input.msg),
     onSuccess: (msg) => {
       toast.success(msg);
       qc.invalidateQueries({ queryKey: ["support-inbox"] });
@@ -150,7 +153,11 @@ function SupportInboxPage() {
         {current.status !== "resolved" ? (
           <DropdownMenuItem
             onClick={() =>
-              patch.mutate({ id: current.id, data: { status: "resolved" }, msg: "Atendimento encerrado" })
+              patch.mutate({
+                id: current.id,
+                data: { status: "resolved" },
+                msg: "Atendimento encerrado",
+              })
             }
           >
             <CheckCircle2 className="size-4" /> Encerrar atendimento
@@ -158,7 +165,11 @@ function SupportInboxPage() {
         ) : (
           <DropdownMenuItem
             onClick={() =>
-              patch.mutate({ id: current.id, data: { status: "open" }, msg: "Atendimento reaberto" })
+              patch.mutate({
+                id: current.id,
+                data: { status: "open" },
+                msg: "Atendimento reaberto",
+              })
             }
           >
             <RotateCcw className="size-4" /> Reabrir
@@ -232,7 +243,12 @@ function SupportInboxPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
-                    <span className={cn("truncate text-sm", cv.support_unread > 0 ? "font-bold" : "font-semibold")}>
+                    <span
+                      className={cn(
+                        "truncate text-sm",
+                        cv.support_unread > 0 ? "font-bold" : "font-semibold",
+                      )}
+                    >
                       {shopName(cv)}
                     </span>
                     <span className="shrink-0 text-[11px] text-muted-foreground">

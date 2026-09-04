@@ -81,7 +81,10 @@ const DEMO_CUSTOMERS = [
   },
 ];
 
-async function countOf(table: "services" | "barbers" | "subscription_plans" | "customers" | "appointments", shopId: string) {
+async function countOf(
+  table: "services" | "barbers" | "subscription_plans" | "customers" | "appointments",
+  shopId: string,
+) {
   const { count } = await supabase
     .from(table)
     .select("id", { count: "exact", head: true })
@@ -171,7 +174,14 @@ export async function seedStarterData(shopId: string) {
 
   const cutService = services.find((s) => s.benefit_kind === "cut") ?? services[0]!;
   const beardService = services.find((s) => s.benefit_kind === "beard") ?? services[0]!;
-  const slots: { customer: number; dayOffset: number; hour: number; minute: number; service: typeof cutService; done: boolean }[] = [
+  const slots: {
+    customer: number;
+    dayOffset: number;
+    hour: number;
+    minute: number;
+    service: typeof cutService;
+    done: boolean;
+  }[] = [
     { customer: 0, dayOffset: -3, hour: 10, minute: 0, service: cutService, done: true },
     { customer: 1, dayOffset: -1, hour: 15, minute: 30, service: beardService, done: true },
     { customer: 0, dayOffset: 0, hour: 14, minute: 0, service: cutService, done: false },

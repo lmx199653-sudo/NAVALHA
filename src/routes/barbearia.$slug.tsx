@@ -258,7 +258,9 @@ function PublicBooking() {
       if (shopRow?.has_pix) {
         // Chave Pix só é buscada quando a barbearia aceita Pix, e apenas para esta barbearia.
         const { data: pixRows } = await (supabase.rpc as any)("public_shop_pix", { _slug: slug });
-        const pix = ((pixRows ?? []) as Pick<Shop, "pix_key" | "pix_key_type" | "pix_holder_name">[])[0];
+        const pix = (
+          (pixRows ?? []) as Pick<Shop, "pix_key" | "pix_key_type" | "pix_holder_name">[]
+        )[0];
         shop = { ...shopRow, ...(pix ?? {}) };
       }
       if (isDemo(slug) && !shop) {
