@@ -27,7 +27,7 @@ import { useShop } from "@/hooks/useShop";
 import { useIsSupport, useMyConversations, useInbox, useSupportRealtime } from "@/hooks/useSupport";
 import { canManage } from "@/lib/supabase-guard";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
-import { InstallAppCta } from "@/components/InstallAppCta";
+
 import { BillingBanner } from "@/components/BillingBanner";
 
 import { useBrand } from "@/lib/brand";
@@ -269,7 +269,7 @@ export function AppShell({
         </header>
 
         <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
-          <InstallAppCta />
+          
           <BillingBanner />
           <div className="animate-rise">{children}</div>
         </main>
