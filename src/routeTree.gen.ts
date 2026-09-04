@@ -15,7 +15,6 @@ import { Route as AgendarRouteImport } from './routes/agendar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ExcluirContaRouteImport } from './routes/excluir-conta'
-import { Route as InstalarAppRouteImport } from './routes/instalar-app'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SegurancaDadosRouteImport } from './routes/seguranca-dados'
 import { Route as SuporteRouteImport } from './routes/suporte'
@@ -65,11 +64,6 @@ const DashboardRoute = DashboardRouteImport.update({
 const ExcluirContaRoute = ExcluirContaRouteImport.update({
   id: '/excluir-conta',
   path: '/excluir-conta',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InstalarAppRoute = InstalarAppRouteImport.update({
-  id: '/instalar-app',
-  path: '/instalar-app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -189,7 +183,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/excluir-conta': typeof ExcluirContaRoute
-  '/instalar-app': typeof InstalarAppRoute
   '/privacidade': typeof PrivacidadeRoute
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
@@ -218,7 +211,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/excluir-conta': typeof ExcluirContaRoute
-  '/instalar-app': typeof InstalarAppRoute
   '/privacidade': typeof PrivacidadeRoute
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
@@ -249,7 +241,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/dashboard': typeof DashboardRoute
   '/excluir-conta': typeof ExcluirContaRoute
-  '/instalar-app': typeof InstalarAppRoute
   '/privacidade': typeof PrivacidadeRoute
   '/seguranca-dados': typeof SegurancaDadosRoute
   '/suporte': typeof SuporteRoute
@@ -280,7 +271,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/excluir-conta'
-    | '/instalar-app'
     | '/privacidade'
     | '/seguranca-dados'
     | '/suporte'
@@ -309,7 +299,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/excluir-conta'
-    | '/instalar-app'
     | '/privacidade'
     | '/seguranca-dados'
     | '/suporte'
@@ -339,7 +328,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/excluir-conta'
-    | '/instalar-app'
     | '/privacidade'
     | '/seguranca-dados'
     | '/suporte'
@@ -370,7 +358,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   DashboardRoute: typeof DashboardRoute
   ExcluirContaRoute: typeof ExcluirContaRoute
-  InstalarAppRoute: typeof InstalarAppRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SegurancaDadosRoute: typeof SegurancaDadosRoute
   SuporteRoute: typeof SuporteRoute
@@ -421,13 +408,6 @@ declare module '@tanstack/react-router' {
       path: '/excluir-conta'
       fullPath: '/excluir-conta'
       preLoaderRoute: typeof ExcluirContaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/instalar-app': {
-      id: '/instalar-app'
-      path: '/instalar-app'
-      fullPath: '/instalar-app'
-      preLoaderRoute: typeof InstalarAppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -626,7 +606,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   DashboardRoute: DashboardRoute,
   ExcluirContaRoute: ExcluirContaRoute,
-  InstalarAppRoute: InstalarAppRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SegurancaDadosRoute: SegurancaDadosRoute,
   SuporteRoute: SuporteRoute,
