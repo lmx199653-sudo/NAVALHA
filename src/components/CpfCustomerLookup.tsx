@@ -154,6 +154,10 @@ export function CpfCustomerLookup({
           ) : (
             <div className="space-y-3">
               <div className="space-y-2">
+                <Label>CPF</Label>
+                <Input value={cpfMask(cpf)} readOnly className="bg-secondary/40" />
+              </div>
+              <div className="space-y-2">
                 <Label>Nome completo</Label>
                 <Input
                   value={form.name}
