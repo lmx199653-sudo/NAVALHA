@@ -38,6 +38,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { requireLoginInApp } from "@/lib/app-auth";
+import { cn } from "@/lib/utils";
+
+type PeriodKey = "hoje" | "7d" | "mes";
+
+const PERIODS: { key: PeriodKey; label: string }[] = [
+  { key: "hoje", label: "Hoje" },
+  { key: "7d", label: "7 dias" },
+  { key: "mes", label: "Mês" },
+];
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -91,6 +100,16 @@ function Dashboard() {
   const { data: shop, isSuccess, isError: isShopError } = useShop();
   const isMobile = useIsMobile();
   const [chartTab, setChartTab] = useState("faturamento");
+  const [period, setPeriod] = useState<PeriodKey>("mes");
+
+  // O barbeiro escolhe o período e a preferência fica salva no aparelho.
+  useEffect(() => {
+    const saved = localStorage.getItem("dashboard-period");
+    if (saved === "hoje" || saved === "7d" || saved === "mes") setPeriod(saved);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("dashboard-period", period);
+  }, [period]);
 
   useEffect(() => {
     if (userId && (isSuccess || isShopError) && !shop)
@@ -148,9 +167,7 @@ function Dashboard() {
     .slice(0, 6);
   const monthAppts = appts.filter((a) => new Date(a.starts_at) >= monthStart);
   const revToday = todays.filter(paid).reduce((s, a) => s + a.price_cents, 0);
-  const revMonth = monthAppts.filter(paid).reduce((s, a) => s + a.price_cents, 0);
   const doneMonth = monthAppts.filter(paid).length;
-  const ticket = doneMonth ? revMonth / doneMonth : 0;
 
   // Faturamento e ticket médio do período escolhido pelo barbeiro.
   const periodStart =
