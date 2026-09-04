@@ -77,7 +77,12 @@ type Appt = {
   customer_name: string;
   barber_id: string | null;
   service_id: string | null;
+  notes?: string | null;
 };
+
+/** Agendamentos criados apenas como exemplo não entram nos números do painel. */
+const DEMO_NOTE = "Agendamento de demonstração";
+
 
 const chartTooltip = {
   background: "var(--color-card)",
