@@ -36,7 +36,7 @@ export function CpfCustomerLookup({
   const [result, setResult] = useState<CpfLookup | null>(null);
   const [invalid, setInvalid] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const [form, setForm] = useState({ name: "", phone: "" });
   const [saving, setSaving] = useState(false);
   const latest = useRef(0);
 
@@ -86,7 +86,6 @@ export function CpfCustomerLookup({
       barbershop_id: shopId,
       name: form.name.trim(),
       phone: form.phone.trim() || null,
-      email: form.email.trim() || null,
       cpf: cpfDigits(cpf),
     });
     setSaving(false);
