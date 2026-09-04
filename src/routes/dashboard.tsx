@@ -151,6 +151,18 @@ function Dashboard() {
   const revMonth = monthAppts.filter(paid).reduce((s, a) => s + a.price_cents, 0);
   const doneMonth = monthAppts.filter(paid).length;
   const ticket = doneMonth ? revMonth / doneMonth : 0;
+
+  // Faturamento e ticket médio do período escolhido pelo barbeiro.
+  const periodStart =
+    period === "hoje"
+      ? new Date(new Date().setHours(0, 0, 0, 0))
+      : period === "7d"
+        ? new Date(now - 6 * 86400000)
+        : monthStart;
+  const periodDone = appts.filter((a) => paid(a) && new Date(a.starts_at) >= periodStart);
+  const periodRevenue = periodDone.reduce((s, a) => s + a.price_cents, 0);
+  const periodTicket = periodDone.length ? periodRevenue / periodDone.length : 0;
+
   const canceled = monthAppts.filter((a) => a.status === "canceled").length;
   const noShow = monthAppts.filter((a) => a.status === "no_show").length;
   const occupancy = Math.min(
