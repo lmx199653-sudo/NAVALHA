@@ -204,7 +204,7 @@ export function AppShell({
               </div>
             </div>
           ))}
-          {!installed && (
+          {(
             <div>
               <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">
                 Cliente
@@ -329,7 +329,7 @@ export function AppShell({
                 </SheetTitle>
               </SheetHeader>
               <div className="grid grid-cols-3 gap-2 px-4 pb-6">
-                {!installed && (
+                {(
                   <Link
                     to="/agendar"
                     onClick={() => setMenuOpen(false)}
