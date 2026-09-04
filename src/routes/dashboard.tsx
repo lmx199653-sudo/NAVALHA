@@ -135,7 +135,7 @@ function Dashboard() {
       const [appts, customers, barbers, services] = await Promise.all([
         supabase
           .from("appointments")
-          .select("id, starts_at, price_cents, status, customer_name, barber_id, service_id")
+          .select("id, starts_at, price_cents, status, customer_name, barber_id, service_id, notes")
           .eq("barbershop_id", shop!.id)
           .gte("starts_at", since.toISOString())
           .order("starts_at"),
@@ -154,7 +154,7 @@ function Dashboard() {
 
   const data = liveData;
 
-  const appts = (data?.appts ?? []) as Appt[];
+  const appts = ((data?.appts ?? []) as Appt[]).filter((a) => a.notes !== DEMO_NOTE);
   const customers = (data?.customers ?? []) as { id: string; created_at: string }[];
   const barbers = (data?.barbers ?? []) as { id: string; name: string }[];
   const services = (data?.services ?? []) as { id: string; name: string }[];
