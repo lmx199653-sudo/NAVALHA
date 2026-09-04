@@ -38,6 +38,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { requireLoginInApp } from "@/lib/app-auth";
+import { cn } from "@/lib/utils";
+
+type PeriodKey = "hoje" | "7d" | "mes";
+
+const PERIODS: { key: PeriodKey; label: string }[] = [
+  { key: "hoje", label: "Hoje" },
+  { key: "7d", label: "7 dias" },
+  { key: "mes", label: "Mês" },
+];
 
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
@@ -91,6 +100,16 @@ function Dashboard() {
   const { data: shop, isSuccess, isError: isShopError } = useShop();
   const isMobile = useIsMobile();
   const [chartTab, setChartTab] = useState("faturamento");
+  const [period, setPeriod] = useState<PeriodKey>("mes");
+
+  // O barbeiro escolhe o período e a preferência fica salva no aparelho.
+  useEffect(() => {
+    const saved = localStorage.getItem("dashboard-period");
+    if (saved === "hoje" || saved === "7d" || saved === "mes") setPeriod(saved);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("dashboard-period", period);
+  }, [period]);
 
   useEffect(() => {
     if (userId && (isSuccess || isShopError) && !shop)
@@ -148,9 +167,19 @@ function Dashboard() {
     .slice(0, 6);
   const monthAppts = appts.filter((a) => new Date(a.starts_at) >= monthStart);
   const revToday = todays.filter(paid).reduce((s, a) => s + a.price_cents, 0);
-  const revMonth = monthAppts.filter(paid).reduce((s, a) => s + a.price_cents, 0);
   const doneMonth = monthAppts.filter(paid).length;
-  const ticket = doneMonth ? revMonth / doneMonth : 0;
+
+  // Faturamento e ticket médio do período escolhido pelo barbeiro.
+  const periodStart =
+    period === "hoje"
+      ? new Date(new Date().setHours(0, 0, 0, 0))
+      : period === "7d"
+        ? new Date(now - 6 * 86400000)
+        : monthStart;
+  const periodDone = appts.filter((a) => paid(a) && new Date(a.starts_at) >= periodStart);
+  const periodRevenue = periodDone.reduce((s, a) => s + a.price_cents, 0);
+  const periodTicket = periodDone.length ? periodRevenue / periodDone.length : 0;
+
   const canceled = monthAppts.filter((a) => a.status === "canceled").length;
   const noShow = monthAppts.filter((a) => a.status === "no_show").length;
   const occupancy = Math.min(
@@ -249,20 +278,40 @@ function Dashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[22rem]">
-                <div className="surface-row px-3.5 py-3">
-                  <span className="eyebrow text-[10px]">Mês</span>
-                  <p className="mt-1.5 truncate font-display text-2xl leading-none text-success">
-                    {brl(revMonth)}
-                  </p>
+              <div className="lg:w-[22rem]">
+                <div className="flex gap-1 rounded-full bg-secondary/60 p-1">
+                  {PERIODS.map((p) => (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setPeriod(p.key)}
+                      className={cn(
+                        "flex-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-colors",
+                        period === p.key
+                          ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
-                <div className="surface-row px-3.5 py-3">
-                  <span className="eyebrow text-[10px]">Ticket médio</span>
-                  <p className="mt-1.5 truncate font-display text-2xl leading-none">
-                    {brl(ticket)}
-                  </p>
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="surface-row px-3.5 py-3">
+                    <span className="eyebrow text-[10px]">Faturamento</span>
+                    <p className="mt-1.5 truncate font-display text-2xl leading-none text-success">
+                      {brl(periodRevenue)}
+                    </p>
+                  </div>
+                  <div className="surface-row px-3.5 py-3">
+                    <span className="eyebrow text-[10px]">Ticket médio</span>
+                    <p className="mt-1.5 truncate font-display text-2xl leading-none">
+                      {brl(periodTicket)}
+                    </p>
+                  </div>
                 </div>
               </div>
+
             </div>
 
             {/* Ações rápidas — alvos grandes no celular */}
