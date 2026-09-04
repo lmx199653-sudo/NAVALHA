@@ -252,13 +252,19 @@ function PublicBooking() {
     queryKey: ["public-shop", slug],
     queryFn: async () => {
       // Dados públicos da barbearia (sem CPF/CNPJ) via função dedicada.
-      const { data: shopRows } = await (supabase.rpc as any)("public_shop", { _slug: slug });
+      const rpc = supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: unknown }>;
+      const { data: shopRows } = await rpc("public_shop", { _slug: slug });
       const shopRow = ((shopRows ?? []) as (Shop & { has_pix?: boolean })[])[0] ?? null;
       let shop: Shop | null = shopRow;
       if (shopRow?.has_pix) {
         // Chave Pix só é buscada quando a barbearia aceita Pix, e apenas para esta barbearia.
-        const { data: pixRows } = await (supabase.rpc as any)("public_shop_pix", { _slug: slug });
-        const pix = ((pixRows ?? []) as Pick<Shop, "pix_key" | "pix_key_type" | "pix_holder_name">[])[0];
+        const { data: pixRows } = await rpc("public_shop_pix", { _slug: slug });
+        const pix = (
+          (pixRows ?? []) as Pick<Shop, "pix_key" | "pix_key_type" | "pix_holder_name">[]
+        )[0];
         shop = { ...shopRow, ...(pix ?? {}) };
       }
       if (isDemo(slug) && !shop) {

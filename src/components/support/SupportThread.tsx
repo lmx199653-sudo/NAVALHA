@@ -130,7 +130,12 @@ export function SupportThread({
       if (!body && !file) return;
       let path: string | null = null;
       if (file) path = await uploadAttachment(conversation.id, file);
-      await sendMessage({ conversationId: conversation.id, senderId: userId, body, attachmentPath: path });
+      await sendMessage({
+        conversationId: conversation.id,
+        senderId: userId,
+        body,
+        attachmentPath: path,
+      });
     },
     onSuccess: () => {
       setText("");
@@ -148,7 +153,13 @@ export function SupportThread({
       {/* Cabeçalho */}
       <div className="flex items-center gap-2 border-b border-border/60 px-3 py-2.5 sm:px-4">
         {onBack && (
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onBack} aria-label="Voltar">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onBack}
+            aria-label="Voltar"
+          >
             <ArrowLeft className="size-4" />
           </Button>
         )}
@@ -159,7 +170,10 @@ export function SupportThread({
           </p>
         </div>
         {conversation.urgent && (
-          <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive">
+          <Badge
+            variant="outline"
+            className="border-destructive/40 bg-destructive/10 text-destructive"
+          >
             Urgente
           </Badge>
         )}
@@ -236,7 +250,11 @@ export function SupportThread({
             disabled={disabled || send.isPending || (!text.trim() && !file)}
             onClick={() => send.mutate()}
           >
-            {send.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            {send.isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Send className="size-4" />
+            )}
           </Button>
         </div>
       </div>

@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/suporte-chat")({
   validateSearch: (s: Record<string, unknown>) => ({
-    c: typeof s['c'] === "string" ? s['c'] : undefined,
+    c: typeof s["c"] === "string" ? s["c"] : undefined,
   }),
   component: SupportChatPage,
 });
