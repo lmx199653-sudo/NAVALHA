@@ -129,19 +129,15 @@ export async function createConversation(input: {
   subject: string;
   body: string;
 }): Promise<string> {
-  const { data, error } = await db
-    .from("support_conversations")
-    .insert({
-      user_id: input.userId,
-      barbershop_id: input.barbershopId,
-      subject: input.subject.trim() || "Ajuda",
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  const id = data.id as string;
-  await sendMessage({ conversationId: id, senderId: input.userId, body: input.body });
-  return id;
+  // A criação + primeira mensagem + e-mail de aviso rodam no servidor (RLS como
+  // o usuário autenticado). O e-mail não bloqueia o fluxo em caso de falha.
+  return createSupportConversation({
+    data: {
+      subject: input.subject,
+      body: input.body,
+      barbershopId: input.barbershopId,
+    },
+  });
 }
 
 export async function sendMessage(input: {
