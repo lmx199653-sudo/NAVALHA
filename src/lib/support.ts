@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { createSupportConversation } from "@/lib/support.functions";
 
 export type SupportStatus = "new" | "open" | "resolved";
 
