@@ -16,7 +16,6 @@ import {
   Menu,
   Scissors,
   Settings,
-  Smartphone,
   Users,
   UserSquare2,
 } from "lucide-react";
@@ -26,7 +25,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { useIsSupport, useMyConversations, useInbox, useSupportRealtime } from "@/hooks/useSupport";
 import { canManage } from "@/lib/supabase-guard";
-import { usePwaInstall } from "@/hooks/usePwaInstall";
 
 import { BillingBanner } from "@/components/BillingBanner";
 
@@ -148,7 +146,6 @@ export function AppShell({
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [menuOpen, setMenuOpen] = useState(false);
-  const { installed } = usePwaInstall();
   const { items: navItems, badges: navBadges } = useNav();
   useBrand(shop);
 
@@ -207,7 +204,7 @@ export function AppShell({
               </div>
             </div>
           ))}
-          {!installed && (
+          {(
             <div>
               <p className="eyebrow px-2.5 pb-1.5 text-[10px] text-sidebar-foreground/40">
                 Cliente
@@ -332,7 +329,7 @@ export function AppShell({
                 </SheetTitle>
               </SheetHeader>
               <div className="grid grid-cols-3 gap-2 px-4 pb-6">
-                {!installed && (
+                {(
                   <Link
                     to="/agendar"
                     onClick={() => setMenuOpen(false)}
@@ -368,16 +365,6 @@ export function AppShell({
                     </Link>
                   );
                 })}
-                {!installed && (
-                  <Link
-                    to="/instalar-app"
-                    onClick={() => setMenuOpen(false)}
-                    className="surface-row flex flex-col items-center gap-2 border-primary/50 px-2 py-4 text-center text-xs text-primary"
-                  >
-                    <Smartphone className="size-5" />
-                    <span className="leading-tight">Instalar APP</span>
-                  </Link>
-                )}
                 <button
                   onClick={() => {
                     setMenuOpen(false);

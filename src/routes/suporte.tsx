@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Mail, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
+import { LifeBuoy, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { LegalLayout, LegalSection, legalHead } from "@/components/LegalLayout";
 import { Button } from "@/components/ui/button";
 import { LEGAL } from "@/lib/legal";
@@ -8,16 +8,12 @@ export const Route = createFileRoute("/suporte")({
   head: () =>
     legalHead(
       "Suporte e Contato",
-      "Fale com o suporte do NAVALHA PRO: e-mail, perguntas frequentes, instalação do app e exclusão de conta.",
+      "Fale com o suporte do NAVALHA PRO: e-mail, perguntas frequentes e exclusão de conta.",
     ),
   component: SupportPage,
 });
 
 const FAQ: { q: string; a: string }[] = [
-  {
-    q: "Como instalo o app no celular?",
-    a: "Baixe pela Google Play ou acesse /instalar-app no navegador e siga o passo a passo para adicionar à tela inicial.",
-  },
   {
     q: "Esqueci minha senha. E agora?",
     a: "Na tela de login toque em “Esqueci minha senha” e siga o link enviado ao seu e-mail. Se entrou com Google, basta tocar em “Continuar com Google”.",
@@ -87,11 +83,6 @@ function SupportPage() {
 
       <LegalSection title="Atalhos úteis">
         <div className="flex flex-wrap gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to="/instalar-app">
-              <Smartphone className="size-4" /> Instalar app
-            </Link>
-          </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/excluir-conta">
               <Trash2 className="size-4" /> Excluir conta
