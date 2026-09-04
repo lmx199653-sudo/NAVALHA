@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -16,21 +16,27 @@ import {
   CalendarCheck,
   CalendarX2,
   CalendarClock,
+  ChevronRight,
   Coins,
+  Link2,
+  Scissors,
   Sparkles,
   Trophy,
-  TrendingUp,
   UserPlus,
   Users,
+  Wallet,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useSession, useShop } from "@/hooks/useShop";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
 
 import { brl, timeLabel, dateLabel } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { requireLoginInApp } from "@/lib/app-auth";
 
 export const Route = createFileRoute("/dashboard")({
@@ -64,10 +70,27 @@ type Appt = {
   service_id: string | null;
 };
 
+const chartTooltip = {
+  background: "var(--color-card)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 12,
+  color: "var(--color-foreground)",
+  fontSize: 12,
+};
+
+const quickActions = [
+  { to: "/agenda", label: "Agenda", icon: CalendarClock },
+  { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet },
+  { to: "/link", label: "Link", icon: Link2 },
+] as const;
+
 function Dashboard() {
   const navigate = useNavigate();
   const { userId } = useSession();
   const { data: shop, isSuccess, isError: isShopError } = useShop();
+  const isMobile = useIsMobile();
+  const [chartTab, setChartTab] = useState("faturamento");
 
   useEffect(() => {
     if (userId && (isSuccess || isShopError) && !shop)
@@ -157,16 +180,20 @@ function Dashboard() {
     }, {}),
   ).sort((a, b) => b[1] - a[1]);
 
-  const days = Array.from({ length: 14 }, (_, i) => {
+  const allDays = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (13 - i));
     const list = appts.filter((a) => new Date(a.starts_at).toDateString() === d.toDateString());
     return {
       dia: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+      diaCurto: d.toLocaleDateString("pt-BR", { day: "2-digit" }),
       faturamento: list.filter(paid).reduce((s, a) => s + a.price_cents, 0) / 100,
       agendamentos: list.length,
     };
   });
+  // No celular exibimos os últimos 7 dias para os rótulos não se sobreporem.
+  const days = isMobile ? allDays.slice(-7) : allDays;
+  const chartRangeLabel = isMobile ? "7 dias" : "14 dias";
 
   const insights = [
     `Você tem ${todays.length} agendamentos hoje e ${brl(revToday)} previstos.`,
@@ -179,6 +206,8 @@ function Dashboard() {
       : "Nenhuma falta registrada este mês. Excelente!",
   ];
 
+  const maxBarberRevenue = barberRevenue[0]?.[1] ?? 0;
+
   return (
     <AppShell
       title="Dashboard"
@@ -187,45 +216,78 @@ function Dashboard() {
       {isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-            <StatCard
-              size="hero"
-              label="Agendamentos hoje"
-              value={todays.length}
-              icon={CalendarCheck}
-              tone="gold"
-              hint={`${brl(revToday)} previstos hoje`}
-              loading={isLoading}
-            />
-            <StatCard
-              size="hero"
-              label="Faturamento do dia"
-              value={brl(revToday)}
-              icon={Coins}
-              loading={isLoading}
-            />
-            <StatCard
-              size="hero"
-              label="Faturamento do mês"
-              value={brl(revMonth)}
-              icon={TrendingUp}
-              tone="success"
-              loading={isLoading}
-            />
-            <StatCard
-              size="hero"
-              label="Ticket médio"
-              value={brl(ticket)}
-              icon={Coins}
-              loading={isLoading}
-            />
-          </div>
+        <div className="space-y-4 sm:space-y-5">
+          {/* Destaque do dia */}
+          <section className="surface-card relative overflow-hidden p-4 sm:p-6">
+            <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-primary/10 blur-3xl" />
+            <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div className="min-w-0">
+                <span className="eyebrow">Hoje</span>
+                {isLoading ? (
+                  <Skeleton className="mt-3 h-12 w-48" />
+                ) : (
+                  <p className="mt-2 font-display text-4xl leading-none text-primary sm:text-5xl">
+                    {todays.length}
+                    <span className="ml-2 align-middle text-base text-muted-foreground sm:text-lg">
+                      {todays.length === 1 ? "agendamento" : "agendamentos"}
+                    </span>
+                  </p>
+                )}
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {brl(revToday)} previstos · {occupancy}% de ocupação
+                </p>
+                {upcoming[0] && (
+                  <Link
+                    to="/agenda"
+                    className="mt-3 inline-flex max-w-full items-center gap-2 rounded-full bg-secondary/70 px-3 py-1.5 text-xs text-foreground/90 ring-1 ring-border/60"
+                  >
+                    <CalendarCheck className="size-3.5 shrink-0 text-primary" />
+                    <span className="truncate">
+                      Próximo {timeLabel(upcoming[0].starts_at)} · {upcoming[0].customer_name}
+                    </span>
+                  </Link>
+                )}
+              </div>
 
-          <div className="mt-3 grid gap-3 grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:w-[22rem]">
+                <div className="surface-row px-3.5 py-3">
+                  <span className="eyebrow text-[10px]">Mês</span>
+                  <p className="mt-1.5 truncate font-display text-2xl leading-none text-success">
+                    {brl(revMonth)}
+                  </p>
+                </div>
+                <div className="surface-row px-3.5 py-3">
+                  <span className="eyebrow text-[10px]">Ticket médio</span>
+                  <p className="mt-1.5 truncate font-display text-2xl leading-none">
+                    {brl(ticket)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Ações rápidas — alvos grandes no celular */}
+            <div className="relative mt-4 grid grid-cols-4 gap-2 sm:gap-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="surface-row flex min-h-16 flex-col items-center justify-center gap-1.5 px-2 py-3 text-center transition-colors hover:bg-secondary/60"
+                >
+                  <action.icon className="size-5 text-primary" />
+                  <span className="truncate text-[11px] font-medium sm:text-xs">
+                    {action.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* Indicadores compactos */}
+          <section className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
             <StatCard
               label="Clientes novos"
               value={newCustomers}
+              hint="no mês"
               icon={UserPlus}
               loading={isLoading}
             />
@@ -236,109 +298,124 @@ function Dashboard() {
               loading={isLoading}
             />
             <StatCard
-              label="Taxa de ocupação"
-              value={`${occupancy}%`}
-              hint="hoje"
-              icon={TrendingUp}
+              label="Atendimentos"
+              value={doneMonth}
+              hint="concluídos no mês"
+              icon={Scissors}
               loading={isLoading}
             />
             <StatCard
-              label="Cancelamentos / faltas"
+              label="Cancelam. / faltas"
               value={`${canceled} / ${noShow}`}
               icon={CalendarX2}
               tone="danger"
               loading={isLoading}
             />
-          </div>
+          </section>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-3">
-            <div className="surface-card p-4 lg:col-span-2">
-              <SectionHeader title="Faturamento (14 dias)" icon={TrendingUp} />
-              <div className="mt-4 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={days}>
-                    <defs>
-                      <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.6} />
-                        <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis
-                      dataKey="dia"
-                      tick={{ fontSize: 11 }}
-                      stroke="var(--color-muted-foreground)"
-                    />
-                    <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--color-card)",
-                        border: "1px solid var(--color-border)",
-                        borderRadius: 12,
-                        color: "var(--color-foreground)",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="faturamento"
-                      stroke="var(--color-primary)"
-                      fill="url(#gold)"
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+          {/* Gráficos — alternados por abas para caber no celular */}
+          <section className="surface-card p-3 sm:p-4">
+            <Tabs value={chartTab} onValueChange={setChartTab}>
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+                <p className="truncate font-display text-lg leading-none">
+                  Desempenho · {chartRangeLabel}
+                </p>
+                <TabsList className="shrink-0">
+                  <TabsTrigger value="faturamento" className="text-xs">
+                    <Coins className="size-3.5" /> Receita
+                  </TabsTrigger>
+                  <TabsTrigger value="agendamentos" className="text-xs">
+                    <CalendarClock className="size-3.5" /> Agenda
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </div>
 
-            <div className="surface-card p-4">
-              <SectionHeader title="Assistente IA" icon={Sparkles} />
-              <ul className="mt-3 space-y-2">
-                {insights.map((text) => (
-                  <li key={text} className="surface-row flex items-start gap-2.5 px-3.5 py-3">
-                    <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
-                    <span className="text-sm text-foreground/90">{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+              <TabsContent value="faturamento" className="mt-3">
+                <div className="h-52 w-full sm:h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={days} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.6} />
+                          <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                      <XAxis
+                        dataKey={isMobile ? "diaCurto" : "dia"}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 10 }}
+                        stroke="var(--color-muted-foreground)"
+                      />
+                      <YAxis
+                        width={44}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 10 }}
+                        stroke="var(--color-muted-foreground)"
+                      />
+                      <Tooltip contentStyle={chartTooltip} />
+                      <Area
+                        type="monotone"
+                        dataKey="faturamento"
+                        stroke="var(--color-primary)"
+                        fill="url(#gold)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <div className="surface-card p-4">
-              <SectionHeader title="Agendamentos por dia" icon={CalendarClock} />
-              <div className="mt-4 h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={days}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
-                    <XAxis
-                      dataKey="dia"
-                      tick={{ fontSize: 11 }}
-                      stroke="var(--color-muted-foreground)"
-                    />
-                    <YAxis tick={{ fontSize: 11 }} stroke="var(--color-muted-foreground)" />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--color-card)",
-                        border: "1px solid var(--color-border)",
-                        borderRadius: 12,
-                        color: "var(--color-foreground)",
-                      }}
-                    />
-                    <Bar dataKey="agendamentos" fill="var(--color-accent)" radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+              <TabsContent value="agendamentos" className="mt-3">
+                <div className="h-52 w-full sm:h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={days} margin={{ top: 4, right: 8, left: -18, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                      <XAxis
+                        dataKey={isMobile ? "diaCurto" : "dia"}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 10 }}
+                        stroke="var(--color-muted-foreground)"
+                      />
+                      <YAxis
+                        width={44}
+                        allowDecimals={false}
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 10 }}
+                        stroke="var(--color-muted-foreground)"
+                      />
+                      <Tooltip contentStyle={chartTooltip} />
+                      <Bar
+                        dataKey="agendamentos"
+                        fill="var(--color-accent)"
+                        radius={[6, 6, 0, 0]}
+                        maxBarSize={38}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </section>
 
+          {/* Próximos agendamentos + ranking */}
+          <section className="grid gap-4 lg:grid-cols-2">
             <div className="surface-card p-4">
               <SectionHeader
                 title="Próximos agendamentos"
-                {...(upcoming[0]
-                  ? {
-                      description: `Próximo: ${timeLabel(upcoming[0].starts_at)} · ${upcoming[0].customer_name}`,
-                    }
-                  : {})}
                 icon={CalendarCheck}
+                action={
+                  <Link
+                    to="/agenda"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    Ver agenda <ChevronRight className="size-3.5" />
+                  </Link>
+                }
               />
               <div className="mt-3 space-y-2">
                 {upcoming.length === 0 ? (
@@ -352,8 +429,13 @@ function Dashboard() {
                   upcoming.map((a) => (
                     <div
                       key={a.id}
-                      className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
+                      className="surface-row grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-3 py-3"
                     >
+                      <div className="flex size-11 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                        <span className="font-display text-sm leading-none text-primary">
+                          {timeLabel(a.starts_at)}
+                        </span>
+                      </div>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{a.customer_name}</p>
                         <p className="truncate text-xs text-muted-foreground">
@@ -361,43 +443,65 @@ function Dashboard() {
                         </p>
                       </div>
                       <div className="shrink-0 text-right">
-                        <p className="text-sm text-primary">{timeLabel(a.starts_at)}</p>
-                        <p className="text-xs text-muted-foreground">{dateLabel(a.starts_at)}</p>
+                        <p className="text-sm text-primary">{brl(a.price_cents)}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {dateLabel(a.starts_at)}
+                        </p>
                       </div>
                     </div>
                   ))
                 )}
               </div>
             </div>
-          </div>
 
-          <div className="mt-4 surface-card p-4">
-            <SectionHeader title="Ranking de barbeiros (mês)" icon={Trophy} />
-            <div className="mt-3 space-y-2">
-              {barberRevenue.length === 0 ? (
-                <EmptyState
-                  icon={Trophy}
-                  title="Sem atendimentos"
-                  description="Nenhum atendimento concluído no mês ainda."
-                  compact
-                />
-              ) : (
-                barberRevenue.map(([name, cents], i) => (
-                  <div
-                    key={name}
-                    className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Badge variant={i === 0 ? "default" : "secondary"}>{i + 1}º</Badge>
-                      <span className="text-sm">{name}</span>
+            <div className="surface-card p-4">
+              <SectionHeader title="Ranking de barbeiros (mês)" icon={Trophy} />
+              <div className="mt-3 space-y-2">
+                {barberRevenue.length === 0 ? (
+                  <EmptyState
+                    icon={Trophy}
+                    title="Sem atendimentos"
+                    description="Nenhum atendimento concluído no mês ainda."
+                    compact
+                  />
+                ) : (
+                  barberRevenue.map(([name, cents], i) => (
+                    <div key={name} className="surface-row px-3 py-3">
+                      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                        <Badge variant={i === 0 ? "default" : "secondary"} className="shrink-0">
+                          {i + 1}º
+                        </Badge>
+                        <span className="truncate text-sm">{name}</span>
+                        <span className="shrink-0 text-sm text-primary">{brl(cents)}</span>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary/70">
+                        <div
+                          className="h-full rounded-full bg-primary/70"
+                          style={{
+                            width: `${maxBarberRevenue ? Math.round((cents / maxBarberRevenue) * 100) : 0}%`,
+                          }}
+                        />
+                      </div>
                     </div>
-                    <span className="text-sm text-primary">{brl(cents)}</span>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
             </div>
-          </div>
-        </>
+          </section>
+
+          {/* Insights */}
+          <section className="surface-card p-4">
+            <SectionHeader title="Assistente IA" icon={Sparkles} />
+            <ul className="mt-3 grid gap-2 lg:grid-cols-2">
+              {insights.map((text) => (
+                <li key={text} className="surface-row flex items-start gap-2.5 px-3.5 py-3">
+                  <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span className="text-sm text-foreground/90">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       )}
     </AppShell>
   );
