@@ -22,7 +22,6 @@ import {
   Scissors,
   Sparkles,
   Trophy,
-  TrendingUp,
   UserPlus,
   Users,
   Wallet,
