@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { LifeBuoy, Mail, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
+import { LifeBuoy, Mail, ShieldCheck, Trash2 } from "lucide-react";
 import { LegalLayout, LegalSection, legalHead } from "@/components/LegalLayout";
 import { Button } from "@/components/ui/button";
 import { LEGAL } from "@/lib/legal";

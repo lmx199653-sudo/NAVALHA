@@ -16,7 +16,6 @@ import {
   Menu,
   Scissors,
   Settings,
-  Smartphone,
   Users,
   UserSquare2,
 } from "lucide-react";
