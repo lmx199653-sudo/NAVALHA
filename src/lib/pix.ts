@@ -149,7 +149,7 @@ function asciiOnly(s: string, max: number) {
   return s
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Za-z0-9 .\-]/g, "")
+    .replace(/[^A-Za-z0-9 .-]/g, "")
     .trim()
     .slice(0, max);
 }
