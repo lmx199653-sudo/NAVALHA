@@ -40,41 +40,7 @@ export const createSupportConversation = createServerFn({ method: "POST" })
     });
     if (msgError) throw msgError;
 
-    // 3. Coleta dados do barbeiro para o e-mail
-    const { data: profile } = await db
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", userId)
-      .maybeSingle();
 
-    let shopName = "—";
-    if (data.barbershopId) {
-      const { data: shop } = await db
-        .from("barbershops")
-        .select("name")
-        .eq("id", data.barbershopId)
-        .maybeSingle();
-      if (shop?.name) shopName = shop.name;
-    }
-
-    const barberName = profile?.full_name || profile?.email || "Barbeiro";
-    const when = new Date().toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    // 4. Envia o aviso por e-mail (não bloqueia em caso de falha)
-    await notifyNewTicket(
-      barberName,
-      profile?.email ?? null,
-      shopName,
-      subject,
-      data.body.trim(),
-      when,
-    );
 
     return conversationId;
   });
