@@ -252,10 +252,11 @@ function PublicBooking() {
     queryKey: ["public-shop", slug],
     queryFn: async () => {
       // Dados públicos da barbearia (sem CPF/CNPJ) via função dedicada.
-      const rpc = supabase.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: unknown }>;
+      // Importante: manter o `this` do cliente Supabase (não extrair o método solto).
+      const rpc = (fn: string, args: Record<string, unknown>) =>
+        (supabase.rpc as unknown as (f: string, a: Record<string, unknown>) => Promise<{
+          data: unknown;
+        }>).call(supabase, fn, args);
       const { data: shopRows } = await rpc("public_shop", { _slug: slug });
       const shopRow = ((shopRows ?? []) as (Shop & { has_pix?: boolean })[])[0] ?? null;
       let shop: Shop | null = shopRow;
