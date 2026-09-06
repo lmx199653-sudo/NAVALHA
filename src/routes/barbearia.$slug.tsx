@@ -258,7 +258,9 @@ function PublicBooking() {
         fn: string,
         args: Record<string, unknown>,
       ) => Promise<{ data: unknown }>;
-      const { data: shopRows } = await rpc("public_shop", { _slug: slug });
+      const r0 = await rpc("public_shop", { _slug: slug }).then((x)=>x, (e)=>{ console.log("RPC ERR", String(e)); throw e; });
+      console.log("RPC OK", JSON.stringify(r0));
+      const { data: shopRows } = r0;
       const shopRow = ((shopRows ?? []) as (Shop & { has_pix?: boolean })[])[0] ?? null;
       let shop: Shop | null = shopRow;
       if (shopRow?.has_pix) {
