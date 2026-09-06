@@ -201,7 +201,7 @@ function FinancePage() {
                         borderRadius: 8,
                         color: "var(--color-foreground)",
                       }}
-                      formatter={(v: number) => brl(v * 100)}
+                      formatter={(v) => brl(Number(v) * 100)}
                     />
                     <Bar dataKey="valor" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -222,7 +222,7 @@ function FinancePage() {
                       outerRadius={80}
                     >
                       {view.byService.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                        <Cell key={i} fill={COLORS[i % COLORS.length] ?? ""} />
                       ))}
                     </Pie>
                     <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -233,7 +233,7 @@ function FinancePage() {
                         borderRadius: 8,
                         color: "var(--color-foreground)",
                       }}
-                      formatter={(v: number) => brl(v * 100)}
+                      formatter={(v) => brl(Number(v) * 100)}
                     />
                   </PieChart>
                 </ResponsiveContainer>
