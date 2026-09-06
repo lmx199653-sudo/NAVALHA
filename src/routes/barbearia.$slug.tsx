@@ -225,6 +225,7 @@ function maskCpf(v: string) {
 
 function PublicBooking() {
   const { slug } = Route.useParams();
+  console.log("RENDER PublicBooking", typeof window !== "undefined");
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<Service[]>([]);
   const [barber, setBarber] = useState<Barber | null>(null);
