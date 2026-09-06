@@ -251,6 +251,7 @@ function PublicBooking() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-shop", slug],
     queryFn: async () => {
+      console.log("QF START", slug);
       // Dados públicos da barbearia (sem CPF/CNPJ) via função dedicada.
       const rpc = supabase.rpc as unknown as (
         fn: string,
