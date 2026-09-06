@@ -225,7 +225,6 @@ function maskCpf(v: string) {
 
 function PublicBooking() {
   const { slug } = Route.useParams();
-  console.log("RENDER PublicBooking", typeof window !== "undefined");
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<Service[]>([]);
   const [barber, setBarber] = useState<Barber | null>(null);
@@ -252,15 +251,12 @@ function PublicBooking() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-shop", slug],
     queryFn: async () => {
-      console.log("QF START", slug);
       // Dados públicos da barbearia (sem CPF/CNPJ) via função dedicada.
       const rpc = supabase.rpc as unknown as (
         fn: string,
         args: Record<string, unknown>,
       ) => Promise<{ data: unknown }>;
-      const r0 = await rpc("public_shop", { _slug: slug }).then((x)=>x, (e)=>{ console.log("RPC ERR", String(e)); throw e; });
-      console.log("RPC OK", JSON.stringify(r0));
-      const { data: shopRows } = r0;
+      const { data: shopRows } = await rpc("public_shop", { _slug: slug });
       const shopRow = ((shopRows ?? []) as (Shop & { has_pix?: boolean })[])[0] ?? null;
       let shop: Shop | null = shopRow;
       if (shopRow?.has_pix) {
