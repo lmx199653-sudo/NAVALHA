@@ -3,7 +3,7 @@
  *
  * Regras (aplicadas no banco):
  *  - 250 atendimentos concluídos grátis por barbearia.
- *  - Depois disso, R$ 0,20 por atendimento concluído, acumulado em ciclos de 30 dias.
+ *  - Depois disso, R$ 0,10 por atendimento concluído, acumulado em ciclos de 30 dias.
  *  - Cancelamentos, faltas e agendamentos não concluídos não geram cobrança.
  *  - Fim do ciclo: cobrança Pix. Prazo de 5 dias; depois "Cobrança pendente" por 5 dias;
  *    depois "Suspensa" (bloqueia novos agendamentos e funções administrativas).

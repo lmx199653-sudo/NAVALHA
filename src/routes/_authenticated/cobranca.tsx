@@ -45,7 +45,7 @@ function BillingPage() {
   const status = data ? BILLING_STATUS[data.status] : null;
   const inv = data?.open_invoice ?? null;
   const freePct = data ? Math.min(100, Math.round((data.free_used / data.free_quota) * 100)) : 0;
-  const unit = data ? brl(data.unit_price_cents) : "R$ 0,20";
+  const unit = data ? brl(data.unit_price_cents) : "R$ 0,10";
 
   return (
     <AppShell
