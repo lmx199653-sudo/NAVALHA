@@ -1,5 +1,5 @@
 import { friendlyError } from "@/lib/errors";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, Loader2, User, AlertCircle } from "lucide-react";
@@ -10,9 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import logoAsset from "@/assets/navalha-pro-logo.png.asset.json";
+import { LOGIN_REQUIRED } from "@/lib/app-auth";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  // Login temporariamente escondido: quem abrir esta tela vai direto ao painel.
+  beforeLoad: () => {
+    if (!LOGIN_REQUIRED) throw redirect({ to: "/dashboard", replace: true });
+  },
   head: () => ({
     meta: [
       { title: "Entrar | NAVALHA PRO — Agendamento para barbearias" },
