@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.navalhapro.oficial",
       "sha256_cert_fingerprints": [
-        "3E:1D:29:64:2F:BE:F2:9A:E4:C1:D5:B3:12:38:BE:6B:D0:46:B0:5C:14:87:40:09:B9:73:F8:7D:32:34:A7:7D"
+        "3E:1D:29:64:2F:BE:F2:9A:E4:C1:D5:B3:12:38:BE:6B:D0:46:B0:5C:14:87:40:09:B9:73:F8:7D:32:34:A7:7D",
+        "F9:49:E9:00:0E:F5:07:35:2B:0C:8C:66:FF:DD:C5:18:BC:48:0D:78:6F:F5:9E:C5:C7:2E:70:2A:D9:D6:EA:5B"
       ]
     }
   }
