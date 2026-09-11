@@ -5,9 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,20 +38,10 @@ jobs:
       - name: Build Release Bundle (AAB)
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon --stacktrace
+          ./gradlew bundleRelease --stacktrace > build.log 2>&1 || (tail -n 150 build.log && exit 1)
 
       - name: Upload Android App Bundle (AAB)
         uses: actions/upload-artifact@v4
         with:
           name: app-release-bundle
           path: android/app/build/outputs/bundle/release/*.aab
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v1.0.1
-          name: "NAVALHA PRO v1.0.1 - Capacitor Release"
-          body: "Versão oficial para Google Play Console com Capacitor nativo (sem barra de navegador)."
-          files: android/app/build/outputs/bundle/release/*.aab
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
