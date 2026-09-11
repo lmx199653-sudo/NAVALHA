@@ -25,7 +25,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-36 platforms;android-35 build-tools;35.0.0'
+          packages: 'platforms;android-36 platforms;android-35 build-tools;36.0.0 build-tools;35.0.0'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.1
-          name: "NAVALHA PRO v1.0.1 - Capacitor Release"
-          body: "Versão oficial para Google Play Console com Capacitor nativo (sem barra de navegador)."
+          tag_name: v1.0.2
+          name: "NAVALHA PRO v1.0.2 - Target SDK 36"
+          body: "Versão oficial para Google Play Console com Capacitor nativo (sem barra de navegador) e Target SDK 36."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
