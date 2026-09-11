@@ -22,32 +22,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies
-        run: npm ci || npm install
-
-      - name: Build Web Assets
-        run: npm run build
-
       - name: Make Gradle executable
         run: chmod +x android/gradlew
-
-      - name: Ensure fallback index.html for Capacitor
-        run: |
-          mkdir -p dist
-          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>NAVALHA PRO</title></head><body>Carregando...</body></html>' > dist/index.html
-
-      - name: Copy Assets to Capacitor Android
-        run: npx cap copy android
 
       - name: Build Release Bundle (AAB)
         run: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease --stacktrace
 
       - name: Upload Android App Bundle (AAB)
         uses: actions/upload-artifact@v4
