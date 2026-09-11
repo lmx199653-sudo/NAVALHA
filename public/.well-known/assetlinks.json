@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.lovable.pronavalha.twa",
+      "package_name": "com.navalhapro.oficial",
       "sha256_cert_fingerprints": [
-        "SUBSTITUA_PELO_SHA256_DA_CHAVE_DE_ASSINATURA_DO_PLAY_APP_SIGNING"
+        "3E:1D:29:64:2F:BE:F2:9A:E4:C1:D5:B3:12:38:BE:6B:D0:46:B0:5C:14:87:40:09:B9:73:F8:7D:32:34:A7:7D"
       ]
     }
   }
