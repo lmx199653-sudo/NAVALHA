@@ -41,7 +41,7 @@ jobs:
       - name: Build Release Bundle (AAB)
         run: |
           cd android
-          ./gradlew bundleRelease --stacktrace > build.log 2>&1 || (tail -n 150 build.log && exit 1)
+          ./gradlew bundleRelease
 
       - name: Upload Android App Bundle (AAB)
         uses: actions/upload-artifact@v4
