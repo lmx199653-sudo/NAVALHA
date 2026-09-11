@@ -18,12 +18,10 @@ android {
     }
     signingConfigs {
         release {
-            if (file('signing.keystore').exists()) {
-                storeFile file('signing.keystore')
-                storePassword 'jlRNx3Qn5xKg'
-                keyAlias 'my-key-alias'
-                keyPassword 'jlRNx3Qn5xKg'
-            }
+            storeFile file("${projectDir}/signing.keystore")
+            storePassword 'jlRNx3Qn5xKg'
+            keyAlias 'my-key-alias'
+            keyPassword 'jlRNx3Qn5xKg'
         }
     }
     buildTypes {
