@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.2
-          name: "NAVALHA PRO v1.0.2 - Target SDK 36"
-          body: "Versão oficial para Google Play Console com Capacitor nativo (sem barra de navegador) e Target SDK 36."
+          tag_name: v1.0.3
+          name: "NAVALHA PRO v1.0.3 - Target SDK 36"
+          body: "Versão oficial para Google Play Console com Capacitor nativo e Target SDK 36."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
