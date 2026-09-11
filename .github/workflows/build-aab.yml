@@ -36,6 +36,11 @@ jobs:
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
+      - name: Ensure fallback index.html for Capacitor
+        run: |
+          mkdir -p dist
+          echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>NAVALHA PRO</title></head><body>Carregando...</body></html>' > dist/index.html
+
       - name: Copy Assets to Capacitor Android
         run: npx cap copy android
 
