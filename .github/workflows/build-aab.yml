@@ -21,6 +21,8 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-35 build-tools;35.0.0'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,7 +38,15 @@ jobs:
       - name: Build Release Bundle (AAB)
         run: |
           cd android
-          ./gradlew bundleRelease --stacktrace
+          ./gradlew bundleRelease --no-daemon --stacktrace 2>&1 | tee ../gradle_output.log
+
+      - name: Report Build Output
+        if: always()
+        run: |
+          echo "### Gradle Build Log" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -n 120 gradle_output.log >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Android App Bundle (AAB)
         uses: actions/upload-artifact@v4
