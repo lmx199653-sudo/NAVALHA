@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,3 +48,14 @@ jobs:
         with:
           name: app-release-bundle
           path: android/app/build/outputs/bundle/release/*.aab
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: v1.0.1
+          name: "NAVALHA PRO v1.0.1 - Capacitor Release"
+          body: "Versão oficial para Google Play Console com Capacitor nativo (sem barra de navegador)."
+          files: android/app/build/outputs/bundle/release/*.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

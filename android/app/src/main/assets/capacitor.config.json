@@ -1,0 +1,10 @@
+{
+	"appId": "com.navalhapro.oficial",
+	"appName": "NAVALHA PRO",
+	"webDir": "dist",
+	"server": {
+		"url": "https://pronavalha.lovable.app",
+		"cleartext": false,
+		"androidScheme": "https"
+	}
+}
