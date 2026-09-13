@@ -42,8 +42,16 @@ function Onboarding() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId) return;
     setLoading(true);
+    // Se a sessão ainda não estiver carregada no estado, busca direto —
+    // assim o cadastro nunca falha silenciosamente.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const ownerId = userId ?? sessionData.session?.user.id ?? null;
+    if (!ownerId) {
+      setLoading(false);
+      toast.error("Entre na sua conta para criar a barbearia.");
+      return;
+    }
     const slug = slugify(form.slug || form.name);
     const { celular, ...rest } = form;
     const payload = {
@@ -51,7 +59,7 @@ function Onboarding() {
       slug,
       phone: celular,
       cpf_cnpj: form.cpf_cnpj || null,
-      owner_id: userId,
+      owner_id: ownerId,
       onboarding_done: true,
       logo_url: brand.logo_url,
       accent_color: brand.accent_color,
@@ -61,25 +69,53 @@ function Onboarding() {
     };
 
     const returning = "id, slug, name, onboarding_done";
-    const { data, error } = shop
+    // A barbearia pode já existir (criada automaticamente em outra tela):
+    // nesse caso atualizamos em vez de tentar criar outra.
+    const existingId =
+      shop?.id ??
+      (
+        await supabase
+          .from("barbershops")
+          .select("id")
+          .eq("owner_id", ownerId)
+          .order("created_at")
+          .limit(1)
+          .maybeSingle()
+      ).data?.id ??
+      null;
+
+    let { data, error } = existingId
       ? await supabase
           .from("barbershops")
           .update(payload)
-          .eq("id", shop.id)
+          .eq("id", existingId)
           .select(returning)
           .single()
       : await supabase.from("barbershops").insert(payload).select(returning).single();
 
+    // Endereço público já usado: gera uma variação automaticamente.
+    if (error && /slug/i.test(error.message) && /duplicate|unique/i.test(error.message)) {
+      const retryPayload = { ...payload, slug: `${slug}-${Date.now().toString(36).slice(-4)}` };
+      ({ data, error } = existingId
+        ? await supabase
+            .from("barbershops")
+            .update(retryPayload)
+            .eq("id", existingId)
+            .select(returning)
+            .single()
+        : await supabase.from("barbershops").insert(retryPayload).select(returning).single());
+    }
+
     if (error || !data) {
       setLoading(false);
-      toast.error(error ? friendlyError(error.message) : "Não foi possível salvar");
+      toast.error(error ? friendlyError(error.message) : "Não foi possível salvar os dados.");
       return;
     }
 
     await supabase
       .from("barbershop_members")
       .upsert(
-        { barbershop_id: data.id, user_id: userId, role: "owner" },
+        { barbershop_id: data.id, user_id: ownerId, role: "owner" },
         { onConflict: "barbershop_id,user_id" },
       );
 
@@ -97,7 +133,7 @@ function Onboarding() {
     // Conta nova já vem com serviços, barbeiros, 3 planos de teste e 2 clientes
     // de demonstração (com assinaturas ativas e agendamentos). Cada etapa checa
     // se já existem dados antes de inserir — nunca duplica em barbearias existentes.
-    if (!shop) {
+    {
       try {
         await seedStarterData(data.id);
       } catch {
