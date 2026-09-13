@@ -90,7 +90,11 @@ export function friendlyError(message: string | null | undefined) {
   }
 
   // Servidor
-  if (m.includes("internal server error") || m.includes("500") || m.includes("service unavailable")) {
+  if (
+    m.includes("internal server error") ||
+    m.includes("500") ||
+    m.includes("service unavailable")
+  ) {
     return "O sistema está instável no momento. Tente novamente em instantes.";
   }
 
