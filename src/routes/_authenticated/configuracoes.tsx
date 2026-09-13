@@ -19,6 +19,8 @@ import { DeleteAccountDialog } from "@/components/DeleteAccountDialog";
 import { LEGAL, LEGAL_LINKS } from "@/lib/legal";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
+import { ensureShopId } from "@/lib/shop";
+import { slugify } from "@/lib/format";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +81,7 @@ function SettingsPage() {
 
   const saveBrand = useMutation({
     mutationFn: async (b: Brand) => {
+      const shopId = shop?.id ?? (await ensureShopId(form.name || b.name));
       const { error } = await supabase
         .from("barbershops")
         .update({
@@ -88,7 +91,7 @@ function SettingsPage() {
           bg_color: b.bg_color,
           font_family: b.font_family,
         })
-        .eq("id", shop!.id);
+        .eq("id", shopId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -100,17 +103,19 @@ function SettingsPage() {
 
   const saveShop = useMutation({
     mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("Informe o nome da barbearia.");
+      const shopId = shop?.id ?? (await ensureShopId(form.name));
       const { error } = await supabase
         .from("barbershops")
         .update({
           name: form.name,
-          slug: form.slug,
+          slug: slugify(form.slug || form.name),
           phone: form.phone,
           address: form.address,
           description: form.description,
           cover_url: form.cover_url || null,
         })
-        .eq("id", shop!.id);
+        .eq("id", shopId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -133,6 +138,7 @@ function SettingsPage() {
       if (!clear) {
         if (!detected || !detected.ok) throw new Error(detected?.reason ?? "Informe a chave Pix.");
       }
+      const shopId = shop?.id ?? (await ensureShopId(form.name));
       const { error } = await supabase
         .from("barbershops")
         .update(
@@ -144,7 +150,7 @@ function SettingsPage() {
                 pix_holder_name: pix.holder.trim() || null,
               },
         )
-        .eq("id", shop!.id);
+        .eq("id", shopId);
       if (error) throw error;
     },
     onSuccess: (_, clear) => {
