@@ -42,8 +42,16 @@ function Onboarding() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!userId) return;
     setLoading(true);
+    // Se a sessão ainda não estiver carregada no estado, busca direto —
+    // assim o cadastro nunca falha silenciosamente.
+    const { data: sessionData } = await supabase.auth.getSession();
+    const ownerId = userId ?? sessionData.session?.user.id ?? null;
+    if (!ownerId) {
+      setLoading(false);
+      toast.error("Entre na sua conta para criar a barbearia.");
+      return;
+    }
     const slug = slugify(form.slug || form.name);
     const { celular, ...rest } = form;
     const payload = {
