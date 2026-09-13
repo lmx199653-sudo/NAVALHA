@@ -133,7 +133,7 @@ function Onboarding() {
     // Conta nova já vem com serviços, barbeiros, 3 planos de teste e 2 clientes
     // de demonstração (com assinaturas ativas e agendamentos). Cada etapa checa
     // se já existem dados antes de inserir — nunca duplica em barbearias existentes.
-    if (!shop) {
+    {
       try {
         await seedStarterData(data.id);
       } catch {
