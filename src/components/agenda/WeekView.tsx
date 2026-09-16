@@ -54,7 +54,8 @@ export function WeekView({
             <div className="mt-3 space-y-2.5">
               {list.length === 0 && <p className="text-xs text-muted-foreground">Livre</p>}
               {list.map((a) => {
-                const service = services.find((s) => s.id === a.service_id);
+                const label =
+                  summaries[a.id] ?? services.find((s) => s.id === a.service_id)?.name ?? "";
                 return (
                   <button
                     key={a.id}
