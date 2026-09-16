@@ -12,10 +12,17 @@ interface WeekViewProps {
   startDate: Date;
   appts: Appointment[];
   services: ServiceSummary[];
+  summaries?: Record<string, string>;
   onSelectAppointment: (id: string) => void;
 }
 
-export function WeekView({ startDate, appts, services, onSelectAppointment }: WeekViewProps) {
+export function WeekView({
+  startDate,
+  appts,
+  services,
+  summaries = {},
+  onSelectAppointment,
+}: WeekViewProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 7 }, (_, i) => {
