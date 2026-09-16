@@ -171,32 +171,33 @@ export function PaymentStep({
 
       <div className="surface-card space-y-3 p-4">
         <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
-        <div
-          className={cn(
-            "grid gap-2",
-            planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
-          )}
-        >
-          {shopHasPix && (
-            <PaymentOption
-              icon={QrCode}
-              active={paymentChoice === "pix"}
-              title="Pagar com Pix"
-              hint="QR Code ou chave · agora"
-              badge="Recomendado"
-              onClick={() => onSelectPayment("pix")}
-            />
-          )}
-          {planEligible && (
-            <PaymentOption
-              icon={Sparkles}
-              active={paymentChoice === "plan"}
-              title="Usar meu plano"
-              hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
-              badge="Assinante"
-              onClick={() => onSelectPayment("plan")}
-            />
-          )}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <PaymentOption
+            icon={QrCode}
+            active={paymentChoice === "pix"}
+            disabled={!shopHasPix}
+            title="Pagar com Pix"
+            hint={
+              shopHasPix
+                ? "QR Code ou chave · agora"
+                : "Indisponível — esta barbearia ainda não cadastrou o Pix"
+            }
+            badge={shopHasPix ? "Recomendado" : "Indisponível"}
+            onClick={() => onSelectPayment("pix")}
+          />
+          <PaymentOption
+            icon={Sparkles}
+            active={paymentChoice === "plan"}
+            disabled={!planEligible}
+            title="Usar meu plano"
+            hint={
+              planEligible
+                ? `Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`
+                : "Indisponível — nenhum plano ativo para este CPF"
+            }
+            badge={planEligible ? "Assinante" : "Indisponível"}
+            onClick={() => onSelectPayment("plan")}
+          />
           <PaymentOption
             icon={Wallet}
             active={paymentChoice === "on_site"}
