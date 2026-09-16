@@ -31,6 +31,7 @@ import {
   type LocalPaymentMethod,
 } from "@/lib/subscriptions";
 import { PAYMENT_METHOD_LABEL } from "@/lib/pix";
+import { fetchAppointmentServices, serviceSummary } from "@/lib/appointment-services";
 
 import {
   AppointmentDetailDialog,
@@ -63,6 +64,7 @@ function AgendaPage() {
   const [editForm, setEditForm] = useState<string | null>(null);
   const [confirmDone, setConfirmDone] = useState<string | null>(null);
   const [payMethod, setPayMethod] = useState<LocalPaymentMethod>("pix");
+  const [newTime, setNewTime] = useState<string | undefined>(undefined);
 
   const notified = useRef<Set<string>>(new Set());
 
