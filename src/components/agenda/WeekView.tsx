@@ -12,10 +12,17 @@ interface WeekViewProps {
   startDate: Date;
   appts: Appointment[];
   services: ServiceSummary[];
+  summaries?: Record<string, string>;
   onSelectAppointment: (id: string) => void;
 }
 
-export function WeekView({ startDate, appts, services, onSelectAppointment }: WeekViewProps) {
+export function WeekView({
+  startDate,
+  appts,
+  services,
+  summaries = {},
+  onSelectAppointment,
+}: WeekViewProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 7 }, (_, i) => {
@@ -47,7 +54,8 @@ export function WeekView({ startDate, appts, services, onSelectAppointment }: We
             <div className="mt-3 space-y-2.5">
               {list.length === 0 && <p className="text-xs text-muted-foreground">Livre</p>}
               {list.map((a) => {
-                const service = services.find((s) => s.id === a.service_id);
+                const label =
+                  summaries[a.id] ?? services.find((s) => s.id === a.service_id)?.name ?? "";
                 return (
                   <button
                     key={a.id}
@@ -59,10 +67,8 @@ export function WeekView({ startDate, appts, services, onSelectAppointment }: We
                       <span className="text-[11px] font-medium">{brl(a.price_cents)}</span>
                     </div>
                     <p className="mt-1 truncate text-sm font-medium">{a.customer_name}</p>
-                    {service && (
-                      <p className="truncate text-[11px] text-muted-foreground/80">
-                        {service.name}
-                      </p>
+                    {label && (
+                      <p className="truncate text-[11px] text-muted-foreground/80">{label}</p>
                     )}
                     <div className="mt-1.5">
                       <StatusBadge status={a.status} />

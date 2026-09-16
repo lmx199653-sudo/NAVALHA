@@ -14,6 +14,61 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_services: {
+        Row: {
+          appointment_id: string
+          barbershop_id: string
+          created_at: string
+          duration_min: number
+          id: string
+          name: string
+          price_cents: number
+          service_id: string | null
+        }
+        Insert: {
+          appointment_id: string
+          barbershop_id: string
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name: string
+          price_cents?: number
+          service_id?: string | null
+        }
+        Update: {
+          appointment_id?: string
+          barbershop_id?: string
+          created_at?: string
+          duration_min?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          service_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           barber_id: string | null

@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { timeLabel } from "@/lib/format";
+import { timeLabel, toDayKey } from "@/lib/format";
 import { breaksForDay, type BreakRow } from "@/lib/slots";
 import {
   BENEFIT_LABEL,
@@ -31,6 +31,7 @@ import {
   type LocalPaymentMethod,
 } from "@/lib/subscriptions";
 import { PAYMENT_METHOD_LABEL } from "@/lib/pix";
+import { fetchAppointmentServices, serviceSummary } from "@/lib/appointment-services";
 
 import {
   AppointmentDetailDialog,
@@ -63,6 +64,7 @@ function AgendaPage() {
   const [editForm, setEditForm] = useState<string | null>(null);
   const [confirmDone, setConfirmDone] = useState<string | null>(null);
   const [payMethod, setPayMethod] = useState<LocalPaymentMethod>("pix");
+  const [newTime, setNewTime] = useState<string | undefined>(undefined);
 
   const notified = useRef<Set<string>>(new Set());
 
@@ -118,6 +120,22 @@ function AgendaPage() {
   });
 
   const appts = data?.appts ?? [];
+
+  const apptIds = appts.map((a) => a.id);
+  const { data: apptServices } = useQuery({
+    queryKey: ["agenda-services", apptIds.join(",")],
+    enabled: apptIds.length > 0,
+    queryFn: () => fetchAppointmentServices(apptIds),
+  });
+
+  const summaries = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const a of appts) {
+      const label = serviceSummary(apptServices?.[a.id]);
+      if (label) out[a.id] = label;
+    }
+    return out;
+  }, [appts, apptServices]);
 
   // Novo agendamento feito pelo link do cliente: aparece na hora e avisa dentro do app.
   useEffect(() => {
@@ -311,25 +329,37 @@ function AgendaPage() {
       title="Agenda"
       subtitle={headerLabel}
       action={
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setNewTime(undefined);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => setNewTime(undefined)}>
               <Plus className="size-4" /> Novo
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Novo agendamento</DialogTitle>
+              <DialogTitle className="font-display text-2xl tracking-wide">
+                Novo agendamento
+              </DialogTitle>
             </DialogHeader>
             <AppointmentForm
+              key={`new-${newTime ?? "default"}-${toDayKey(anchor)}`}
               shopId={shop?.id}
               barbers={data?.barbers ?? []}
               services={data?.services ?? []}
               customers={data?.customers ?? []}
               defaultDate={anchor}
+              defaultTime={newTime}
               onDone={() => {
                 setOpen(false);
+                setNewTime(undefined);
                 qc.invalidateQueries({ queryKey: ["agenda"] });
+                qc.invalidateQueries({ queryKey: ["agenda-services"] });
               }}
             />
           </DialogContent>
@@ -381,8 +411,13 @@ function AgendaPage() {
           appts={appts}
           services={data?.services ?? []}
           dayBreaks={dayBreaks}
+          summaries={summaries}
           onSelectAppointment={(id) => setEditing(id)}
           onReschedule={(params) => reschedule.mutate(params)}
+          onCreateAt={(hour) => {
+            setNewTime(`${String(hour).padStart(2, "0")}:00`);
+            setOpen(true);
+          }}
         />
       )}
 
@@ -391,6 +426,7 @@ function AgendaPage() {
           startDate={range.start}
           appts={appts}
           services={data?.services ?? []}
+          summaries={summaries}
           onSelectAppointment={(id) => setEditing(id)}
         />
       )}
@@ -414,6 +450,7 @@ function AgendaPage() {
         shopName={shop?.name}
         barbers={data?.barbers ?? []}
         services={data?.services ?? []}
+        summary={selected ? summaries[selected.id] : undefined}
         onEdit={(id) => {
           setEditForm(id);
           setEditing(null);
@@ -434,12 +471,15 @@ function AgendaPage() {
       />
 
       <Dialog open={!!editForm} onOpenChange={(v) => !v && setEditForm(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar agendamento</DialogTitle>
+            <DialogTitle className="font-display text-2xl tracking-wide">
+              Editar agendamento
+            </DialogTitle>
           </DialogHeader>
           {editForm && (
             <AppointmentForm
+              key={editForm}
               shopId={shop?.id}
               barbers={data?.barbers ?? []}
               services={data?.services ?? []}
@@ -449,6 +489,7 @@ function AgendaPage() {
               onDone={() => {
                 setEditForm(null);
                 qc.invalidateQueries({ queryKey: ["agenda"] });
+                qc.invalidateQueries({ queryKey: ["agenda-services"] });
               }}
             />
           )}

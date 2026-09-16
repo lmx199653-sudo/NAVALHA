@@ -30,6 +30,7 @@ interface AppointmentDetailDialogProps {
   shopName?: string | undefined;
   barbers: BarberSummary[];
   services: ServiceSummary[];
+  summary?: string | undefined;
   onEdit: (id: string) => void;
   onConfirmDone: (appointment: Appointment) => void;
   onRefund: (id: string) => void;
@@ -43,6 +44,7 @@ export function AppointmentDetailDialog({
   shopName,
   barbers,
   services,
+  summary,
   onEdit,
   onConfirmDone,
   onRefund,
@@ -74,8 +76,10 @@ export function AppointmentDetailDialog({
               valueClass="font-semibold text-primary"
             />
             <Info
-              label="Serviço"
-              value={services.find((s) => s.id === appointment.service_id)?.name ?? "—"}
+              label="Serviços"
+              value={
+                summary || services.find((s) => s.id === appointment.service_id)?.name || "—"
+              }
             />
             <Info
               label="Barbeiro"
