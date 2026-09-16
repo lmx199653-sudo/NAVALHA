@@ -329,22 +329,32 @@ function AgendaPage() {
       title="Agenda"
       subtitle={headerLabel}
       action={
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setNewTime(undefined);
+          }}
+        >
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={() => setNewTime(undefined)}>
               <Plus className="size-4" /> Novo
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Novo agendamento</DialogTitle>
+              <DialogTitle className="font-display text-2xl tracking-wide">
+                Novo agendamento
+              </DialogTitle>
             </DialogHeader>
             <AppointmentForm
+              key={`new-${newTime ?? "default"}-${toDayKey(anchor)}`}
               shopId={shop?.id}
               barbers={data?.barbers ?? []}
               services={data?.services ?? []}
               customers={data?.customers ?? []}
               defaultDate={anchor}
+              defaultTime={newTime}
               onDone={() => {
                 setOpen(false);
                 qc.invalidateQueries({ queryKey: ["agenda"] });
