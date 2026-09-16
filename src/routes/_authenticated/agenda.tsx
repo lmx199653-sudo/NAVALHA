@@ -489,6 +489,7 @@ function AgendaPage() {
               onDone={() => {
                 setEditForm(null);
                 qc.invalidateQueries({ queryKey: ["agenda"] });
+                qc.invalidateQueries({ queryKey: ["agenda-services"] });
               }}
             />
           )}
