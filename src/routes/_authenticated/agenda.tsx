@@ -357,7 +357,9 @@ function AgendaPage() {
               defaultTime={newTime}
               onDone={() => {
                 setOpen(false);
+                setNewTime(undefined);
                 qc.invalidateQueries({ queryKey: ["agenda"] });
+                qc.invalidateQueries({ queryKey: ["agenda-services"] });
               }}
             />
           </DialogContent>
