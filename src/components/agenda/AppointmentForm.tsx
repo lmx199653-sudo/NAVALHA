@@ -239,6 +239,16 @@ export function AppointmentForm({
     return true;
   }
 
+  function attendNow() {
+    const now = new Date();
+    setWhenMode("now");
+    setDay(toDayKey(now));
+    setTime(
+      `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    );
+    setStep(4);
+  }
+
   function next() {
     if (!canAdvance()) {
       toast.error(
