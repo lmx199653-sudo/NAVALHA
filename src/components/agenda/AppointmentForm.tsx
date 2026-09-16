@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarClock,
   Check,
   Clock,
   IdCard,
@@ -11,6 +12,7 @@ import {
   Scissors,
   Search,
   UserPlus,
+  Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
