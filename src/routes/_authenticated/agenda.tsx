@@ -411,8 +411,13 @@ function AgendaPage() {
           appts={appts}
           services={data?.services ?? []}
           dayBreaks={dayBreaks}
+          summaries={summaries}
           onSelectAppointment={(id) => setEditing(id)}
           onReschedule={(params) => reschedule.mutate(params)}
+          onCreateAt={(hour) => {
+            setNewTime(`${String(hour).padStart(2, "0")}:00`);
+            setOpen(true);
+          }}
         />
       )}
 
@@ -421,6 +426,7 @@ function AgendaPage() {
           startDate={range.start}
           appts={appts}
           services={data?.services ?? []}
+          summaries={summaries}
           onSelectAppointment={(id) => setEditing(id)}
         />
       )}
@@ -444,6 +450,7 @@ function AgendaPage() {
         shopName={shop?.name}
         barbers={data?.barbers ?? []}
         services={data?.services ?? []}
+        summary={selected ? summaries[selected.id] : undefined}
         onEdit={(id) => {
           setEditForm(id);
           setEditing(null);
