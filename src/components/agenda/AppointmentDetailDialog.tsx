@@ -30,6 +30,7 @@ interface AppointmentDetailDialogProps {
   shopName?: string | undefined;
   barbers: BarberSummary[];
   services: ServiceSummary[];
+  summary?: string | undefined;
   onEdit: (id: string) => void;
   onConfirmDone: (appointment: Appointment) => void;
   onRefund: (id: string) => void;
