@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarClock,
   Check,
   Clock,
   IdCard,
@@ -11,6 +12,7 @@ import {
   Scissors,
   Search,
   UserPlus,
+  Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -106,6 +108,10 @@ export function AppointmentForm({
       : (defaultTime ?? "10:00"),
   );
   const [useBenefit, setUseBenefit] = useState(true);
+  // Na etapa Horário: atender agora (horário atual) ou marcar para depois (escolher data/hora).
+  const [whenMode, setWhenMode] = useState<"now" | "later" | null>(
+    appointment || defaultTime ? "later" : null,
+  );
   const [saving, setSaving] = useState(false);
 
   // Carrega itens já salvos ao editar um agendamento com vários serviços.
@@ -233,6 +239,16 @@ export function AppointmentForm({
     if (step === 2) return true;
     if (step === 3) return !!day && !!time;
     return true;
+  }
+
+  function attendNow() {
+    const now = new Date();
+    setWhenMode("now");
+    setDay(toDayKey(now));
+    setTime(
+      `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    );
+    setStep(4);
   }
 
   function next() {
@@ -495,54 +511,101 @@ export function AppointmentForm({
 
       {step === 3 && (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Data</Label>
-              <Input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label>Horário</Label>
-              <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-            </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={attendNow}
+              className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                whenMode === "now"
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/40 hover:bg-secondary/40"
+              }`}
+            >
+              <Zap className="size-5 shrink-0 text-primary" />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Atender agora</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  Começa neste momento ({new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })})
+                </span>
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setWhenMode("later")}
+              className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-colors ${
+                whenMode === "later"
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-primary/40 hover:bg-secondary/40"
+              }`}
+            >
+              <CalendarClock className="size-5 shrink-0 text-primary" />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">Marcar para depois</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  Escolher data e horário
+                </span>
+              </span>
+            </button>
           </div>
 
-          <div className="space-y-2">
-            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <Clock className="size-3.5" /> Livres para {totalDuration || 0} min
+          {whenMode === "now" && (
+            <p className="rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-2 text-sm text-muted-foreground">
+              Atendimento começa agora — toque em <span className="font-semibold text-foreground">Continuar</span> para confirmar.
             </p>
-            {loadingSlots ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Calculando horários…
+          )}
+
+          {whenMode === "later" && (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Data</Label>
+                  <Input type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário</Label>
+                  <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+                </div>
               </div>
-            ) : slots.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
-                Sem horários livres neste dia para esta duração. Você ainda pode definir o horário
-                manualmente acima.
-              </p>
-            ) : (
-              <div className="grid max-h-44 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
-                {slots.map((iso) => {
-                  const d = new Date(iso);
-                  const label = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-                  const active = time === label;
-                  return (
-                    <button
-                      key={iso}
-                      type="button"
-                      onClick={() => setTime(label)}
-                      className={`rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
-                        active
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/40"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+
+              <div className="space-y-2">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Clock className="size-3.5" /> Livres para {totalDuration || 0} min
+                </p>
+                {loadingSlots ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="size-4 animate-spin" /> Calculando horários…
+                  </div>
+                ) : slots.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
+                    Sem horários livres neste dia para esta duração. Você ainda pode definir o horário
+                    manualmente acima.
+                  </p>
+                ) : (
+                  <div className="grid max-h-44 grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4">
+                    {slots.map((iso) => {
+                      const d = new Date(iso);
+                      const label = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+                      const active = time === label;
+                      return (
+                        <button
+                          key={iso}
+                          type="button"
+                          onClick={() => setTime(label)}
+                          className={`rounded-lg border px-2 py-2 text-sm font-medium transition-colors ${
+                            active
+                              ? "border-primary bg-primary/15 text-primary"
+                              : "border-border text-muted-foreground hover:border-primary/40"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       )}
 
