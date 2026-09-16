@@ -41,6 +41,7 @@ export function PaymentOption({
   title,
   hint,
   badge,
+  disabled,
   onClick,
 }: {
   icon: React.ComponentType<{ className?: string }>;
@@ -48,29 +49,41 @@ export function PaymentOption({
   title: string;
   hint: string;
   badge?: string | undefined;
+  disabled?: boolean | undefined;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-pressed={active}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      aria-pressed={active && !disabled}
+      aria-disabled={disabled}
       className={cn(
         "relative flex flex-col gap-2 rounded-xl border p-3.5 text-left transition-colors min-h-24",
-        active
-          ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-          : "border-border hover:border-primary/40",
+        disabled
+          ? "cursor-not-allowed border-border/60 bg-muted/30 opacity-60 grayscale"
+          : active
+            ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+            : "border-border hover:border-primary/40",
       )}
     >
       {badge && (
-        <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase text-primary-foreground">
+        <span
+          className={cn(
+            "absolute -top-2 right-2 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+            disabled
+              ? "bg-muted text-muted-foreground"
+              : "bg-primary text-primary-foreground",
+          )}
+        >
           {badge}
         </span>
       )}
       <span
         className={cn(
           "flex size-8 items-center justify-center rounded-lg ring-1",
-          active
+          !disabled && active
             ? "bg-primary/20 text-primary ring-primary/30"
             : "bg-secondary/70 text-muted-foreground ring-border",
         )}
@@ -78,7 +91,14 @@ export function PaymentOption({
         <Icon className="size-4" />
       </span>
       <div>
-        <p className={cn("font-display text-xl leading-none", active && "text-primary")}>{title}</p>
+        <p
+          className={cn(
+            "font-display text-xl leading-none",
+            disabled ? "text-muted-foreground" : active && "text-primary",
+          )}
+        >
+          {title}
+        </p>
         <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
       </div>
     </button>
@@ -151,32 +171,33 @@ export function PaymentStep({
 
       <div className="surface-card space-y-3 p-4">
         <p className="text-sm text-muted-foreground">Como você quer pagar?</p>
-        <div
-          className={cn(
-            "grid gap-2",
-            planEligible ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2",
-          )}
-        >
-          {shopHasPix && (
-            <PaymentOption
-              icon={QrCode}
-              active={paymentChoice === "pix"}
-              title="Pagar com Pix"
-              hint="QR Code ou chave · agora"
-              badge="Recomendado"
-              onClick={() => onSelectPayment("pix")}
-            />
-          )}
-          {planEligible && (
-            <PaymentOption
-              icon={Sparkles}
-              active={paymentChoice === "plan"}
-              title="Usar meu plano"
-              hint={`Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`}
-              badge="Assinante"
-              onClick={() => onSelectPayment("plan")}
-            />
-          )}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <PaymentOption
+            icon={QrCode}
+            active={paymentChoice === "pix"}
+            disabled={!shopHasPix}
+            title="Pagar com Pix"
+            hint={
+              shopHasPix
+                ? "QR Code ou chave · agora"
+                : "Indisponível — esta barbearia ainda não cadastrou o Pix"
+            }
+            badge={shopHasPix ? "Recomendado" : "Indisponível"}
+            onClick={() => onSelectPayment("pix")}
+          />
+          <PaymentOption
+            icon={Sparkles}
+            active={paymentChoice === "plan"}
+            disabled={!planEligible}
+            title="Usar meu plano"
+            hint={
+              planEligible
+                ? `Serviço incluso no plano${eligibility?.plan_name ? ` ${eligibility.plan_name}` : ""}`
+                : "Indisponível — nenhum plano ativo para este CPF"
+            }
+            badge={planEligible ? "Assinante" : "Indisponível"}
+            onClick={() => onSelectPayment("plan")}
+          />
           <PaymentOption
             icon={Wallet}
             active={paymentChoice === "on_site"}
