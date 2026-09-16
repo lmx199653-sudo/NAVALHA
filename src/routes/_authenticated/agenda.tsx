@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { timeLabel } from "@/lib/format";
+import { timeLabel, toDayKey } from "@/lib/format";
 import { breaksForDay, type BreakRow } from "@/lib/slots";
 import {
   BENEFIT_LABEL,
