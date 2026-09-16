@@ -67,10 +67,8 @@ export function WeekView({
                       <span className="text-[11px] font-medium">{brl(a.price_cents)}</span>
                     </div>
                     <p className="mt-1 truncate text-sm font-medium">{a.customer_name}</p>
-                    {service && (
-                      <p className="truncate text-[11px] text-muted-foreground/80">
-                        {service.name}
-                      </p>
+                    {label && (
+                      <p className="truncate text-[11px] text-muted-foreground/80">{label}</p>
                     )}
                     <div className="mt-1.5">
                       <StatusBadge status={a.status} />
