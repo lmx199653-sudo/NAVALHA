@@ -471,12 +471,15 @@ function AgendaPage() {
       />
 
       <Dialog open={!!editForm} onOpenChange={(v) => !v && setEditForm(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar agendamento</DialogTitle>
+            <DialogTitle className="font-display text-2xl tracking-wide">
+              Editar agendamento
+            </DialogTitle>
           </DialogHeader>
           {editForm && (
             <AppointmentForm
+              key={editForm}
               shopId={shop?.id}
               barbers={data?.barbers ?? []}
               services={data?.services ?? []}
