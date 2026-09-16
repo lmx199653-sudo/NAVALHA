@@ -119,6 +119,22 @@ function AgendaPage() {
 
   const appts = data?.appts ?? [];
 
+  const apptIds = appts.map((a) => a.id);
+  const { data: apptServices } = useQuery({
+    queryKey: ["agenda-services", apptIds.join(",")],
+    enabled: apptIds.length > 0,
+    queryFn: () => fetchAppointmentServices(apptIds),
+  });
+
+  const summaries = useMemo(() => {
+    const out: Record<string, string> = {};
+    for (const a of appts) {
+      const label = serviceSummary(apptServices?.[a.id]);
+      if (label) out[a.id] = label;
+    }
+    return out;
+  }, [appts, apptServices]);
+
   // Novo agendamento feito pelo link do cliente: aparece na hora e avisa dentro do app.
   useEffect(() => {
     if (!shop?.id) return;
