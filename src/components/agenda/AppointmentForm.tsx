@@ -106,6 +106,10 @@ export function AppointmentForm({
       : (defaultTime ?? "10:00"),
   );
   const [useBenefit, setUseBenefit] = useState(true);
+  // Na etapa Horário: atender agora (horário atual) ou marcar para depois (escolher data/hora).
+  const [whenMode, setWhenMode] = useState<"now" | "later" | null>(
+    appointment || defaultTime ? "later" : null,
+  );
   const [saving, setSaving] = useState(false);
 
   // Carrega itens já salvos ao editar um agendamento com vários serviços.
