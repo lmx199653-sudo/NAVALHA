@@ -6,7 +6,6 @@ import {
   CalendarPlus,
   Clock,
   Crown,
-  CreditCard,
   Headset,
   Inbox,
   LayoutDashboard,
@@ -26,7 +25,6 @@ import { useShop } from "@/hooks/useShop";
 import { useIsSupport, useMyConversations, useInbox, useSupportRealtime } from "@/hooks/useSupport";
 import { canManage } from "@/lib/supabase-guard";
 
-import { BillingBanner } from "@/components/BillingBanner";
 
 import { useBrand } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
@@ -51,7 +49,6 @@ const NAV: readonly NavItem[] = [
   { to: "/horarios", label: "Horários", icon: Clock, group: "Cadastros" },
   { to: "/financeiro", label: "Financeiro", icon: BarChart3, group: "Negócio" },
   { to: "/assinaturas", label: "Assinaturas", icon: Crown, group: "Negócio" },
-  { to: "/cobranca", label: "Cobrança", icon: CreditCard, group: "Negócio" },
   { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
   { to: "/suporte-chat", label: "Suporte", icon: Headset, group: "Ajuda" },
@@ -268,7 +265,6 @@ export function AppShell({
         </header>
 
         <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
-          <BillingBanner />
           <div className="animate-rise">{children}</div>
         </main>
       </div>
