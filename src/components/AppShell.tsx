@@ -264,6 +264,7 @@ export function AppShell({
           </div>
         </header>
 
+        <main className="mx-auto w-full max-w-[1400px] px-4 pb-28 pt-4 sm:px-6 sm:pt-5 lg:pb-10">
           <div className="animate-rise">{children}</div>
         </main>
       </div>
