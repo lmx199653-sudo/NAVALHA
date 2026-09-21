@@ -39,6 +39,7 @@ import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { requireLoginInApp } from "@/lib/app-auth";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type PeriodKey = "hoje" | "7d" | "mes";
 
