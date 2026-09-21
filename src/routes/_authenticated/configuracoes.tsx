@@ -41,6 +41,13 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 function SettingsPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
+
+  // Atualiza a barbearia (e o restante do app) na hora, sem exigir novo login
+  // nem recarregar a página.
+  const refreshShop = async () => {
+    await qc.refetchQueries({ queryKey: ["shop"] });
+    await qc.invalidateQueries();
+  };
   const [form, setForm] = useState({
     name: "",
     slug: "",
