@@ -23,7 +23,7 @@ async function existingShopId(userId: string) {
     .select("barbershop_id")
     .eq("user_id", userId)
     .limit(1);
-  if (members && members.length > 0) return members[0].barbershop_id;
+  if (members?.[0]?.barbershop_id) return members[0].barbershop_id;
 
   const { data } = await supabase
     .from("barbershops")
