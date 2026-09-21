@@ -56,8 +56,22 @@ export function useShop() {
   return useQuery({
     queryKey: ["shop", userId],
     enabled: ready,
+    retry: 1,
     queryFn: async (): Promise<Shop | null> => {
       if (!userId) return null;
+
+      const load = async (ids: string[]) => {
+        const { data, error } = await supabase
+          .from("barbershops")
+          .select(SHOP_COLUMNS)
+          .in("id", ids)
+          .order("created_at")
+          .limit(1)
+          .maybeSingle();
+        if (error) throw error;
+        return (data ?? null) as Shop | null;
+      };
+
       // A barbearia é localizada pelo vínculo de equipe (o dono recebe o vínculo
       // automaticamente), evitando expor o identificador do proprietário.
       const { data: memberships, error: memberError } = await supabase
@@ -66,17 +80,17 @@ export function useShop() {
         .eq("user_id", userId);
       if (memberError) throw memberError;
       const ids = (memberships ?? []).map((m: { barbershop_id: string }) => m.barbershop_id);
-      if (ids.length === 0) return null;
 
-      const { data, error } = await supabase
-        .from("barbershops")
-        .select(SHOP_COLUMNS)
-        .in("id", ids)
-        .order("created_at")
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return (data ?? null) as Shop | null;
+      if (ids.length > 0) {
+        const found = await load(ids);
+        if (found) return found;
+      }
+
+      // Conta nova sem barbearia: criamos uma automaticamente para que o app
+      // funcione por completo desde o primeiro acesso.
+      const { ensureShopId } = await import("@/lib/shop");
+      const newId = await ensureShopId();
+      return await load([newId]);
     },
   });
 }

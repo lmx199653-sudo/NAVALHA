@@ -38,17 +38,6 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-/** Verifica se o usuário já tem barbearia (vínculo de equipe ou como dono). */
-async function hasShop(userId: string) {
-  const { data, error } = await supabase
-    .from("barbershop_members")
-    .select("barbershop_id")
-    .eq("user_id", userId)
-    .limit(1);
-  if (error) return false;
-  return (data ?? []).length > 0;
-}
-
 /** Checkbox premium customizado: fundo escuro, check dourado, animação. */
 function GoldCheckbox({
   id,
@@ -104,8 +93,8 @@ function AuthPage() {
     let active = true;
     const go = async (userId: string) => {
       if (!active) return;
-      const to = (await hasShop(userId)) ? "/dashboard" : "/onboarding";
-      navigate({ to, replace: true });
+      void userId;
+      navigate({ to: "/dashboard", replace: true });
     };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
@@ -160,9 +149,7 @@ function AuthPage() {
       toast.error(msg);
       return;
     }
-    const userId = data.session?.user.id;
-    const to = userId && (await hasShop(userId)) ? "/dashboard" : "/onboarding";
-    navigate({ to, replace: true });
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function signUp(e: React.FormEvent) {
@@ -195,8 +182,8 @@ function AuthPage() {
       return;
     }
 
-    toast.success("Conta criada! Vamos configurar sua barbearia.");
-    navigate({ to: "/onboarding" });
+    toast.success("Conta criada! Bem-vindo ao Navalha Pro.");
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function signInWithGoogle() {

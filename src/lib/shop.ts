@@ -17,6 +17,14 @@ async function currentUserId() {
 }
 
 async function existingShopId(userId: string) {
+  // Primeiro pelo vínculo de equipe (cobre dono e demais membros).
+  const { data: members } = await supabase
+    .from("barbershop_members")
+    .select("barbershop_id")
+    .eq("user_id", userId)
+    .limit(1);
+  if (members?.[0]?.barbershop_id) return members[0].barbershop_id;
+
   const { data } = await supabase
     .from("barbershops")
     .select("id")
@@ -49,12 +57,12 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
   const found = await existingShopId(userId);
   if (found) return found;
 
-  const name = (preferredName ?? "").trim() || "Minha barbearia";
+  const name = (preferredName ?? "").trim() || "Minha Barbearia";
   const slug = await uniqueSlug(name);
 
   const { data, error } = await supabase
     .from("barbershops")
-    .insert({ owner_id: userId, name, slug })
+    .insert({ owner_id: userId, name, slug, onboarding_done: true })
     .select("id")
     .single();
   if (error || !data) throw error ?? new Error("Não foi possível criar a barbearia.");

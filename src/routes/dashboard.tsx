@@ -39,6 +39,7 @@ import { EmptyState, ErrorState, SectionHeader } from "@/components/ui/states";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { requireLoginInApp } from "@/lib/app-auth";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type PeriodKey = "hoje" | "7d" | "mes";
 
@@ -116,10 +117,14 @@ function Dashboard() {
     localStorage.setItem("dashboard-period", period);
   }, [period]);
 
+  // A barbearia é criada automaticamente quando não existe, então o painel
+  // nunca força o cadastro inicial: apenas avisa se houver falha.
   useEffect(() => {
-    if (userId && (isSuccess || isShopError) && !shop)
-      navigate({ to: "/onboarding", replace: true });
-  }, [userId, isSuccess, isShopError, shop, navigate]);
+    if (userId && isShopError && !shop)
+      toast.error("Não foi possível carregar sua barbearia. Tente novamente em instantes.");
+  }, [userId, isShopError, shop]);
+  void isSuccess;
+  void navigate;
 
   const {
     data: liveData,
