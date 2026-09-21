@@ -41,6 +41,13 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 function SettingsPage() {
   const { data: shop } = useShop();
   const qc = useQueryClient();
+
+  // Atualiza a barbearia (e o restante do app) na hora, sem exigir novo login
+  // nem recarregar a página.
+  const refreshShop = async () => {
+    await qc.refetchQueries({ queryKey: ["shop"] });
+    await qc.invalidateQueries();
+  };
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -95,7 +102,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success("Identidade visual salva");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -119,7 +126,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success("Dados atualizados");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -154,7 +161,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: (_, clear) => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success(
         clear
           ? "Chave Pix removida"

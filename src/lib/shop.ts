@@ -9,11 +9,25 @@ import { supabase } from "@/lib/supabase-guard";
 import { slugify } from "@/lib/format";
 import { seedStarterData } from "@/lib/starter-data";
 
-export const SEM_LOGIN_MESSAGE = "Entre na sua conta para criar e salvar os dados da barbearia.";
+export const SEM_LOGIN_MESSAGE = "Não foi possível identificar sua conta agora. Tente novamente.";
 
 async function currentUserId() {
+  // A sessão local resolve na maioria dos casos; se ela ainda não estiver
+  // hidratada, revalidamos direto no servidor em vez de pedir novo login.
   const { data } = await supabase.auth.getSession();
-  return data.session?.user.id ?? null;
+  if (data.session?.user.id) return data.session.user.id;
+  const { data: userData } = await supabase.auth.getUser();
+  return userData.user?.id ?? null;
+}
+
+/** Garante o vínculo de dono, para o app reconhecer a barbearia na hora. */
+async function ensureOwnerMembership(shopId: string, userId: string) {
+  await supabase
+    .from("barbershop_members")
+    .upsert(
+      { barbershop_id: shopId, user_id: userId, role: "owner" },
+      { onConflict: "barbershop_id,user_id" },
+    );
 }
 
 async function existingShopId(userId: string) {
@@ -55,7 +69,10 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
   if (!userId) throw new Error(SEM_LOGIN_MESSAGE);
 
   const found = await existingShopId(userId);
-  if (found) return found;
+  if (found) {
+    await ensureOwnerMembership(found, userId);
+    return found;
+  }
 
   const name = (preferredName ?? "").trim() || "Minha Barbearia";
   const slug = await uniqueSlug(name);
@@ -67,12 +84,7 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
     .single();
   if (error || !data) throw error ?? new Error("Não foi possível criar a barbearia.");
 
-  await supabase
-    .from("barbershop_members")
-    .upsert(
-      { barbershop_id: data.id, user_id: userId, role: "owner" },
-      { onConflict: "barbershop_id,user_id" },
-    );
+  await ensureOwnerMembership(data.id, userId);
 
   await supabase.from("business_hours").upsert(
     Array.from({ length: 7 }, (_, weekday) => ({

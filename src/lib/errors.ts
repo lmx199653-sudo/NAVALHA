@@ -58,7 +58,7 @@ export function friendlyError(message: string | null | undefined) {
     m.includes("forbidden") ||
     m.includes("não autorizado")
   ) {
-    return "Você não tem permissão para esta operação. Faça login e tente novamente.";
+    return "Você não tem permissão para esta operação.";
   }
 
   // Registro não encontrado
