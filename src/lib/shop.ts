@@ -84,12 +84,7 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
     .single();
   if (error || !data) throw error ?? new Error("Não foi possível criar a barbearia.");
 
-  await supabase
-    .from("barbershop_members")
-    .upsert(
-      { barbershop_id: data.id, user_id: userId, role: "owner" },
-      { onConflict: "barbershop_id,user_id" },
-    );
+  await ensureOwnerMembership(data.id, userId);
 
   await supabase.from("business_hours").upsert(
     Array.from({ length: 7 }, (_, weekday) => ({
