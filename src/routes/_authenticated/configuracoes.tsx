@@ -102,7 +102,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success("Identidade visual salva");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -126,7 +126,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success("Dados atualizados");
     },
     onError: (e: Error) => toast.error(friendlyError(e.message)),
@@ -161,7 +161,7 @@ function SettingsPage() {
       if (error) throw error;
     },
     onSuccess: (_, clear) => {
-      qc.invalidateQueries({ queryKey: ["shop"] });
+      void refreshShop();
       toast.success(
         clear
           ? "Chave Pix removida"
