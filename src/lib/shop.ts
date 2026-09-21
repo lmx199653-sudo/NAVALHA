@@ -57,12 +57,12 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
   const found = await existingShopId(userId);
   if (found) return found;
 
-  const name = (preferredName ?? "").trim() || "Minha barbearia";
+  const name = (preferredName ?? "").trim() || "Minha Barbearia";
   const slug = await uniqueSlug(name);
 
   const { data, error } = await supabase
     .from("barbershops")
-    .insert({ owner_id: userId, name, slug })
+    .insert({ owner_id: userId, name, slug, onboarding_done: true })
     .select("id")
     .single();
   if (error || !data) throw error ?? new Error("Não foi possível criar a barbearia.");
