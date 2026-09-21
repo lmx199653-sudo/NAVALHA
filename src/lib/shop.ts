@@ -17,6 +17,14 @@ async function currentUserId() {
 }
 
 async function existingShopId(userId: string) {
+  // Primeiro pelo vínculo de equipe (cobre dono e demais membros).
+  const { data: members } = await supabase
+    .from("barbershop_members")
+    .select("barbershop_id")
+    .eq("user_id", userId)
+    .limit(1);
+  if (members && members.length > 0) return members[0].barbershop_id;
+
   const { data } = await supabase
     .from("barbershops")
     .select("id")
