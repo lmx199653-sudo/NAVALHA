@@ -69,7 +69,10 @@ export async function ensureShopId(preferredName?: string): Promise<string> {
   if (!userId) throw new Error(SEM_LOGIN_MESSAGE);
 
   const found = await existingShopId(userId);
-  if (found) return found;
+  if (found) {
+    await ensureOwnerMembership(found, userId);
+    return found;
+  }
 
   const name = (preferredName ?? "").trim() || "Minha Barbearia";
   const slug = await uniqueSlug(name);
