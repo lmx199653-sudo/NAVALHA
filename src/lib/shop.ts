@@ -9,11 +9,25 @@ import { supabase } from "@/lib/supabase-guard";
 import { slugify } from "@/lib/format";
 import { seedStarterData } from "@/lib/starter-data";
 
-export const SEM_LOGIN_MESSAGE = "Entre na sua conta para criar e salvar os dados da barbearia.";
+export const SEM_LOGIN_MESSAGE = "Não foi possível identificar sua conta agora. Tente novamente.";
 
 async function currentUserId() {
+  // A sessão local resolve na maioria dos casos; se ela ainda não estiver
+  // hidratada, revalidamos direto no servidor em vez de pedir novo login.
   const { data } = await supabase.auth.getSession();
-  return data.session?.user.id ?? null;
+  if (data.session?.user.id) return data.session.user.id;
+  const { data: userData } = await supabase.auth.getUser();
+  return userData.user?.id ?? null;
+}
+
+/** Garante o vínculo de dono, para o app reconhecer a barbearia na hora. */
+async function ensureOwnerMembership(shopId: string, userId: string) {
+  await supabase
+    .from("barbershop_members")
+    .upsert(
+      { barbershop_id: shopId, user_id: userId, role: "owner" },
+      { onConflict: "barbershop_id,user_id" },
+    );
 }
 
 async function existingShopId(userId: string) {
