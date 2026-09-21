@@ -104,8 +104,8 @@ function AuthPage() {
     let active = true;
     const go = async (userId: string) => {
       if (!active) return;
-      const to = (await hasShop(userId)) ? "/dashboard" : "/onboarding";
-      navigate({ to, replace: true });
+      void userId;
+      navigate({ to: "/dashboard", replace: true });
     };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
@@ -160,9 +160,7 @@ function AuthPage() {
       toast.error(msg);
       return;
     }
-    const userId = data.session?.user.id;
-    const to = userId && (await hasShop(userId)) ? "/dashboard" : "/onboarding";
-    navigate({ to, replace: true });
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function signUp(e: React.FormEvent) {
@@ -195,8 +193,8 @@ function AuthPage() {
       return;
     }
 
-    toast.success("Conta criada! Vamos configurar sua barbearia.");
-    navigate({ to: "/onboarding" });
+    toast.success("Conta criada! Bem-vindo ao Navalha Pro.");
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function signInWithGoogle() {
