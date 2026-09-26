@@ -88,13 +88,23 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [checking, setChecking] = useState(true);
 
-  // Já logado: não fica preso na tela de login.
+  // Já logado: não fica preso na tela de login. Se ainda não tiver barbearia,
+  // vai obrigatoriamente para o cadastro antes do painel.
   useEffect(() => {
     let active = true;
     const go = async (userId: string) => {
       if (!active) return;
-      void userId;
-      navigate({ to: "/dashboard", replace: true });
+      const { data: memberships } = await supabase
+        .from("barbershop_members")
+        .select("barbershop_id")
+        .eq("user_id", userId)
+        .limit(1);
+      if (!active) return;
+      if (memberships && memberships.length > 0) {
+        navigate({ to: "/dashboard", replace: true });
+      } else {
+        navigate({ to: "/onboarding", replace: true });
+      }
     };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
@@ -149,7 +159,17 @@ function AuthPage() {
       toast.error(msg);
       return;
     }
-    navigate({ to: "/dashboard", replace: true });
+    // Quem já tem barbearia vai ao painel; quem não tem, cadastra primeiro.
+    const { data: memberships } = await supabase
+      .from("barbershop_members")
+      .select("barbershop_id")
+      .eq("user_id", data.user.id)
+      .limit(1);
+    if (memberships && memberships.length > 0) {
+      navigate({ to: "/dashboard", replace: true });
+    } else {
+      navigate({ to: "/onboarding", replace: true });
+    }
   }
 
   async function signUp(e: React.FormEvent) {
@@ -183,7 +203,8 @@ function AuthPage() {
     }
 
     toast.success("Conta criada! Bem-vindo ao Navalha Pro.");
-    navigate({ to: "/dashboard", replace: true });
+    // Conta nova nunca tem barbearia: cadastro obrigatório antes do painel.
+    navigate({ to: "/onboarding", replace: true });
   }
 
   async function signInWithGoogle() {
