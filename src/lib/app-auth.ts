@@ -4,11 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Chave única para ligar/desligar a exigência de login.
- * Está temporariamente desligada a pedido: a tela de entrar fica escondida e
- * o painel abre direto. Para voltar ao normal, basta colocar `true`.
+ * Ativa: sem sessão, o painel (dashboard, agenda, clientes etc.) manda para a
+ * tela de entrar/criar conta. Para liberar acesso temporário, coloque `false`.
  * Nada da autenticação, usuários ou permissões foi removido.
  */
-export const LOGIN_REQUIRED = false;
+export const LOGIN_REQUIRED = true;
 
 /**
  * Toda a área do sistema exige login: sem sessão, manda para a tela de
