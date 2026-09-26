@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.4
-          name: "NAVALHA PRO v1.0.4 - Official Logo"
-          body: "Versão oficial para Google Play Console com o logo original NAVALHA PRO e Capacitor nativo."
+          tag_name: v1.0.5
+          name: "NAVALHA PRO v1.0.5 - Native Capacitor Engine"
+          body: "Versão oficial 100% nativa em Capacitor (sem TWA, sem Chrome, sem URL exposta) para solicitação de produção no Google Play Console."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

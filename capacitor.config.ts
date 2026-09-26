@@ -7,7 +7,12 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://pronavalha.lovable.app',
     cleartext: false,
-    androidScheme: 'https'
+    androidScheme: 'https',
+    allowNavigation: [
+      'pronavalha.lovable.app',
+      '*.lovable.app',
+      '*.supabase.co'
+    ]
   }
 };
 
