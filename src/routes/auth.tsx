@@ -106,8 +106,6 @@ function AuthPage() {
         navigate({ to: "/onboarding", replace: true });
       }
     };
-    const goRef = { current: go };
-    void goRef;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       if (data.session) void go(data.session.user.id);
