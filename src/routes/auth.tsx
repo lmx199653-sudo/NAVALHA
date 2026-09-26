@@ -211,8 +211,11 @@ function AuthPage() {
     if (loading) return;
     setLoading(true);
     try {
+      // Retorna para a própria tela de autenticação (rota pública), que
+      // decide o destino: painel ou cadastro da barbearia. Assim o usuário
+      // nunca cai numa página externa nem no painel sem barbearia.
       await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: `${window.location.origin}/auth`,
       });
     } catch (err) {
       toast.error(err instanceof Error ? friendlyError(err.message) : "Falha ao entrar com Google");
