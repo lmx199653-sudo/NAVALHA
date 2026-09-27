@@ -18,6 +18,22 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- App Links oficiais para captura de URLs do pronavalha.lovable.app (OAuth / Google Login) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="pronavalha.lovable.app" />
+            </intent-filter>
+
+            <!-- Custom URL Scheme de contingência -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.navalhapro.oficial" />
+            </intent-filter>
         </activity>
 
         <provider
