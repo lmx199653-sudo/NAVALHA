@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.6
-          name: "NAVALHA PRO v1.0.6 - Deep Links & OAuth Return"
-          body: "Versão oficial com suporte completo a App Links/Deep Links para autenticação OAuth (Google) e retorno nativo sem navegador exposto."
+          tag_name: v1.0.7
+          name: "NAVALHA PRO v1.0.7 - Open Testing Release"
+          body: "Versão oficial para lançamento no teste aberto do Google Play Console."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
