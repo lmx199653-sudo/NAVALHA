@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Mail, Lock, Eye, EyeOff, Loader2, User, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -101,9 +102,21 @@ function AuthPage() {
       if (!active) return;
       if (memberships && memberships.length > 0) {
         navigate({ to: "/dashboard", replace: true });
-      } else {
-        navigate({ to: "/onboarding", replace: true });
+        return;
       }
+
+      const { data: owned } = await supabase
+        .from("barbershops")
+        .select("id")
+        .eq("owner_id", userId)
+        .limit(1);
+      if (!active) return;
+      if (owned && owned.length > 0) {
+        navigate({ to: "/dashboard", replace: true });
+        return;
+      }
+
+      navigate({ to: "/onboarding", replace: true });
     };
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
@@ -204,6 +217,36 @@ function AuthPage() {
     toast.success("Conta criada! Bem-vindo ao Navalha Pro.");
     // Conta nova nunca tem barbearia: cadastro obrigatório antes do painel.
     navigate({ to: "/onboarding", replace: true });
+  }
+
+  async function signInWithGoogle() {
+    if (loading) return;
+    setLoading(true);
+    setFieldError(null);
+    try {
+      const redirectUri = `${window.location.origin}/auth`;
+      try {
+        const res = await lovable.auth.signInWithOAuth("google", {
+          redirect_uri: redirectUri,
+        });
+        if (res && "error" in res && res.error) {
+          throw res.error;
+        }
+      } catch (lovableErr) {
+        console.warn("[OAuth] Lovable OAuth fallback to Supabase OAuth:", lovableErr);
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: redirectUri,
+          },
+        });
+        if (error) throw error;
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? friendlyError(err.message) : "Falha ao entrar com Google");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function resetPassword() {
@@ -534,18 +577,72 @@ function AuthPage() {
             </form>
           )}
 
+          <div className="my-6 flex items-center gap-3">
+            <span className="h-px flex-1 bg-white/[0.07]" />
+            <span className="text-[11px] font-medium uppercase tracking-widest text-[#5B6168]">
+              ou continue com
+            </span>
+            <span className="h-px flex-1 bg-white/[0.07]" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-[52px] w-full gap-2.5 rounded-[13px] border-[#292D32] bg-transparent text-[15px] font-medium text-white transition-all duration-200 hover:-translate-y-px hover:border-[#3A4046] hover:bg-white/[0.04] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.8)] active:translate-y-0"
+            disabled={loading}
+            onClick={signInWithGoogle}
+          >
+            <svg className="size-4" viewBox="0 0 48 48" aria-hidden="true">
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2.5 24 .5 14.6.5 6.5 5.9 2.6 13.8l7.8 6.1C12.3 13.7 17.6 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-3.2-.4-4.7H24v9h12.7c-.6 3-2.3 5.6-4.9 7.3l7.6 5.9c4.4-4.1 7.1-10.2 7.1-17.5z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.4 28.1a14.5 14.5 0 0 1 0-9.2l-7.8-6.1a24 24 0 0 0 0 21.4l7.8-6.1z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 47.5c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.4 0-11.7-4.2-13.6-10.1l-7.8 6.1C6.5 42.1 14.6 47.5 24 47.5z"
+              />
+            </svg>
+            {tab === "signup" ? "Criar conta com Google" : "Continuar com Google"}
+          </Button>
+
           <p className="mt-7 text-center text-sm text-[#7A8188]">
-            Novo no NAVALHA PRO?{" "}
-            <button
-              type="button"
-              onClick={() => {
-                setTab("signup");
-                setFieldError(null);
-              }}
-              className="font-semibold text-[oklch(0.78_0.13_85)] transition-colors duration-200 hover:text-[oklch(0.84_0.12_85)] hover:underline underline-offset-4"
-            >
-              Crie sua conta
-            </button>
+            {tab === "login" ? (
+              <>
+                Novo no NAVALHA PRO?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab("signup");
+                    setFieldError(null);
+                  }}
+                  className="font-semibold text-[oklch(0.78_0.13_85)] transition-colors duration-200 hover:text-[oklch(0.84_0.12_85)] hover:underline underline-offset-4"
+                >
+                  Crie sua conta
+                </button>
+              </>
+            ) : (
+              <>
+                Já possui uma conta?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTab("login");
+                    setFieldError(null);
+                  }}
+                  className="font-semibold text-[oklch(0.78_0.13_85)] transition-colors duration-200 hover:text-[oklch(0.84_0.12_85)] hover:underline underline-offset-4"
+                >
+                  Faça login
+                </button>
+              </>
+            )}
           </p>
         </div>
 

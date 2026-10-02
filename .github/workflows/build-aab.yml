@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.9
-          name: "NAVALHA PRO v1.0.9 - Notificações Push & Permissões"
-          body: "Versão com suporte completo a notificações push, VAPID, POST_NOTIFICATIONS no Android 13+ e painel de teste."
+          tag_name: v1.0.10
+          name: "NAVALHA PRO v1.0.10 - Google Login & Criação de Barbearia"
+          body: "Versão com suporte restaurado a autenticação com Google (OAuth) e fluxo de criação de barbearia integrado."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

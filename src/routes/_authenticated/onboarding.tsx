@@ -40,6 +40,35 @@ function Onboarding() {
     if (isSuccess && shop?.onboarding_done) navigate({ to: "/dashboard", replace: true });
   }, [isSuccess, shop, navigate]);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      if (user) {
+        const meta = user.user_metadata;
+        const fullName = (meta?.["full_name"] || meta?.["name"] || "") as string;
+        if (fullName) {
+          const firstName = fullName.split(" ")[0];
+          const suggested = `Barbearia do ${firstName}`;
+          setForm((prev) => {
+            if (prev.name) return prev;
+            return {
+              ...prev,
+              name: suggested,
+              slug: slugify(suggested),
+            };
+          });
+        }
+        const avatarUrl = meta?.["avatar_url"] as string | undefined;
+        if (avatarUrl) {
+          setBrand((prev) => ({
+            ...prev,
+            logo_url: prev.logo_url || avatarUrl,
+          }));
+        }
+      }
+    });
+  }, []);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
