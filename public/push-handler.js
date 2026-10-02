@@ -17,6 +17,7 @@ self.addEventListener("push", (event) => {
     badge: "/app-icon-192.png",
     tag: payload.tag || "navalha-pro",
     renotify: true,
+    vibrate: [200, 100, 200],
     data: { url: payload.url || "/dashboard" },
   };
 

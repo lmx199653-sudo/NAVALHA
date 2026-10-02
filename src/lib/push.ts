@@ -2,7 +2,8 @@
 import { savePushSubscription } from "@/lib/push.functions";
 
 export const VAPID_PUBLIC_KEY =
-  "BAq8mKNV7WP4bKM6nIkFJngMaD6trRyhb_oK4YVtfPMzPqp6SYvgvWY1XUDygiu7npgNOkhqCHzfH89nU7dhawI";
+  (typeof import.meta !== "undefined" && import.meta.env?.["VITE_VAPID_PUBLIC_KEY"]) ||
+  "BEE59eSSlrngcxmOQ0LpF-6uj0XIrB-i0Mo8-cPqhPOnj7kvSkVoNZs0Vs9pY20SJf_UQZ8OcrjATRf0iu0Jt0M";
 
 const ASK_AT_KEY = "navalha:push:askAt";
 const DECLINES_KEY = "navalha:push:declines";
@@ -18,12 +19,16 @@ export function pushSupported() {
   );
 }
 
-/** true apenas quando o app está aberto como aplicativo instalado (não no navegador/preview). */
+/** true quando o app está aberto como aplicativo instalado (PWA/Capacitor). */
 export function isStandalone() {
   if (typeof window === "undefined") return false;
   const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  const isCapacitor = Boolean(
+    (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor,
+  );
   return (
     iosStandalone ||
+    isCapacitor ||
     window.matchMedia?.("(display-mode: standalone)").matches === true ||
     window.matchMedia?.("(display-mode: fullscreen)").matches === true ||
     window.matchMedia?.("(display-mode: minimal-ui)").matches === true
@@ -35,10 +40,10 @@ export function permission(): NotificationPermission | "unsupported" {
   return Notification.permission;
 }
 
-/** Deve mostrar o pedido agora? Só no app instalado, e insistentemente até aceitar. */
+/** Deve mostrar o pedido agora? Exibe se suportado e ainda não respondido ("default"). */
 export function shouldAsk() {
-  if (!pushSupported() || !isStandalone()) return false;
-  if (Notification.permission === "granted") return false;
+  if (!pushSupported()) return false;
+  if (Notification.permission === "granted" || Notification.permission === "denied") return false;
   const at = Number(localStorage.getItem(ASK_AT_KEY) ?? 0);
   return Date.now() >= at;
 }
@@ -96,12 +101,40 @@ export async function registerDevice(barbershopId?: string | null) {
   if (!registration) return false;
 
   try {
-    const subscription =
-      (await registration.pushManager.getSubscription()) ??
-      (await registration.pushManager.subscribe({
+    let subscription = await registration.pushManager.getSubscription();
+
+    // Se já houver inscrição mas a chave do servidor for diferente, desinscreve para renovar com a nova chave VAPID
+    if (subscription) {
+      try {
+        const rawKey = subscription.options?.applicationServerKey;
+        if (rawKey) {
+          const currentKeyBytes = new Uint8Array(rawKey);
+          const targetKeyBytes = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+          let match = currentKeyBytes.length === targetKeyBytes.length;
+          if (match) {
+            for (let i = 0; i < currentKeyBytes.length; i++) {
+              if (currentKeyBytes[i] !== targetKeyBytes[i]) {
+                match = false;
+                break;
+              }
+            }
+          }
+          if (!match) {
+            await subscription.unsubscribe();
+            subscription = null;
+          }
+        }
+      } catch {
+        // Ignora erro de comparação e recria se necessário
+      }
+    }
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-      }));
+      });
+    }
 
     const json = subscription.toJSON();
     const p256dh = json.keys?.["p256dh"];
@@ -117,6 +150,26 @@ export async function registerDevice(barbershopId?: string | null) {
         userAgent: navigator.userAgent.slice(0, 300),
       },
     });
+    return true;
+  } catch (err) {
+    console.error("[push] Erro ao registrar dispositivo:", err);
+    return false;
+  }
+}
+
+/** Remove a inscrição push deste dispositivo. */
+export async function unregisterDevice() {
+  if (!pushSupported()) return false;
+  try {
+    const registration = await getRegistration();
+    if (!registration) return false;
+    const subscription = await registration.pushManager.getSubscription();
+    if (subscription) {
+      const endpoint = subscription.endpoint;
+      await subscription.unsubscribe();
+      const { deletePushSubscription } = await import("@/lib/push.functions");
+      await deletePushSubscription({ data: { endpoint } });
+    }
     return true;
   } catch {
     return false;

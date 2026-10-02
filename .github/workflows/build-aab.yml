@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.8
-          name: "NAVALHA PRO v1.0.8 - Production Release"
-          body: "Versão oficial para lançamento de produção no Google Play Console."
+          tag_name: v1.0.9
+          name: "NAVALHA PRO v1.0.9 - Notificações Push & Permissões"
+          body: "Versão com suporte completo a notificações push, VAPID, POST_NOTIFICATIONS no Android 13+ e painel de teste."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -33,6 +33,7 @@ import { PixKeyCard } from "@/components/PixKeyCard";
 import { PixQrCard } from "@/components/PixQrCard";
 import { detectPixKey, pixTypeLabel } from "@/lib/pix";
 import { cn } from "@/lib/utils";
+import { PushSettingsCard } from "@/components/PushSettingsCard";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: SettingsPage,
@@ -375,6 +376,8 @@ function SettingsPage() {
                 </div>
               )}
             </div>
+
+            <PushSettingsCard />
 
             <Button
               variant="outline"

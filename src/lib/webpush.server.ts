@@ -125,12 +125,25 @@ async function encryptPayload(payload: string, p256dh: string, authSecret: strin
   return concat(salt, rs, new Uint8Array([localPub.length]), localPub, ciphertext);
 }
 
+const DEFAULT_VAPID_PUBLIC_KEY =
+  "BEE59eSSlrngcxmOQ0LpF-6uj0XIrB-i0Mo8-cPqhPOnj7kvSkVoNZs0Vs9pY20SJf_UQZ8OcrjATRf0iu0Jt0M";
+const DEFAULT_VAPID_PRIVATE_KEY =
+  "UK3w8Gqc1Jx0lVfBeCWJX9IYiLRwPLYb5REUY3wVslE";
+
+export function getVapidKeys() {
+  const publicKey = process.env["VAPID_PUBLIC_KEY"] || DEFAULT_VAPID_PUBLIC_KEY;
+  const privateKey = process.env["VAPID_PRIVATE_KEY"] || DEFAULT_VAPID_PRIVATE_KEY;
+  return { publicKey, privateKey };
+}
+
 export type PushTarget = { endpoint: string; p256dh: string; auth: string };
 
 export async function sendPush(target: PushTarget, payload: Record<string, unknown>) {
-  const publicKey = process.env["VAPID_PUBLIC_KEY"];
-  const privateKey = process.env["VAPID_PRIVATE_KEY"];
-  if (!publicKey || !privateKey) return { ok: false as const, status: 0, gone: false };
+  const { publicKey, privateKey } = getVapidKeys();
+  if (!publicKey || !privateKey) {
+    console.warn("[webpush] Chaves VAPID ausentes para envio de push.");
+    return { ok: false as const, status: 0, gone: false };
+  }
 
   const body = await encryptPayload(JSON.stringify(payload), target.p256dh, target.auth);
   const headers = await vapidHeaders(target.endpoint, publicKey, privateKey);

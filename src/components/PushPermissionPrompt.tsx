@@ -25,7 +25,7 @@ export function PushPermissionPrompt() {
 
   useEffect(() => {
     const state = permission();
-    if (state === "unsupported" || !isStandalone()) return;
+    if (state === "unsupported") return;
     if (state === "granted") {
       void registerDevice(shop?.id ?? null);
       return;
