@@ -118,6 +118,19 @@ function AuthPage() {
 
       navigate({ to: "/onboarding", replace: true });
     };
+    // Trata captura direta de tokens no retorno do navegador (hash ou query params)
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const accessToken = searchParams.get("access_token") || hashParams.get("access_token");
+    const refreshToken = searchParams.get("refresh_token") || hashParams.get("refresh_token");
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ data }) => {
+        if (!active) return;
+        if (data.session) void go(data.session.user.id);
+      });
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       if (data.session) void go(data.session.user.id);
@@ -224,7 +237,21 @@ function AuthPage() {
     setLoading(true);
     setFieldError(null);
     try {
-      const redirectUri = `${window.location.origin}/auth`;
+      const isCapacitor = Boolean(
+        (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor,
+      );
+      const origin = "https://pronavalha.lovable.app";
+      const redirectUri = `${origin}/auth`;
+
+      if (isCapacitor) {
+        // No Android / Capacitor: abre o fluxo completo de autenticação no navegador externo do sistema (Chrome).
+        // Isso evita que cookies CSRF fiquem isolados no WebView e causem o erro "State verification failed".
+        const initiateUrl = `${origin}/~oauth/initiate?provider=google&redirect_uri=${encodeURIComponent(redirectUri)}`;
+        window.open(initiateUrl, "_system");
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await lovable.auth.signInWithOAuth("google", {
           redirect_uri: redirectUri,

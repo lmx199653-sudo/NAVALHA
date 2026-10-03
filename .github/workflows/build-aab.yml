@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: v1.0.10
-          name: "NAVALHA PRO v1.0.10 - Google Login & Criação de Barbearia"
-          body: "Versão com suporte restaurado a autenticação com Google (OAuth) e fluxo de criação de barbearia integrado."
+          tag_name: v1.0.11
+          name: "NAVALHA PRO v1.0.11 - Correção OAuth Google no Android"
+          body: "Corrige State verification failed no login do Google no app Android (Capacitor) e isolamento de cookies CSRF."
           files: android/app/build/outputs/bundle/release/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

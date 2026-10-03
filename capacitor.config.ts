@@ -10,7 +10,6 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     allowNavigation: [
       'pronavalha.lovable.app',
-      '*.lovable.app',
       '*.supabase.co'
     ]
   }
