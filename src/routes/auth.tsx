@@ -88,10 +88,22 @@ function AuthPage() {
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [checking, setChecking] = useState(true);
 
+  const [returnToAppInfo, setReturnToAppInfo] = useState<{
+    customSchemeUrl: string;
+    intentUrl: string;
+  } | null>(null);
+
   // Já logado: não fica preso na tela de login. Se ainda não tiver barbearia,
   // vai obrigatoriamente para o cadastro antes do painel.
   useEffect(() => {
     let active = true;
+    const isCapacitor = Boolean(
+      (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor,
+    );
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const isAppRedirect = searchParams.get("app_redirect") === "1";
+
     const go = async (userId: string) => {
       if (!active) return;
       const { data: memberships } = await supabase
@@ -118,11 +130,63 @@ function AuthPage() {
 
       navigate({ to: "/onboarding", replace: true });
     };
+
+    const triggerAppHandoff = (tokens: { access_token: string; refresh_token: string }) => {
+      const q = `access_token=${encodeURIComponent(tokens.access_token)}&refresh_token=${encodeURIComponent(tokens.refresh_token)}`;
+      const customSchemeUrl = `com.navalhapro.oficial://auth?${q}`;
+      const intentUrl = `intent://pronavalha.lovable.app/auth?${q}#Intent;scheme=https;package=com.navalhapro.oficial;end`;
+
+      setReturnToAppInfo({ customSchemeUrl, intentUrl });
+
+      // Dispara imediatamente para o Android abrir o app instalado
+      try {
+        window.location.href = customSchemeUrl;
+      } catch {
+        // fallback
+      }
+      setTimeout(() => {
+        try {
+          window.location.href = intentUrl;
+        } catch {
+          // fallback
+        }
+      }, 700);
+    };
+
     // Trata captura direta de tokens no retorno do navegador (hash ou query params)
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const accessToken = searchParams.get("access_token") || hashParams.get("access_token");
     const refreshToken = searchParams.get("refresh_token") || hashParams.get("refresh_token");
+
+    // Se o login foi disparado do app e estamos no Chrome externo:
+    if (!isCapacitor && isAppRedirect) {
+      if (accessToken && refreshToken) {
+        triggerAppHandoff({ access_token: accessToken, refresh_token: refreshToken });
+        return;
+      }
+      supabase.auth.getSession().then(({ data }) => {
+        if (!active) return;
+        if (data.session) {
+          triggerAppHandoff({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        } else {
+          setChecking(false);
+        }
+      });
+      const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+          triggerAppHandoff({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          });
+        }
+      });
+      return () => {
+        active = false;
+        sub.subscription.unsubscribe();
+      };
+    }
 
     if (accessToken && refreshToken) {
       supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ data }) => {
@@ -241,7 +305,7 @@ function AuthPage() {
         (window as any).Capacitor?.isNativePlatform?.() || (window as any).Capacitor,
       );
       const origin = "https://pronavalha.lovable.app";
-      const redirectUri = `${origin}/auth`;
+      const redirectUri = isCapacitor ? `${origin}/auth?app_redirect=1` : `${origin}/auth`;
 
       if (isCapacitor) {
         // No Android / Capacitor: abre o fluxo completo de autenticação no navegador externo do sistema (Chrome).
@@ -289,6 +353,57 @@ function AuthPage() {
       return;
     }
     toast.success("Enviamos um link de recuperação para seu e-mail.");
+  }
+
+  if (returnToAppInfo) {
+    return (
+      <div className="min-h-screen bg-[#07080A] text-[#EDEFF1] flex flex-col items-center justify-center p-6 text-center">
+        <div className="relative mb-6">
+          <div className="w-20 h-20 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shadow-lg shadow-amber-500/10">
+            <svg
+              className="w-10 h-10 text-amber-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-white mb-2">Login realizado com sucesso!</h1>
+        <p className="text-[15px] text-[#9BA1A6] mb-8 max-w-sm">
+          Retornando para o aplicativo <strong className="text-amber-400 font-semibold">NAVALHA PRO</strong>...
+        </p>
+
+        <div className="w-full max-w-xs space-y-3">
+          <a
+            href={returnToAppInfo.customSchemeUrl}
+            className="flex items-center justify-center w-full h-[52px] rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+          >
+            Abrir no Aplicativo
+          </a>
+
+          <a
+            href={returnToAppInfo.intentUrl}
+            className="block text-xs text-[#70767D] hover:text-white underline transition-colors pt-1"
+          >
+            Não abriu automaticamente? Toque aqui
+          </a>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            setReturnToAppInfo(null);
+            navigate({ to: "/dashboard", replace: true });
+          }}
+          className="mt-8 text-xs text-[#525860] hover:text-[#9BA1A6] transition-colors"
+        >
+          Ou continuar pelo navegador
+        </button>
+      </div>
+    );
   }
 
   if (checking) return <div className="min-h-screen bg-[#07080A]" />;
