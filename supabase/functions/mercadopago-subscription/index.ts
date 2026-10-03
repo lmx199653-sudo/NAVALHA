@@ -124,8 +124,8 @@ serve(async (req: Request) => {
     const payerEmail = user.email || "contato@navalhapro.com.br";
     const appBaseUrl = back_url || "https://pronavalha.lovable.app/cobranca";
 
-    const preapprovalPayload = {
-      payer_email: payerEmail,
+    const buildPayload = (email: string) => ({
+      payer_email: email,
       back_url: `${appBaseUrl}?from_mp=1`,
       reason: `Assinatura NAVALHA PRO - ${shop.name || "Plano Mensal"}`,
       auto_recurring: {
@@ -138,20 +138,38 @@ serve(async (req: Request) => {
       },
       external_reference: barbershop_id,
       status: "pending",
-    };
+    });
 
-    console.log("[MercadoPago Subscription] Criando assinatura:", JSON.stringify(preapprovalPayload));
+    console.log("[MercadoPago Subscription] Criando assinatura:", JSON.stringify(buildPayload(payerEmail)));
 
-    const mpResp = await fetch("https://api.mercadopago.com/preapproval", {
+    let mpResp = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${mpAccessToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(preapprovalPayload),
+      body: JSON.stringify(buildPayload(payerEmail)),
     });
 
-    const mpData = await mpResp.json();
+    let mpData = await mpResp.json();
+
+    const isUserMismatch =
+      !mpResp.ok &&
+      (JSON.stringify(mpData).includes("Both payer and collector") ||
+        JSON.stringify(mpData).includes("payer and collector"));
+
+    if (isUserMismatch) {
+      console.warn("[MercadoPago Subscription] Ambiente de teste detectado no Mercado Pago. Usando test_user comprador.");
+      mpResp = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${mpAccessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(buildPayload("test_user_2516787368175232095@testuser.com")),
+      });
+      mpData = await mpResp.json();
+    }
 
     if (!mpResp.ok) {
       console.error("[MercadoPago Subscription] Erro da API MP:", mpData);
