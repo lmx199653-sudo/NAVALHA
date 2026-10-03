@@ -904,6 +904,36 @@ export type Database = {
           },
         ]
       }
+      mercadopago_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json | null
+          resource_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          resource_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          resource_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -1190,6 +1220,60 @@ export type Database = {
           },
         ]
       }
+      subscription_invoices: {
+        Row: {
+          amount: number
+          barbershop_id: string
+          billing_type: string
+          created_at: string
+          date_approved: string | null
+          id: string
+          mp_payment_id: string | null
+          raw_payload: Json | null
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          amount?: number
+          barbershop_id: string
+          billing_type?: string
+          created_at?: string
+          date_approved?: string | null
+          id?: string
+          mp_payment_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          amount?: number
+          barbershop_id?: string
+          billing_type?: string
+          created_at?: string
+          date_approved?: string | null
+          id?: string
+          mp_payment_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: false
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_payments: {
         Row: {
           amount_cents: number
@@ -1428,6 +1512,77 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          barbershop_id: string
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          grace_until: string | null
+          id: string
+          last_payment_date: string | null
+          last_payment_status: string | null
+          mercadopago_plan_id: string | null
+          mercadopago_preapproval_id: string | null
+          monthly_amount: number
+          next_payment_date: string | null
+          payment_failed_at: string | null
+          restricted_at: string | null
+          status: string
+          suspended_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          barbershop_id: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          grace_until?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_status?: string | null
+          mercadopago_plan_id?: string | null
+          mercadopago_preapproval_id?: string | null
+          monthly_amount?: number
+          next_payment_date?: string | null
+          payment_failed_at?: string | null
+          restricted_at?: string | null
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          barbershop_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          grace_until?: string | null
+          id?: string
+          last_payment_date?: string | null
+          last_payment_status?: string | null
+          mercadopago_plan_id?: string | null
+          mercadopago_preapproval_id?: string | null
+          monthly_amount?: number
+          next_payment_date?: string | null
+          payment_failed_at?: string | null
+          restricted_at?: string | null
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_barbershop_id_fkey"
+            columns: ["barbershop_id"]
+            isOneToOne: true
+            referencedRelation: "barbershops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_conversations: {
         Row: {
           assigned_to: string | null
@@ -1618,6 +1773,10 @@ export type Database = {
       can_access_conversation: { Args: { _conv: string }; Returns: boolean }
       cancel_subscription: {
         Args: { _reason?: string; _subscription_id: string }
+        Returns: Json
+      }
+      check_subscription_access: {
+        Args: { _barbershop_id: string }
         Returns: Json
       }
       complete_appointment: {
