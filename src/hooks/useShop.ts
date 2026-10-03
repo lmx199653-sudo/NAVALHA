@@ -50,11 +50,12 @@ export function useSession() {
   return { userId, email, ready };
 }
 
-export function useShop() {
+export function useShop(options: { autoCreate?: boolean } = {}) {
+  const { autoCreate = true } = options;
   const { userId, ready } = useSession();
 
   return useQuery({
-    queryKey: ["shop", userId],
+    queryKey: ["shop", userId, autoCreate],
     enabled: ready,
     retry: 1,
     queryFn: async (): Promise<Shop | null> => {
@@ -72,8 +73,7 @@ export function useShop() {
         return (data ?? null) as Shop | null;
       };
 
-      // A barbearia é localizada pelo vínculo de equipe (o dono recebe o vínculo
-      // automaticamente), evitando expor o identificador do proprietário.
+      // 1. A barbearia é localizada pelo vínculo de equipe
       const { data: memberships, error: memberError } = await supabase
         .from("barbershop_members")
         .select("barbershop_id")
@@ -86,8 +86,24 @@ export function useShop() {
         if (found) return found;
       }
 
-      // Conta nova sem barbearia: criamos uma automaticamente para que o app
-      // funcione por completo desde o primeiro acesso.
+      // 2. Busca diretamente como proprietário (owner_id)
+      const { data: owned, error: ownedError } = await supabase
+        .from("barbershops")
+        .select(SHOP_COLUMNS)
+        .eq("owner_id", userId)
+        .order("created_at")
+        .limit(1)
+        .maybeSingle();
+      if (!ownedError && owned) {
+        return owned as Shop;
+      }
+
+      // 3. Se autoCreate for false (ex: tela de onboarding), não cria barbearia dummy
+      if (!autoCreate) {
+        return null;
+      }
+
+      // 4. Criação automática de fallback para telas administrativas
       const { ensureShopId } = await import("@/lib/shop");
       const newId = await ensureShopId();
       return await load([newId]);

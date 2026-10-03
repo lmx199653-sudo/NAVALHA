@@ -23,7 +23,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { userId } = useSession();
-  const { data: shop, isSuccess } = useShop();
+  const { data: shop, isSuccess } = useShop({ autoCreate: false });
   const [loading, setLoading] = useState(false);
   const [brand, setBrand] = useState<Brand>(() => emptyBrand());
   const [form, setForm] = useState({
@@ -46,19 +46,21 @@ function Onboarding() {
       if (user) {
         const meta = user.user_metadata;
         const fullName = (meta?.["full_name"] || meta?.["name"] || "") as string;
-        if (fullName) {
-          const firstName = fullName.split(" ")[0];
-          const suggested = `Barbearia do ${firstName}`;
-          setForm((prev) => {
-            if (prev.name) return prev;
-            return {
-              ...prev,
-              name: suggested,
-              slug: slugify(suggested),
-            };
-          });
-        }
-        const avatarUrl = meta?.["avatar_url"] as string | undefined;
+        const namePart = fullName || user.email?.split("@")[0] || "";
+        const firstName = namePart.split(" ")[0];
+        const suggested = firstName ? `Barbearia do ${firstName}` : "Minha Barbearia";
+
+        setForm((prev) => {
+          if (prev.name) return prev;
+          return {
+            ...prev,
+            name: suggested,
+            slug: slugify(suggested),
+            celular: prev.celular || user.phone || (meta?.["phone"] as string) || "",
+          };
+        });
+
+        const avatarUrl = (meta?.["avatar_url"] || meta?.["picture"]) as string | undefined;
         if (avatarUrl) {
           setBrand((prev) => ({
             ...prev,
@@ -72,6 +74,7 @@ function Onboarding() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+
     // Se a sessão ainda não estiver carregada no estado, busca direto —
     // assim o cadastro nunca falha silenciosamente.
     const { data: sessionData } = await supabase.auth.getSession();
@@ -81,20 +84,25 @@ function Onboarding() {
       toast.error("Entre na sua conta para criar a barbearia.");
       return;
     }
-    const slug = slugify(form.slug || form.name);
-    const { celular, ...rest } = form;
-    const payload = {
-      ...rest,
-      slug,
-      phone: celular,
-      cpf_cnpj: form.cpf_cnpj || null,
+
+    const name = form.name.trim() || "Minha Barbearia";
+    const baseSlug = slugify(form.slug || name) || "barbearia";
+
+    const cleanPayload = {
+      name,
+      slug: baseSlug,
+      phone: form.celular?.trim() || null,
+      address: form.address?.trim() || null,
+      cpf_cnpj: form.cpf_cnpj?.trim() || null,
+      instagram: form.instagram?.trim() || null,
+      description: form.description?.trim() || null,
       owner_id: ownerId,
       onboarding_done: true,
-      logo_url: brand.logo_url,
-      accent_color: brand.accent_color,
-      secondary_color: brand.secondary_color,
-      bg_color: brand.bg_color,
-      font_family: brand.font_family,
+      logo_url: brand.logo_url?.trim() || null,
+      accent_color: brand.accent_color || "#E3B341",
+      secondary_color: brand.secondary_color || "#C08A2E",
+      bg_color: brand.bg_color || "#0D0D10",
+      font_family: brand.font_family || "Bebas Neue",
     };
 
     const returning = "id, slug, name, onboarding_done";
@@ -113,51 +121,77 @@ function Onboarding() {
       ).data?.id ??
       null;
 
-    let { data, error } = existingId
-      ? await supabase
-          .from("barbershops")
-          .update(payload)
-          .eq("id", existingId)
-          .select(returning)
-          .single()
-      : await supabase.from("barbershops").insert(payload).select(returning).single();
+    let data: { id: string; slug: string; name: string; onboarding_done: boolean } | null = null;
+    let error: { message: string; code?: string } | null = null;
+    let currentSlug = baseSlug;
 
-    // Endereço público já usado: gera uma variação automaticamente.
-    if (error && /slug/i.test(error.message) && /duplicate|unique/i.test(error.message)) {
-      const retryPayload = { ...payload, slug: `${slug}-${Date.now().toString(36).slice(-4)}` };
-      ({ data, error } = existingId
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const payloadWithSlug = { ...cleanPayload, slug: currentSlug };
+      const res = existingId
         ? await supabase
             .from("barbershops")
-            .update(retryPayload)
+            .update(payloadWithSlug)
             .eq("id", existingId)
             .select(returning)
-            .single()
-        : await supabase.from("barbershops").insert(retryPayload).select(returning).single());
+            .maybeSingle()
+        : await supabase
+            .from("barbershops")
+            .insert(payloadWithSlug)
+            .select(returning)
+            .maybeSingle();
+
+      data = res.data;
+      error = res.error;
+
+      if (!error && data) break;
+
+      const isConflict =
+        error &&
+        (error.code === "23505" ||
+          /slug/i.test(error.message) ||
+          /duplicate|unique|already exists/i.test(error.message));
+
+      if (isConflict) {
+        currentSlug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+        continue;
+      }
+      break;
     }
 
     if (error || !data) {
+      console.error("[Onboarding] Error saving barbershop:", error);
       setLoading(false);
       toast.error(error ? friendlyError(error.message) : "Não foi possível salvar os dados.");
       return;
     }
 
-    await supabase
+    const memberRes = await supabase
       .from("barbershop_members")
       .upsert(
         { barbershop_id: data.id, user_id: ownerId, role: "owner" },
         { onConflict: "barbershop_id,user_id" },
       );
+    if (memberRes.error) {
+      console.warn("[Onboarding] Member upsert warning, fallback to insert:", memberRes.error);
+      await supabase
+        .from("barbershop_members")
+        .insert({ barbershop_id: data.id, user_id: ownerId, role: "owner" });
+    }
 
-    await supabase.from("business_hours").upsert(
-      Array.from({ length: 7 }, (_, weekday) => ({
-        barbershop_id: data.id,
-        weekday,
-        open_time: "09:00",
-        close_time: weekday === 6 ? "18:00" : "20:00",
-        closed: weekday === 0,
-      })),
-      { onConflict: "barbershop_id,weekday" },
-    );
+    try {
+      await supabase.from("business_hours").upsert(
+        Array.from({ length: 7 }, (_, weekday) => ({
+          barbershop_id: data.id,
+          weekday,
+          open_time: "09:00",
+          close_time: weekday === 6 ? "18:00" : "20:00",
+          closed: weekday === 0,
+        })),
+        { onConflict: "barbershop_id,weekday" },
+      );
+    } catch (e) {
+      console.warn("[Onboarding] Business hours upsert warning:", e);
+    }
 
     // Conta nova já vem com serviços, barbeiros, 3 planos de teste e 2 clientes
     // de demonstração (com assinaturas ativas e agendamentos). Cada etapa checa
@@ -223,10 +257,11 @@ function Onboarding() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="cpf_cnpj">CPF ou CNPJ</Label>
+              <Label htmlFor="cpf_cnpj">
+                CPF ou CNPJ <span className="text-xs text-muted-foreground">(opcional)</span>
+              </Label>
               <Input
                 id="cpf_cnpj"
-                required
                 inputMode="numeric"
                 maxLength={18}
                 placeholder="000.000.000-00"
@@ -235,10 +270,11 @@ function Onboarding() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="celular">Celular</Label>
+              <Label htmlFor="celular">
+                Celular <span className="text-xs text-muted-foreground">(opcional)</span>
+              </Label>
               <Input
                 id="celular"
-                required
                 inputMode="tel"
                 maxLength={15}
                 placeholder="(11) 99999-9999"
