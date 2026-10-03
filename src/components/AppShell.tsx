@@ -5,6 +5,7 @@ import {
   CalendarDays,
   CalendarPlus,
   Clock,
+  CreditCard,
   Crown,
   Headset,
   Inbox,
@@ -24,6 +25,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useShop } from "@/hooks/useShop";
 import { useIsSupport, useMyConversations, useInbox, useSupportRealtime } from "@/hooks/useSupport";
 import { canManage } from "@/lib/supabase-guard";
+import { SubscriptionBanner } from "@/components/SubscriptionBanner";
+import { SubscriptionGateModal } from "@/components/SubscriptionGateModal";
 
 
 import { useBrand } from "@/lib/brand";
@@ -48,6 +51,7 @@ const NAV: readonly NavItem[] = [
   { to: "/servicos", label: "Serviços", icon: Scissors, group: "Cadastros" },
   { to: "/horarios", label: "Horários", icon: Clock, group: "Cadastros" },
   { to: "/financeiro", label: "Financeiro", icon: BarChart3, group: "Negócio" },
+  { to: "/cobranca", label: "Minha assinatura", icon: CreditCard, group: "Negócio" },
   { to: "/assinaturas", label: "Assinaturas", icon: Crown, group: "Negócio" },
   { to: "/marketing", label: "Marketing", icon: Megaphone, group: "Negócio" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, group: "Negócio" },
@@ -230,6 +234,8 @@ export function AppShell({
       </aside>
 
       <div className="lg:pl-60">
+        <SubscriptionGateModal />
+        <SubscriptionBanner />
         {/* Header */}
         <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3.5 sm:flex sm:flex-wrap sm:justify-between sm:px-6 sm:py-4">

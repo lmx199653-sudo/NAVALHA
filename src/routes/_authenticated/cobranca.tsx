@@ -1,297 +1,495 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
-  CalendarClock,
+  Calendar,
   CheckCircle2,
-  Coins,
-  Gift,
-  Info,
-  Receipt,
-  ScanLine,
+  Clock,
+  CreditCard,
+  ExternalLink,
+  HelpCircle,
+  Lock,
+  RefreshCw,
+  RotateCcw,
+  ShieldAlert,
   ShieldCheck,
+  Sparkles,
+  Users,
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
 import { StatCard } from "@/components/StatCard";
-import { PixQrCard } from "@/components/PixQrCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  CardSkeleton,
-  EmptyState,
-  ErrorState,
-  ListSkeleton,
-  SectionHeader,
-} from "@/components/ui/states";
-import { useBilling } from "@/hooks/useBilling";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CardSkeleton, EmptyState, ErrorState } from "@/components/ui/states";
 import { useShop } from "@/hooks/useShop";
-import { BILLING_STATUS, daysTo, fetchBillingInvoices } from "@/lib/billing";
+import { useIsSupport } from "@/hooks/useSupport";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import {
+  createOrGetMercadoPagoSubscription,
+  fetchAllSubscriptionsAdmin,
+} from "@/lib/mercadopago.functions";
+import { MP_STATUS_INFO, type SubscriptionStatus } from "@/lib/mercadopago";
 import { brl, dateLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/cobranca")({
-  component: BillingPage,
+  component: MinhaAssinaturaPage,
 });
 
-function BillingPage() {
+function MinhaAssinaturaPage() {
   const { data: shop } = useShop();
-  const { data, isLoading, isError, refetch } = useBilling();
-  const invoices = useQuery({
-    queryKey: ["billing-invoices", shop?.id],
+  const { data: isSupport } = useIsSupport();
+  const qc = useQueryClient();
+
+  const {
+    access,
+    status,
+    subscription,
+    daysUntilRestriction,
+    daysUntilSuspension,
+    refetch: refetchAccess,
+    isLoading: accessLoading,
+  } = useSubscriptionAccess();
+
+  // Histórico de faturas da barbearia
+  const invoicesQuery = useQuery({
+    queryKey: ["subscription-invoices", shop?.id],
     enabled: !!shop?.id,
-    queryFn: () => fetchBillingInvoices(shop!.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_invoices" as any)
+        .select("*")
+        .eq("barbershop_id", shop!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
   });
 
-  const status = data ? BILLING_STATUS[data.status] : null;
-  const inv = data?.open_invoice ?? null;
-  const freePct = data ? Math.min(100, Math.round((data.free_used / data.free_quota) * 100)) : 0;
-  const unit = data ? brl(data.unit_price_cents) : "R$ 0,10";
+  // Assinaturas para visualização administrativa
+  const adminSubsQuery = useQuery({
+    queryKey: ["admin-all-subscriptions"],
+    enabled: !!isSupport,
+    queryFn: async () => {
+      return await fetchAllSubscriptionsAdmin();
+    },
+  });
+
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [adminFilter, setAdminFilter] = useState<string>("all");
+
+  const statusMeta =
+    MP_STATUS_INFO[status as SubscriptionStatus] || MP_STATUS_INFO.active;
+
+  async function handleStartSubscription() {
+    if (!shop?.id) {
+      toast.error("Barbearia não selecionada.");
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const res = await createOrGetMercadoPagoSubscription({
+        data: {
+          barbershopId: shop.id,
+          backUrl: `${window.location.origin}/cobranca?status=approved`,
+        },
+      });
+
+      if (res.initPoint) {
+        toast.success("Redirecionando para o checkout seguro do Mercado Pago...");
+        window.location.href = res.initPoint;
+      } else {
+        toast.info("Assinatura já identificada no sistema.");
+        refetchAccess();
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Falha ao iniciar pagamento no Mercado Pago.");
+    } finally {
+      setCheckoutLoading(false);
+    }
+  }
+
+  const nextBilling = subscription?.next_payment_date
+    ? dateLabel(subscription.next_payment_date)
+    : "Dia 5 do próximo mês";
+
+  const lastPayment = subscription?.last_payment_date
+    ? dateLabel(subscription.last_payment_date)
+    : "Pendente";
+
+  const monthlyPrice = subscription?.monthly_amount
+    ? brl(Math.round(subscription.monthly_amount * 100))
+    : "R$ 49,90";
 
   return (
     <AppShell
-      title="Cobrança"
-      subtitle="Uso do Navalha Pro · pague apenas pelos atendimentos concluídos"
+      title="Minha assinatura"
+      subtitle="Ciclo mensal fixo no dia 5 · Mercado Pago recorrente com pro-rata"
       action={
-        status && (
-          <Badge variant="outline" className={cn("border", status.tone)}>
-            {status.label}
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className={cn("border font-medium", statusMeta.badgeCls)}>
+            {statusMeta.label}
           </Badge>
-        )
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs text-neutral-300"
+            onClick={() => {
+              refetchAccess();
+              invoicesQuery.refetch();
+              toast.info("Status sincronizado.");
+            }}
+          >
+            <RefreshCw className="size-3.5" />
+            <span className="hidden sm:inline">Sincronizar</span>
+          </Button>
+        </div>
       }
     >
-      {isError ? (
-        <ErrorState onRetry={() => refetch()} />
-      ) : isLoading || !data ? (
-        <CardSkeleton count={4} />
-      ) : (
-        <>
-          {/* Como funciona */}
-          <div className="surface-card mb-4 flex items-start gap-3 border-primary/25 p-4">
-            <Info className="mt-0.5 size-4 shrink-0 text-primary" />
-            <p className="text-sm text-muted-foreground">
-              Os primeiros <strong className="text-foreground">{data.free_quota}</strong>{" "}
-              atendimentos concluídos são grátis. A partir do{" "}
-              <strong className="text-foreground">{data.free_quota + 1}º</strong>, cada atendimento
-              concluído custa <strong className="text-foreground">{unit}</strong>, acumulado em
-              ciclos de {data.cycle_days} dias e pago via Pix. Cancelamentos, faltas e agendamentos
-              não concluídos nunca são cobrados.
-            </p>
-          </div>
+      <Tabs defaultValue="minha" className="w-full">
+        {isSupport && (
+          <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="minha">Minha Assinatura</TabsTrigger>
+            <TabsTrigger value="admin" className="gap-1.5">
+              <span>Admin (Todas)</span>
+              {adminSubsQuery.data && (
+                <span className="rounded-full bg-primary/20 px-1.5 text-[10px] font-bold text-primary">
+                  {adminSubsQuery.data.length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        )}
 
+        {/* TAB 1: MINHA ASSINATURA */}
+        <TabsContent value="minha" className="space-y-6 mt-0">
+          {/* Card de Alerta quando houver pendência */}
+          {status === "payment_pending" && (
+            <div className="surface-card border-amber-500/40 bg-amber-500/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="size-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                  <Clock className="size-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-200">Pagamento Pendente</h3>
+                  <p className="text-xs sm:text-sm text-amber-300/80 mt-0.5">
+                    A cobrança do dia 5 não foi processada. Seu acesso será restringido em{" "}
+                    <strong>{daysUntilRestriction ?? "poucos"} dia(s)</strong> (no dia 8).
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleStartSubscription}
+                disabled={checkoutLoading}
+                className="bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs h-9 shrink-0 shadow-md"
+              >
+                Regularizar pagamento
+              </Button>
+            </div>
+          )}
+
+          {status === "restricted" && (
+            <div className="surface-card border-orange-500/40 bg-orange-500/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="size-10 rounded-xl bg-orange-500/20 flex items-center justify-center shrink-0">
+                  <ShieldAlert className="size-5 text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-orange-200">Acesso Restrito</h3>
+                  <p className="text-xs sm:text-sm text-orange-300/80 mt-0.5">
+                    Seu acesso foi restringido no dia 8. Você pode consultar seus dados, mas não pode cadastrar novos agendamentos. Suspensão total em{" "}
+                    <strong>{daysUntilSuspension ?? "poucos"} dia(s)</strong> (no dia 10).
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleStartSubscription}
+                disabled={checkoutLoading}
+                className="bg-orange-500 hover:bg-orange-400 text-black font-semibold text-xs h-9 shrink-0 shadow-md"
+              >
+                Regularizar pagamento
+              </Button>
+            </div>
+          )}
+
+          {status === "suspended" && (
+            <div className="surface-card border-rose-500/40 bg-rose-500/10 p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="size-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
+                  <Lock className="size-5 text-rose-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-rose-200">Acesso Suspenso</h3>
+                  <p className="text-xs sm:text-sm text-rose-300/80 mt-0.5">
+                    Sistema suspenso por pendência financeira. Seus dados e histórico continuam 100% seguros. Efetue o pagamento para reativação imediata.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleStartSubscription}
+                disabled={checkoutLoading}
+                className="bg-rose-500 hover:bg-rose-400 text-white font-semibold text-xs h-9 shrink-0 shadow-md"
+              >
+                Regularizar agora
+              </Button>
+            </div>
+          )}
+
+          {/* Cards de Métricas do Plano */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <StatCard
               size="hero"
-              label="Grátis utilizados"
-              value={`${data.free_used}/${data.free_quota}`}
-              icon={Gift}
+              label="Plano atual"
+              value="NAVALHA PRO"
+              icon={Sparkles}
               tone="gold"
-              hint={
-                data.free_left > 0
-                  ? `${data.free_left} atendimentos grátis restantes`
-                  : "Cota grátis esgotada"
-              }
+              hint="Recorrente Mensal"
             />
             <StatCard
               size="hero"
-              label="Atendimentos cobrados"
-              value={data.cycle?.billed_count ?? 0}
-              icon={Receipt}
-              hint={
-                data.cycle ? `ciclo atual · ${data.billed_total} no total` : "nenhum ciclo aberto"
-              }
+              label="Valor mensal"
+              value={monthlyPrice}
+              icon={CreditCard}
+              tone="gold"
+              hint="Cobrança no cartão via Mercado Pago"
             />
             <StatCard
               size="hero"
-              label="Valor acumulado"
-              value={brl(data.cycle?.amount_cents ?? 0)}
-              icon={Coins}
-              tone={data.cycle?.amount_cents ? "success" : "default"}
-              hint={`${unit} por atendimento`}
+              label="Próximo vencimento"
+              value={nextBilling}
+              icon={Calendar}
+              hint="Ciclo fixo no dia 5 de cada mês"
             />
             <StatCard
               size="hero"
-              label={inv ? "Vencimento" : "Fecha o ciclo em"}
-              value={
-                inv ? dateLabel(inv.due_date) : data.cycle ? dateLabel(data.cycle.period_end) : "—"
-              }
-              icon={CalendarClock}
-              tone={data.status === "active" ? "default" : "danger"}
-              hint={status?.label ?? ""}
+              label="Último pagamento"
+              value={lastPayment}
+              icon={CheckCircle2}
+              hint={subscription?.last_payment_status === "approved" ? "Aprovado com sucesso" : "Aguardando confirmação"}
             />
           </div>
 
-          {/* Barra de uso grátis */}
-          <div className="surface-card mt-4 p-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Atendimentos gratuitos</span>
-              <span className="text-muted-foreground">{freePct}% utilizado</span>
+          {/* Como Funciona a Cobrança Proporcional (Pro-rata) */}
+          <div className="surface-card border-white/5 p-6 rounded-2xl space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <HelpCircle className="size-4 text-primary" />
+                </div>
+              <h3 className="font-semibold text-white">Como funciona o ciclo recorrente do NAVALHA PRO</h3>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${freePct}%` }}
-              />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {data.free_left > 0
-                ? `O ciclo de ${data.cycle_days} dias só começa depois que os ${data.free_quota} atendimentos grátis forem usados.`
-                : data.cycle
-                  ? `Ciclo atual: ${dateLabel(data.cycle.period_start)} a ${dateLabel(data.cycle.period_end)}.`
-                  : "Um novo ciclo começa no próximo atendimento concluído."}
-            </p>
-          </div>
 
-          {/* Cobrança em aberto */}
-          {inv && (
-            <div
-              className={cn(
-                "surface-card mt-4 p-4 sm:p-5",
-                data.status === "suspended"
-                  ? "border-destructive/50"
-                  : data.status === "pending"
-                    ? "border-warning/50"
-                    : "border-primary/40",
-              )}
-            >
-              <SectionHeader
-                title="Cobrança em aberto"
-                description={`${inv.appointments_count} atendimentos · ${dateLabel(inv.period_start)} a ${dateLabel(inv.period_end)}`}
-                icon={ScanLine}
-              />
-              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
-                <div className="surface-row px-3.5 py-3">
-                  <p className="text-xs text-muted-foreground">Valor</p>
-                  <p className="font-display text-2xl text-primary">{brl(inv.amount_cents)}</p>
-                </div>
-                <div className="surface-row px-3.5 py-3">
-                  <p className="text-xs text-muted-foreground">Vencimento</p>
-                  <p className="font-medium">{dateLabel(inv.due_date)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {daysTo(inv.due_date) >= 0
-                      ? `${daysTo(inv.due_date)} dia(s) restantes`
-                      : `vencida há ${Math.abs(daysTo(inv.due_date))} dia(s)`}
-                  </p>
-                </div>
-                <div className="surface-row px-3.5 py-3">
-                  <p className="text-xs text-muted-foreground">Suspensão em</p>
-                  <p className="font-medium">{dateLabel(inv.suspend_at)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {data.status === "suspended" ? "conta suspensa" : "se não houver pagamento"}
-                  </p>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs sm:text-sm text-neutral-300">
+              <div className="surface-card border-white/5 bg-white/[0.01] p-4 rounded-xl space-y-2">
+                <strong className="text-amber-400 flex items-center gap-1.5">
+                  <Calendar className="size-3.5" /> 1. Vencimento Fixo no Dia 5
+                </strong>
+                <p className="text-neutral-400 leading-relaxed">
+                  O ciclo financeiro da plataforma roda sempre do dia 5 até o próximo dia 5 de cada mês.
+                </p>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{status?.description}</p>
 
-              {data.platform_pix ? (
-                <PixQrCard
-                  className="mt-4"
-                  pixKey={data.platform_pix.key}
-                  pixKeyType={data.platform_pix.key_type}
-                  holderName={data.platform_pix.holder_name ?? "NAVALHA PRO"}
-                  amountCents={inv.amount_cents}
-                  description={`Navalha Pro ${inv.pix_txid}`}
-                  showKey
-                />
-              ) : (
-                <EmptyState
-                  className="mt-4"
-                  icon={ScanLine}
-                  title="Pix em preparação"
-                  description="A chave Pix da plataforma ainda não foi liberada. Assim que estiver disponível, o QR Code aparece aqui."
-                  compact
-                />
-              )}
-              <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                Identificador da cobrança: <code className="select-all">{inv.pix_txid}</code>. A
-                confirmação do pagamento é automática e reativa a conta na hora.
-              </p>
-            </div>
-          )}
+              <div className="surface-card border-white/5 bg-white/[0.01] p-4 rounded-xl space-y-2">
+                <strong className="text-emerald-400 flex items-center gap-1.5">
+                  <ShieldCheck className="size-3.5" /> 2. Cobrança Proporcional (Pro-Rata)
+                </strong>
+                <p className="text-neutral-400 leading-relaxed">
+                  Ao assinar em qualquer outro dia, você paga apenas pelos dias restantes até o próximo dia 5. O valor integral só começa no próximo mês.
+                </p>
+              </div>
 
-          {!inv && data.status === "active" && (
-            <div className="surface-card mt-4 flex items-center gap-3 border-success/30 p-4">
-              <CheckCircle2 className="size-5 shrink-0 text-success" />
-              <div>
-                <p className="text-sm font-medium">Nenhuma cobrança em aberto</p>
-                <p className="text-xs text-muted-foreground">
-                  Ao fechar um ciclo com valor acumulado, a cobrança Pix aparece aqui e você recebe
-                  o aviso no painel.
+              <div className="surface-card border-white/5 bg-white/[0.01] p-4 rounded-xl space-y-2">
+                <strong className="text-sky-400 flex items-center gap-1.5">
+                  <RotateCcw className="size-3.5" /> 3. Tolerância e Reativação Automática
+                </strong>
+                <p className="text-neutral-400 leading-relaxed">
+                  Dias 6 e 7 contam com carência total. Em caso de atraso, o pagamento via Mercado Pago reativa o sistema no mesmo segundo.
                 </p>
               </div>
             </div>
-          )}
 
-          {/* Histórico */}
-          <div className="surface-card mt-4 p-4">
-            <SectionHeader title="Histórico de cobranças" icon={Receipt} />
-            <div className="mt-3 space-y-2">
-              {invoices.isLoading ? (
-                <ListSkeleton rows={3} />
-              ) : invoices.isError ? (
-                <ErrorState onRetry={() => invoices.refetch()} />
-              ) : (invoices.data ?? []).length === 0 ? (
-                <EmptyState
-                  icon={Receipt}
-                  title="Sem cobranças até agora"
-                  description="Enquanto você usa os atendimentos grátis, nada é cobrado."
-                  compact
-                />
-              ) : (
-                invoices.data!.map((i) => (
-                  <div
-                    key={i.id}
-                    className="surface-row flex items-center justify-between gap-3 px-3.5 py-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {dateLabel(i.period_start)} – {dateLabel(i.period_end)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {i.appointments_count} atendimentos · vence {dateLabel(i.due_date)}
-                        {i.paid_at ? ` · pago em ${dateLabel(i.paid_at)}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="font-display text-xl">{brl(i.amount_cents)}</span>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "border",
-                          i.status === "paid"
-                            ? "border-success/40 bg-success/15 text-success"
-                            : i.status === "cancelled"
-                              ? "border-border bg-muted text-muted-foreground"
-                              : "border-warning/40 bg-warning/15 text-warning",
-                        )}
-                      >
-                        {i.status === "paid"
-                          ? "Paga"
-                          : i.status === "cancelled"
-                            ? "Cancelada"
-                            : "Em aberto"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
+            {/* Ação principal */}
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <Button
+                onClick={handleStartSubscription}
+                disabled={checkoutLoading}
+                className="h-11 px-6 font-semibold bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-black shadow-lg shadow-amber-500/20 active:scale-95"
+              >
+                {checkoutLoading ? (
+                  <RefreshCw className="size-4 animate-spin mr-2" />
+                ) : (
+                  <CreditCard className="size-4 mr-2" />
+                )}
+                {status === "active" ? "Gerenciar / Alterar Cartão" : "Ativar Assinatura no Mercado Pago"}
+              </Button>
+
+              {subscription?.mercadopago_preapproval_id && (
+                <span className="text-xs text-neutral-500 font-mono">
+                  ID MP: {subscription.mercadopago_preapproval_id}
+                </span>
               )}
             </div>
-            {invoices.data && invoices.data.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-3"
-                onClick={() => {
-                  void invoices.refetch();
-                  void refetch();
-                }}
-              >
-                Atualizar
-              </Button>
+          </div>
+
+          {/* Histórico de Faturas */}
+          <div className="surface-card border-white/5 p-6 rounded-2xl space-y-4">
+            <h3 className="font-semibold text-white">Histórico de Cobranças</h3>
+
+            {invoicesQuery.isLoading ? (
+              <CardSkeleton count={2} />
+            ) : invoicesQuery.data && invoicesQuery.data.length > 0 ? (
+              <div className="divide-y divide-white/5 overflow-hidden rounded-xl border border-white/5">
+                {invoicesQuery.data.map((inv: any) => (
+                  <div key={inv.id} className="p-4 flex items-center justify-between text-sm hover:bg-white/[0.01]">
+                    <div className="space-y-1">
+                      <div className="font-medium text-white flex items-center gap-2">
+                        <span>{inv.billing_type === "pro_rata" ? "Adesão Proporcional (Pro-Rata)" : "Mensalidade NAVALHA PRO"}</span>
+                        <Badge variant="outline" className={cn("text-[10px] py-0", inv.status === "approved" ? "border-emerald-500/30 text-emerald-400" : "border-rose-500/30 text-rose-400")}>
+                          {inv.status === "approved" ? "Aprovado" : "Falhou"}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-neutral-400">
+                        {dateLabel(inv.date_approved || inv.created_at)} · ID: {inv.mp_payment_id || "N/A"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-semibold text-white">{brl(Math.round(Number(inv.amount) * 100))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-neutral-400 py-2">
+                Nenhum pagamento registrado ainda. Assim que você ativar sua assinatura, o histórico aparecerá aqui.
+              </p>
             )}
           </div>
-        </>
-      )}
+        </TabsContent>
+
+        {/* TAB 2: VISÃO ADMINISTRATIVA (EQUIPE NAVALHA PRO) */}
+        {isSupport && (
+          <TabsContent value="admin" className="space-y-6 mt-0">
+            <div className="surface-card border-white/5 p-6 rounded-2xl space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white">Gestão Global de Assinaturas</h3>
+                  <p className="text-xs text-neutral-400">
+                    Acompanhamento em tempo real das barbearias cadastradas na plataforma.
+                  </p>
+                </div>
+
+                {/* Filtro por status */}
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { id: "all", label: "Todas" },
+                    { id: "active", label: "Ativas" },
+                    { id: "payment_pending", label: "Pendentes" },
+                    { id: "restricted", label: "Restritas" },
+                    { id: "suspended", label: "Suspensas" },
+                    { id: "cancelled", label: "Canceladas" },
+                  ].map((f) => (
+                    <Button
+                      key={f.id}
+                      size="sm"
+                      variant={adminFilter === f.id ? "default" : "outline"}
+                      className={cn(
+                        "h-8 text-xs",
+                        adminFilter === f.id
+                          ? "bg-primary text-primary-foreground font-semibold"
+                          : "border-white/10 text-neutral-300 hover:text-white"
+                      )}
+                      onClick={() => setAdminFilter(f.id)}
+                    >
+                      {f.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {adminSubsQuery.isLoading ? (
+                <CardSkeleton count={4} />
+              ) : adminSubsQuery.isError ? (
+                <ErrorState onRetry={() => adminSubsQuery.refetch()} />
+              ) : (
+                <div className="space-y-3">
+                  {(() => {
+                    const list = (adminSubsQuery.data ?? []).filter((s: any) =>
+                      adminFilter === "all" ? true : s.status === adminFilter,
+                    );
+
+                    if (list.length === 0) {
+                      return (
+                        <p className="text-sm text-neutral-400 py-6 text-center">
+                          Nenhuma assinatura encontrada para este filtro.
+                        </p>
+                      );
+                    }
+
+                    return list.map((sub: any) => {
+                      const meta =
+                        MP_STATUS_INFO[sub.status as SubscriptionStatus] ||
+                        MP_STATUS_INFO.active;
+
+                      return (
+                        <div
+                          key={sub.id}
+                          className="surface-card border-white/5 bg-white/[0.01] hover:bg-white/[0.02] p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-4 text-sm"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white">
+                                {sub.barbershops?.name || "Barbearia sem nome"}
+                              </span>
+                              <Badge
+                                variant="outline"
+                                className={cn("text-[10px] py-0 font-medium", meta.badgeCls)}
+                              >
+                                {meta.label}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-neutral-400 flex flex-wrap gap-x-4 gap-y-1">
+                              <span>Slug: /{sub.barbershops?.slug || "-"}</span>
+                              <span>WhatsApp: {sub.barbershops?.whatsapp || "N/A"}</span>
+                              <span className="font-mono">ID MP: {sub.mercadopago_preapproval_id || "Nenhum"}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-6 text-xs text-neutral-300">
+                            <div>
+                              <span className="text-neutral-500 block">Mensalidade</span>
+                              <span className="font-semibold text-white">
+                                {brl(Math.round(Number(sub.monthly_amount || 49.9) * 100))}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-neutral-500 block">Próx. Cobrança</span>
+                              <span>
+                                {sub.next_payment_date ? dateLabel(sub.next_payment_date) : "Dia 5"}
+                              </span>
+                            </div>
+
+                            <div>
+                              <span className="text-neutral-500 block">Último Pagamento</span>
+                              <span>
+                                {sub.last_payment_date ? dateLabel(sub.last_payment_date) : "Pendente"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </AppShell>
   );
 }

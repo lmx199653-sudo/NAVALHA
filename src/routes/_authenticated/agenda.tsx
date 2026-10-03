@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase-guard";
 import { useShop } from "@/hooks/useShop";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { EmptyState, ErrorState, ListSkeleton } from "@/components/ui/states";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 
 function AgendaPage() {
   const { data: shop } = useShop();
+  const { isRestricted } = useSubscriptionAccess();
   const qc = useQueryClient();
   const [view, setView] = useState<View>("day");
   const [anchor, setAnchor] = useState(new Date());
@@ -332,12 +334,31 @@ function AgendaPage() {
         <Dialog
           open={open}
           onOpenChange={(v) => {
+            if (v && isRestricted) {
+              toast.error(
+                "Acesso restrito: criação de novos agendamentos bloqueada por pendência no pagamento. Regularize no menu Minha assinatura.",
+              );
+              return;
+            }
             setOpen(v);
             if (!v) setNewTime(undefined);
           }}
         >
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5" onClick={() => setNewTime(undefined)}>
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={(e) => {
+                if (isRestricted) {
+                  e.preventDefault();
+                  toast.error(
+                    "Acesso restrito: criação de novos agendamentos bloqueada por pendência no pagamento. Regularize no menu Minha assinatura.",
+                  );
+                  return;
+                }
+                setNewTime(undefined);
+              }}
+            >
               <Plus className="size-4" /> Novo
             </Button>
           </DialogTrigger>
@@ -415,6 +436,12 @@ function AgendaPage() {
           onSelectAppointment={(id) => setEditing(id)}
           onReschedule={(params) => reschedule.mutate(params)}
           onCreateAt={(hour) => {
+            if (isRestricted) {
+              toast.error(
+                "Acesso restrito: criação de novos agendamentos bloqueada por pendência no pagamento. Regularize no menu Minha assinatura.",
+              );
+              return;
+            }
             setNewTime(`${String(hour).padStart(2, "0")}:00`);
             setOpen(true);
           }}

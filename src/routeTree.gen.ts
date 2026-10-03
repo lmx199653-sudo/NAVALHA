@@ -36,6 +36,7 @@ import { Route as AuthenticatedSuporteChatRouteImport } from './routes/_authenti
 import { Route as AuthenticatedSuporteInboxRouteImport } from './routes/_authenticated/suporte-inbox'
 import { Route as BarbeariaSlugRouteImport } from './routes/barbearia.$slug'
 import { Route as ApiPublicBillingPixWebhookRouteImport } from './routes/api/public/billing/pix-webhook'
+import { Route as ApiPublicMercadopagoWebhookRouteImport } from './routes/api/public/mercadopago/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -176,6 +177,12 @@ const ApiPublicBillingPixWebhookRoute =
     path: '/api/public/billing/pix-webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMercadopagoWebhookRoute =
+  ApiPublicMercadopagoWebhookRouteImport.update({
+    id: '/api/public/mercadopago/webhook',
+    path: '/api/public/mercadopago/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -232,6 +240,7 @@ export interface FileRoutesByTo {
   '/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -262,6 +271,7 @@ export interface FileRoutesById {
   '/_authenticated/suporte-inbox': typeof AuthenticatedSuporteInboxRoute
   '/barbearia/$slug': typeof BarbeariaSlugRoute
   '/api/public/billing/pix-webhook': typeof ApiPublicBillingPixWebhookRoute
+  '/api/public/mercadopago/webhook': typeof ApiPublicMercadopagoWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
+    | '/api/public/mercadopago/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
+    | '/api/public/mercadopago/webhook'
   id:
     | '__root__'
     | '/'
@@ -349,6 +361,7 @@ export interface FileRouteTypes {
     | '/_authenticated/suporte-inbox'
     | '/barbearia/$slug'
     | '/api/public/billing/pix-webhook'
+    | '/api/public/mercadopago/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -364,6 +377,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   BarbeariaSlugRoute: typeof BarbeariaSlugRoute
   ApiPublicBillingPixWebhookRoute: typeof ApiPublicBillingPixWebhookRoute
+  ApiPublicMercadopagoWebhookRoute: typeof ApiPublicMercadopagoWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -557,6 +571,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBillingPixWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/mercadopago/webhook': {
+      id: '/api/public/mercadopago/webhook'
+      path: '/api/public/mercadopago/webhook'
+      fullPath: '/api/public/mercadopago/webhook'
+      preLoaderRoute: typeof ApiPublicMercadopagoWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -612,6 +633,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   BarbeariaSlugRoute: BarbeariaSlugRoute,
   ApiPublicBillingPixWebhookRoute: ApiPublicBillingPixWebhookRoute,
+  ApiPublicMercadopagoWebhookRoute: ApiPublicMercadopagoWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
