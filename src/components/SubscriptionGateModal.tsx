@@ -13,11 +13,12 @@ export function SubscriptionGateModal() {
   const [loading, setLoading] = useState(false);
 
   const pathname = useRouterState({
-    select: (s) => s.location.pathname,
+    select: (s) => s.location?.pathname || "",
   });
 
   // Não bloqueia caso esteja na tela de cobrança ou suporte para poder pagar/pedir ajuda
   const isAllowedPath =
+    !pathname ||
     pathname.startsWith("/cobranca") ||
     pathname.startsWith("/suporte-chat") ||
     pathname.startsWith("/auth") ||
