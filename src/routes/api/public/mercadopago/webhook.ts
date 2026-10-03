@@ -18,7 +18,7 @@ function verifySignature(
     let hash = "";
 
     for (const part of parts) {
-      const [k, v] = part.trim().split("=");
+      const [k, v = ""] = part.trim().split("=");
       if (k === "ts") ts = v;
       if (k === "v1") hash = v;
     }

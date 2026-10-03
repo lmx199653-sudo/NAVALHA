@@ -127,6 +127,7 @@ export function useSubscriptionAccess() {
     } catch {
       // ignore
     }
+    return undefined;
   }, [barbershopId, qc]);
 
   const access = query.data?.access ?? "full";
