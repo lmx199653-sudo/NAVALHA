@@ -1,11 +1,49 @@
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, Lock, ShieldAlert, ArrowRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Lock, ShieldAlert, ArrowRight, Sparkles } from "lucide-react";
 import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
+import { useShop } from "@/hooks/useShop";
+import { getBarbershopPlanInfo } from "@/lib/plans";
 import { Button } from "@/components/ui/button";
 
 export function SubscriptionBanner() {
   const { access, status, inGracePeriod, daysUntilRestriction, daysUntilSuspension } =
     useSubscriptionAccess();
+  const { data: shop } = useShop();
+
+  const planInfoQuery = useQuery({
+    queryKey: ["barbershop-plan-info", shop?.id],
+    enabled: !!shop?.id,
+    queryFn: () => getBarbershopPlanInfo(shop!.id),
+    staleTime: 15_000,
+  });
+
+  const planInfo = planInfoQuery.data;
+
+  // Aviso especial: Limite de 100 agendamentos concluídos atingido no plano Grátis
+  if (planInfo?.isLimitReached) {
+    return (
+      <div className="relative z-40 bg-rose-500/20 border-b border-rose-500/40 text-rose-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="size-4 shrink-0 text-rose-400" />
+          <span>
+            <strong>Limite de 100 agendamentos atingido:</strong> Você concluiu 100 agendamentos este mês no Plano Grátis.
+            Faça upgrade para o <strong>Plano Premium (R$ 49,90/mês)</strong> para agendamentos ilimitados.
+          </span>
+        </div>
+        <Link to="/cobranca">
+          <Button
+            size="sm"
+            className="h-7 px-3 text-xs font-semibold bg-primary hover:bg-primary/90 text-black shadow-sm gap-1"
+          >
+            <Sparkles className="size-3" />
+            Fazer Upgrade
+            <ArrowRight className="size-3.5 ml-1" />
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   // Se o acesso estiver 100% normal e ativo, não exibe banner
   if (access === "full" && status !== "payment_pending") {

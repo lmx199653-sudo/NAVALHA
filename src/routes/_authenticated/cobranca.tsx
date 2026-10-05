@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -14,12 +14,9 @@ import {
   Sparkles,
   ShieldCheck,
   Zap,
-  Globe,
-  Users,
-  TrendingUp,
-  Shield,
-  ArrowUpRight,
-  HelpCircle,
+  AlertTriangle,
+  Info,
+  ArrowRight,
 } from "lucide-react";
 
 import { AppShell } from "@/components/AppShell";
@@ -35,6 +32,13 @@ import {
   fetchAllSubscriptionsAdmin,
 } from "@/lib/mercadopago.functions";
 import { MP_STATUS_INFO, type SubscriptionStatus } from "@/lib/mercadopago";
+import {
+  getBarbershopPlanInfo,
+  saveBarbershopPlan,
+  PLANS,
+  type PlanType,
+} from "@/lib/plans";
+import { PlanSelectionCards } from "@/components/PlanSelectionCards";
 import { brl, dateLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,13 +50,21 @@ export const Route = createFileRoute("/_authenticated/cobranca")({
 function MeuPlanoPage() {
   const { data: shop } = useShop();
   const { data: isSupport } = useIsSupport();
+  const qc = useQueryClient();
 
   const {
     status,
     subscription,
-    daysUntilRestriction,
     refetch: refetchAccess,
   } = useSubscriptionAccess();
+
+  // Consulta detalhes do plano, ciclo de 30 dias e contagem de agendamentos CONCLUÍDOS
+  const planInfoQuery = useQuery({
+    queryKey: ["barbershop-plan-info", shop?.id],
+    enabled: !!shop?.id,
+    queryFn: () => getBarbershopPlanInfo(shop!.id),
+    staleTime: 10_000,
+  });
 
   const invoicesQuery = useQuery({
     queryKey: ["subscription-invoices", shop?.id],
@@ -78,11 +90,41 @@ function MeuPlanoPage() {
 
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [adminFilter, setAdminFilter] = useState<string>("all");
+  const [switchingPlan, setSwitchingPlan] = useState<PlanType | null>(null);
 
   const statusMeta =
     MP_STATUS_INFO[status as SubscriptionStatus] || MP_STATUS_INFO.active;
 
-  async function handleStartSubscription() {
+  const planInfo = planInfoQuery.data;
+  const currentPlanType: PlanType = planInfo?.planType ?? (subscription?.mercadopago_plan_id === "premium" ? "premium" : "free");
+  const isPremium = currentPlanType === "premium";
+
+  // Troca de plano limpa e direta: salva na conta, inicia ciclo de 30 dias sem cobrança imediata
+  async function handleSelectPlan(chosenPlan: PlanType) {
+    if (!shop?.id) {
+      toast.error("Barbearia não selecionada.");
+      return;
+    }
+    setSwitchingPlan(chosenPlan);
+    try {
+      await saveBarbershopPlan(shop.id, chosenPlan);
+      await qc.invalidateQueries({ queryKey: ["barbershop-plan-info", shop.id] });
+      await qc.invalidateQueries({ queryKey: ["subscription-access", shop.id] });
+      refetchAccess();
+      toast.success(
+        chosenPlan === "premium"
+          ? "Plano Premium selecionado! Ciclo de 30 dias iniciado."
+          : "Plano Grátis ativado com sucesso!",
+      );
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao salvar o plano escolhido.");
+    } finally {
+      setSwitchingPlan(null);
+    }
+  }
+
+  async function handleStartMercadoPago() {
     if (!shop?.id) {
       toast.error("Barbearia não selecionada.");
       return;
@@ -111,26 +153,17 @@ function MeuPlanoPage() {
     }
   }
 
-  const isPaid = status === "active";
-  const monthlyPrice = subscription?.monthly_amount
-    ? brl(Math.round(subscription.monthly_amount * 100))
-    : "R$ 49,90";
-
-  const nextBilling = subscription?.next_payment_date
-    ? dateLabel(subscription.next_payment_date)
-    : "Dia 05 do próximo mês";
-
   return (
     <AppShell
       title="Meu Plano"
-      subtitle="Gerencie a assinatura do seu sistema NAVALHA PRO"
+      subtitle="Gerencie seu plano, ciclo de faturamento e agendamentos concluídos"
       action={
         <div className="flex items-center gap-2">
           <Badge
             variant="outline"
             className={cn("border font-medium px-3 py-1 text-xs shadow-sm", statusMeta.badgeCls)}
           >
-            {statusMeta.label}
+            {isPremium ? "Plano Premium" : "Plano Grátis"}
           </Badge>
           <Button
             size="sm"
@@ -138,8 +171,9 @@ function MeuPlanoPage() {
             className="h-8 gap-1.5 text-xs text-neutral-400 hover:text-white border-white/10"
             onClick={() => {
               refetchAccess();
+              planInfoQuery.refetch();
               invoicesQuery.refetch();
-              toast.info("Status atualizado.");
+              toast.info("Dados atualizados.");
             }}
           >
             <RefreshCw className="size-3.5" />
@@ -163,290 +197,203 @@ function MeuPlanoPage() {
           </TabsList>
         )}
 
-        {/* TAB 1: MEU PLANO (DESIGN PREMIUM, COMPLETO E ORGANIZADO) */}
+        {/* TAB 1: MEU PLANO */}
         <TabsContent value="plano" className="space-y-6 mt-0">
-          {/* AVISOS DE STATUS (GRACE PERIOD OU RESTRIÇÃO) */}
-          {status === "payment_pending" && (
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm text-amber-200 shadow-lg shadow-amber-500/5">
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
-                  <Clock className="size-4 text-amber-400" />
+          {/* ALERTA: LIMITE DE 100 AGENDAMENTOS CONCLUÍDOS ATINGIDO NO PLANO GRÁTIS */}
+          {planInfo?.isLimitReached && (
+            <div className="rounded-2xl border-2 border-rose-500/50 bg-gradient-to-r from-rose-500/20 via-rose-500/10 to-transparent p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl shadow-rose-950/20">
+              <div className="flex items-start gap-3.5">
+                <div className="size-10 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertTriangle className="size-5 text-rose-400" />
                 </div>
                 <div>
-                  <span className="font-semibold block text-amber-300">
-                    Aguardando renovação mensal
-                  </span>
-                  <span className="text-amber-200/80">
-                    Sua assinatura está no período de tolerância. Regularize até o dia 8 para manter o sistema liberado.
-                  </span>
+                  <h3 className="font-bold text-white text-base">
+                    Limite de 100 agendamentos concluídos atingido no mês!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-rose-200/90 mt-1 max-w-2xl leading-relaxed">
+                    Você atingiu o teto de 100 atendimentos concluídos do Plano Grátis neste ciclo.
+                    Faça upgrade para o <strong>Plano Premium (R$ 49,90/mês)</strong> para agendamentos ilimitados e continuar atendendo sem barreiras.
+                  </p>
                 </div>
               </div>
               <Button
-                size="sm"
-                onClick={handleStartSubscription}
-                disabled={checkoutLoading}
-                className="bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs h-9 px-4 shrink-0 shadow-md"
+                onClick={() => handleSelectPlan("premium")}
+                disabled={switchingPlan !== null}
+                className="bg-primary hover:bg-primary/90 text-black font-bold text-sm h-11 px-5 shrink-0 shadow-lg shadow-primary/25 gap-1.5"
               >
-                Pagar agora
+                <Sparkles className="size-4" />
+                Fazer Upgrade para Premium
+                <ArrowRight className="size-4" />
               </Button>
             </div>
           )}
 
-          {status === "restricted" && (
-            <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm text-orange-200 shadow-lg shadow-orange-500/5">
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-lg bg-orange-500/20 flex items-center justify-center shrink-0">
-                  <ShieldAlert className="size-4 text-orange-400" />
-                </div>
-                <div>
-                  <span className="font-semibold block text-orange-300">
-                    Acesso restrito para novos agendamentos
-                  </span>
-                  <span className="text-orange-200/80">
-                    Regularize seu pagamento para liberar a agenda e permitir novas marcações imediatamente.
-                  </span>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleStartSubscription}
-                disabled={checkoutLoading}
-                className="bg-orange-500 hover:bg-orange-400 text-black font-semibold text-xs h-9 px-4 shrink-0 shadow-md"
-              >
-                Regularizar Plano
-              </Button>
-            </div>
-          )}
-
-          {status === "suspended" && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs sm:text-sm text-rose-200 shadow-lg shadow-rose-500/5">
-              <div className="flex items-center gap-3">
-                <div className="size-8 rounded-lg bg-rose-500/20 flex items-center justify-center shrink-0">
-                  <Lock className="size-4 text-rose-400" />
-                </div>
-                <div>
-                  <span className="font-semibold block text-rose-300">
-                    Acesso suspenso
-                  </span>
-                  <span className="text-rose-200/80">
-                    Seus dados e históricos estão 100% preservados. Ative a assinatura para desbloquear o sistema.
-                  </span>
-                </div>
-              </div>
-              <Button
-                size="sm"
-                onClick={handleStartSubscription}
-                disabled={checkoutLoading}
-                className="bg-rose-500 hover:bg-rose-400 text-white font-semibold text-xs h-9 px-4 shrink-0 shadow-md"
-              >
-                Desbloquear Agora
-              </Button>
-            </div>
-          )}
-
-          {/* 4 CARDS DE STATUS / KPIS (VISUAL ELEGANTE) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {/* Card 1: Status Atual */}
+          {/* 4 CARDS DE INDICADORES / KPIS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Plano Atual */}
             <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
-              <div className="size-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                <Sparkles className="size-5 text-amber-400" />
+              <div className={cn(
+                "size-10 rounded-xl flex items-center justify-center shrink-0 border",
+                isPremium
+                  ? "bg-amber-500/15 border-amber-500/30 text-amber-400"
+                  : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+              )}>
+                {isPremium ? <Sparkles className="size-5" /> : <Zap className="size-5" />}
               </div>
               <div>
                 <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
-                  Situação
+                  Plano Atual
                 </span>
                 <span className="text-sm font-bold text-white flex items-center gap-1.5">
-                  <span className={cn(
-                    "size-2 rounded-full",
-                    isPaid ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
-                  )} />
-                  {isPaid ? "Plano Ativo" : statusMeta.label}
+                  {isPremium ? "Plano 2 — Premium" : "Plano 1 — Grátis"}
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  {isPremium ? "R$ 49,90/mês" : "R$ 0 · Grátis"}
                 </span>
               </div>
             </div>
 
-            {/* Card 2: Valor */}
+            {/* Card 2: Ciclo Vigente de 30 Dias */}
             <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
-              <div className="size-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-                <CreditCard className="size-5 text-emerald-400" />
+              <div className="size-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0 text-blue-400">
+                <Calendar className="size-5" />
               </div>
               <div>
                 <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
-                  Mensalidade
+                  Ciclo de 30 Dias
                 </span>
                 <span className="text-sm font-bold text-white">
-                  {monthlyPrice}
-                  <span className="text-xs font-normal text-neutral-400">/mês</span>
+                  {planInfo ? `${planInfo.daysLeft} dias restantes` : "Ciclo em andamento"}
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  {planInfo?.cycleEnd ? `Renovação: ${dateLabel(planInfo.cycleEnd)}` : "30 dias"}
                 </span>
               </div>
             </div>
 
-            {/* Card 3: Vencimento */}
+            {/* Card 3: Agendamentos Concluídos no Mês */}
             <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
-              <div className="size-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                <Calendar className="size-5 text-blue-400" />
+              <div className={cn(
+                "size-10 rounded-xl flex items-center justify-center shrink-0 border",
+                planInfo?.isLimitReached
+                  ? "bg-rose-500/15 border-rose-500/30 text-rose-400"
+                  : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+              )}>
+                <Check className="size-5" />
               </div>
-              <div>
+              <div className="w-full min-w-0">
                 <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
-                  Vencimento Fixo
+                  Agendamentos Concluídos
                 </span>
                 <span className="text-sm font-bold text-white">
-                  Todo dia 05
-                </span>
-              </div>
-            </div>
-
-            {/* Card 4: Plataforma Segura */}
-            <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
-              <div className="size-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                <ShieldCheck className="size-5 text-purple-400" />
-              </div>
-              <div>
-                <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
-                  Processamento
-                </span>
-                <span className="text-sm font-bold text-white">
-                  Mercado Pago
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* CARD PRINCIPAL DO PLANO: LUXO, ELEGANTE E COMPLETO */}
-          <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-br from-[#15171E] via-[#0E1014] to-[#0A0B0E] p-6 sm:p-8 shadow-2xl">
-            {/* Brilho de fundo sutil */}
-            <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
-              {/* Lado Esquerdo: Identificação e Ação */}
-              <div className="lg:col-span-5 space-y-5">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold mb-3">
-                    <Sparkles className="size-3.5" />
-                    <span>Acesso Total e Ilimitado</span>
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-extrabold font-display text-white tracking-tight">
-                    NAVALHA PRO
-                  </h2>
-                  <p className="text-xs sm:text-sm text-neutral-400 mt-1.5 leading-relaxed">
-                    Sua barbearia no controle total: agendamentos 24h, finanças automatizadas e gestão da equipe.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5 space-y-1">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-                      {monthlyPrice}
-                    </span>
-                    <span className="text-xs text-neutral-400">/mês</span>
-                  </div>
-                  <p className="text-[11px] text-amber-400/90 leading-tight">
-                    Vencimento unificado todo dia 05 com cobrança proporcional na adesão.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Button
-                    onClick={handleStartSubscription}
-                    disabled={checkoutLoading}
-                    className="w-full h-12 text-sm font-bold bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 hover:from-amber-400 hover:to-amber-200 text-black shadow-lg shadow-amber-500/25 active:scale-98 rounded-xl transition-all"
-                  >
-                    {checkoutLoading ? (
-                      <RefreshCw className="size-4 animate-spin mr-2" />
+                  {planInfo ? (
+                    isPremium ? (
+                      `${planInfo.completedCount} (Ilimitados)`
                     ) : (
-                      <CreditCard className="size-4 mr-2" />
-                    )}
-                    {isPaid ? "Gerenciar Assinatura no Mercado Pago" : "Ativar Assinatura no Mercado Pago"}
-                  </Button>
-
-                  <div className="flex items-center justify-between text-[11px] text-neutral-500 px-1 pt-1">
-                    <span className="flex items-center gap-1">
-                      <Shield className="size-3 text-neutral-400" />
-                      Sem fidelidade, cancele quando quiser
-                    </span>
-                    <span>Próximo ciclo: {nextBilling}</span>
+                      `${planInfo.completedCount} / 100`
+                    )
+                  ) : (
+                    "0"
+                  )}
+                </span>
+                {/* Barra de progresso para o plano Grátis */}
+                {!isPremium && (
+                  <div className="w-full bg-white/10 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all duration-300",
+                        planInfo?.isLimitReached
+                          ? "bg-rose-500"
+                          : (planInfo?.percentageUsed ?? 0) > 80
+                          ? "bg-amber-500"
+                          : "bg-emerald-500",
+                      )}
+                      style={{ width: `${planInfo?.percentageUsed ?? 0}%` }}
+                    />
                   </div>
-                </div>
+                )}
               </div>
+            </div>
 
-              {/* Linha Divisória para telas grandes */}
-              <div className="hidden lg:block lg:col-span-1 border-r border-white/10 h-full my-auto" />
-
-              {/* Lado Direito: Lista de Benefícios e Recursos Inclusos */}
-              <div className="lg:col-span-6 space-y-3.5">
-                <h3 className="text-xs font-bold text-neutral-300 uppercase tracking-wider mb-2">
-                  Tudo o que está incluído no seu plano:
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Zap className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Agendamentos Ilimitados</span>
-                      <span className="text-[11px] text-neutral-400">Sem limite de clientes ou horários marcados</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Globe className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Página Online Própria</span>
-                      <span className="text-[11px] text-neutral-400">Link exclusivo para seu cliente agendar 24h</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Users className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Barbeiros & Equipe</span>
-                      <span className="text-[11px] text-neutral-400">Cadastre todos os profissionais sem taxa extra</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <TrendingUp className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Financeiro & Comissões</span>
-                      <span className="text-[11px] text-neutral-400">Cálculo de comissão e fluxo de caixa diário</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Sparkles className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Planos dos Clientes</span>
-                      <span className="text-[11px] text-neutral-400">Crie planos mensais para fidelizar seus clientes</span>
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-start gap-2.5">
-                    <div className="size-6 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <ShieldCheck className="size-3.5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-semibold text-white block">Dados Blindados</span>
-                      <span className="text-[11px] text-neutral-400">Backups automáticos e segurança em nuvem</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center gap-2 text-xs text-neutral-400">
-                  <Check className="size-3.5 text-amber-400" />
-                  <span>Cobrança automática sem precisar emitir boleto manualmente todo mês.</span>
-                </div>
+            {/* Card 4: Status do Acesso */}
+            <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
+              <div className="size-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0 text-purple-400">
+                <ShieldCheck className="size-5" />
+              </div>
+              <div>
+                <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
+                  Status da Conta
+                </span>
+                <span className="text-sm font-bold text-white flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Ativa e Regular
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  {isPremium ? "Cobrança mensal no ciclo" : "Sem cobranças"}
+                </span>
               </div>
             </div>
           </div>
+
+          {/* NOTA DE CONTABILIZAÇÃO EXCLUSIVA DE AGENDAMENTOS CONCLUÍDOS */}
+          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5 flex items-start gap-3 text-xs text-neutral-300">
+            <Info className="size-4 shrink-0 text-primary mt-0.5" />
+            <span>
+              <strong>Regra de contabilização transparente:</strong> Apenas agendamentos com status{" "}
+              <strong className="text-white">CONCLUÍDO</strong> são somados ao volume do ciclo.
+              Agendamentos cancelados, pendentes, futuros ou com falta do cliente <strong>não são contabilizados nem geram cobrança</strong>.
+            </span>
+          </div>
+
+          {/* SEÇÃO PRINCIPAL: ESCOLHA E ALTERNÂNCIA DE PLANOS (LADO A LADO) */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h2 className="text-lg font-bold text-white">Planos Disponíveis</h2>
+                <p className="text-xs text-neutral-400">
+                  Alterne seu plano a qualquer momento clicando em "Escolher plano". Não realizamos cobrança imediata.
+                </p>
+              </div>
+            </div>
+
+            {/* CARDS COMPARATIVOS DOS 2 PLANOS LADO A LADO COM DESTAQUE VISUAL */}
+            <PlanSelectionCards
+              currentPlan={currentPlanType}
+              loadingPlan={switchingPlan}
+              onSelectPlan={handleSelectPlan}
+            />
+          </div>
+
+          {/* SEÇÃO COMPLEMENTAR: ASSINATURA MERCADO PAGO (PARA PAGAMENTO DO PREMIUM AO FIM DO CICLO) */}
+          {isPremium && (
+            <div className="surface-card border-white/5 p-6 rounded-2xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <CreditCard className="size-4 text-amber-400" />
+                    Ambiente de Pagamento Mercado Pago
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1 max-w-xl">
+                    Configure a autorização de pagamento recorrente para o ciclo de R$ 49,90/mês.
+                    O Mercado Pago gerencia sua recorrência de forma segura.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleStartMercadoPago}
+                  disabled={checkoutLoading}
+                  variant="outline"
+                  className="h-10 text-xs border-amber-500/40 text-amber-300 hover:bg-amber-500/10 shrink-0 gap-2"
+                >
+                  {checkoutLoading ? (
+                    <RefreshCw className="size-3.5 animate-spin" />
+                  ) : (
+                    <CreditCard className="size-3.5" />
+                  )}
+                  Abrir Checkout Mercado Pago
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* HISTÓRICO DE RECIBOS E FATURAS */}
           <div className="surface-card border-white/5 p-6 rounded-2xl space-y-4">
@@ -510,7 +457,7 @@ function MeuPlanoPage() {
                 <Receipt className="size-8 mx-auto text-neutral-600 mb-2" />
                 <p className="font-medium text-neutral-300">Nenhum recibo emitido ainda</p>
                 <p className="text-neutral-500">
-                  Assim que sua primeira mensalidade for processada no Mercado Pago, os recibos e comprovantes aparecerão aqui.
+                  Os comprovantes de pagamentos processados aparecerão aqui ao final de cada ciclo.
                 </p>
               </div>
             )}

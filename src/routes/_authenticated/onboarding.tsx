@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BrandStudio, emptyBrand } from "@/components/BrandStudio";
 import type { Brand } from "@/lib/brand";
+import { PlanSelectionCards } from "@/components/PlanSelectionCards";
+import { saveBarbershopPlan, type PlanType } from "@/lib/plans";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   component: Onboarding,
@@ -25,6 +27,9 @@ function Onboarding() {
   const { userId } = useSession();
   const { data: shop, isSuccess } = useShop({ autoCreate: false });
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<"form" | "plan">("form");
+  const [createdShopId, setCreatedShopId] = useState<string | null>(null);
+  const [planLoading, setPlanLoading] = useState<PlanType | null>(null);
   const [brand, setBrand] = useState<Brand>(() => emptyBrand());
   const [form, setForm] = useState({
     name: "",
@@ -37,8 +42,10 @@ function Onboarding() {
   });
 
   useEffect(() => {
-    if (isSuccess && shop?.onboarding_done) navigate({ to: "/dashboard", replace: true });
-  }, [isSuccess, shop, navigate]);
+    if (isSuccess && shop?.onboarding_done && step !== "plan") {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [isSuccess, shop, navigate, step]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -206,11 +213,63 @@ function Onboarding() {
 
     await qc.invalidateQueries();
     setLoading(false);
-    toast.success("Barbearia criada com sucesso!");
-    navigate({ to: "/dashboard", replace: true });
+    setCreatedShopId(data.id);
+    setStep("plan");
+    toast.success("Barbearia cadastrada com sucesso! Escolha o plano.");
   }
 
-  if (shop?.onboarding_done) return null;
+  // TELA DE ESCOLHA DO PLANO (PLANO 1 — GRÁTIS vs PLANO 2 — PREMIUM)
+  if (step === "plan") {
+    return (
+      <div className="grid-noise min-h-screen px-4 py-10 sm:py-16">
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="mb-10 text-center">
+            <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/25">
+              <Sparkles className="size-6 text-primary" />
+            </span>
+            <h1 className="mt-4 font-display text-4xl leading-none sm:text-5xl tracking-wide">
+              Escolha o plano da sua barbearia
+            </h1>
+            <p className="mt-3 text-sm font-medium text-foreground/90 max-w-md mx-auto">
+              Selecione o plano ideal para o seu momento. Não realizamos nenhuma cobrança imediata.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Você pode alterar o plano a qualquer momento pelo menu de Cobrança.
+            </p>
+          </div>
+
+          <PlanSelectionCards
+            onSelectPlan={async (chosenPlan) => {
+              const targetShopId = createdShopId || shop?.id;
+              if (!targetShopId) {
+                toast.error("Barbearia não identificada.");
+                return;
+              }
+              setPlanLoading(chosenPlan);
+              try {
+                await saveBarbershopPlan(targetShopId, chosenPlan);
+                await qc.invalidateQueries();
+                toast.success(
+                  chosenPlan === "premium"
+                    ? "Plano Premium ativado com sucesso! Ciclo de 30 dias iniciado."
+                    : "Plano Grátis ativado com sucesso!",
+                );
+                navigate({ to: "/dashboard", replace: true });
+              } catch (err: any) {
+                toast.error(err.message || "Erro ao ativar o plano.");
+              } finally {
+                setPlanLoading(null);
+              }
+            }}
+            loadingPlan={planLoading}
+            hideCurrentBadge
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (shop?.onboarding_done && step !== "plan") return null;
 
   return (
     <div className="grid-noise min-h-screen px-4 py-10 sm:py-14">
