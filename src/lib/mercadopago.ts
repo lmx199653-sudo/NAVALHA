@@ -49,19 +49,19 @@ export const MP_STATUS_INFO: Record<
   },
   payment_pending: {
     label: "Pagamento Pendente",
-    description: "Cobrança gerada no dia 5. Regularize para evitar bloqueio no dia 8.",
+    description: "Cobrança gerada no dia 5. Período de tolerância ativo até o dia 15 sem interrupções.",
     tone: "amber",
     badgeCls: "bg-amber-500/10 text-amber-400 border-amber-500/30",
   },
   restricted: {
     label: "Acesso Restrito",
-    description: "Acesso restrito desde o dia 8. Criação de novos agendamentos bloqueada.",
+    description: "Tolerância encerrada no dia 15. Criação de novos agendamentos bloqueada até regularização.",
     tone: "orange",
     badgeCls: "bg-orange-500/10 text-orange-400 border-orange-500/30",
   },
   suspended: {
     label: "Acesso Suspenso",
-    description: "Sistema suspenso desde o dia 10. Regularize para reativar seu acesso.",
+    description: "Sistema suspenso por pendência financeira após o dia 15. Regularize para reativar seu acesso.",
     tone: "rose",
     badgeCls: "bg-rose-500/10 text-rose-400 border-rose-500/30",
   },

@@ -176,9 +176,9 @@ export const Route = createFileRoute("/api/public/mercadopago/webhook")({
                   });
                 } else if (pStatus === "rejected") {
                   const failedAt = new Date();
-                  const graceUntil = new Date(failedAt.getTime() + 2 * 24 * 60 * 60 * 1000); // dias 6 e 7
-                  const restrictedAt = new Date(failedAt.getTime() + 3 * 24 * 60 * 60 * 1000); // dia 8
-                  const suspendedAt = new Date(failedAt.getTime() + 5 * 24 * 60 * 60 * 1000); // dia 10
+                  const graceUntil = new Date(failedAt.getFullYear(), failedAt.getMonth(), 15, 23, 59, 59); // Tolerância até dia 15
+                  const restrictedAt = new Date(failedAt.getFullYear(), failedAt.getMonth(), 16, 0, 0, 0); // Restrição no dia 16
+                  const suspendedAt = new Date(failedAt.getFullYear(), failedAt.getMonth(), 18, 0, 0, 0); // Suspensão no dia 18
 
                   await supabaseAdmin
                     .from("subscriptions")

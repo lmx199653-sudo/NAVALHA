@@ -120,7 +120,7 @@ export const createOrGetMercadoPagoSubscription = createServerFn({ method: "POST
         transaction_amount: monthlyPrice,
         currency_id: "BRL",
         billing_day: 5,
-        billing_day_proportional: true,
+        billing_day_proportional: false,
       },
       external_reference: barbershopId,
       status: "pending",

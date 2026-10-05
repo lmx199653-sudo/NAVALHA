@@ -253,20 +253,22 @@ function MeuPlanoPage() {
               </div>
             </div>
 
-            {/* Card 2: Ciclo Vigente de 30 Dias */}
+            {/* Card 2: Ciclo Vigente (Dia 05 com tolerância dia 15) */}
             <div className="surface-card border-white/5 bg-gradient-to-b from-white/[0.04] to-transparent p-4 rounded-xl flex items-center gap-3.5 shadow-sm">
               <div className="size-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center shrink-0 text-blue-400">
                 <Calendar className="size-5" />
               </div>
               <div>
                 <span className="text-[11px] font-medium text-neutral-400 block uppercase tracking-wider">
-                  Ciclo de 30 Dias
+                  Ciclo Mensal (Dia 05)
                 </span>
                 <span className="text-sm font-bold text-white">
-                  {planInfo ? `${planInfo.daysLeft} dias restantes` : "Ciclo em andamento"}
+                  Tolerância até Dia 15
                 </span>
                 <span className="text-[11px] text-neutral-400">
-                  {planInfo?.cycleEnd ? `Renovação: ${dateLabel(planInfo.cycleEnd)}` : "30 dias"}
+                  {planInfo?.isAfterDay15
+                    ? "Após dia 15: faturamento no próximo dia 05 sem taxas"
+                    : `${planInfo?.daysLeft ?? 30} dias para o próximo ciclo`}
                 </span>
               </div>
             </div>
@@ -329,20 +331,38 @@ function MeuPlanoPage() {
                   Ativa e Regular
                 </span>
                 <span className="text-[11px] text-neutral-400">
-                  {isPremium ? "Cobrança mensal no ciclo" : "Sem cobranças"}
+                  {isPremium ? "Cobrança no dia 05" : "Sem cobranças"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* NOTA DE CONTABILIZAÇÃO EXCLUSIVA DE AGENDAMENTOS CONCLUÍDOS */}
-          <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5 flex items-start gap-3 text-xs text-neutral-300">
-            <Info className="size-4 shrink-0 text-primary mt-0.5" />
-            <span>
-              <strong>Regra de contabilização transparente:</strong> Apenas agendamentos com status{" "}
-              <strong className="text-white">CONCLUÍDO</strong> são somados ao volume do ciclo.
-              Agendamentos cancelados, pendentes, futuros ou com falta do cliente <strong>não são contabilizados nem geram cobrança</strong>.
-            </span>
+          {/* NOTA DE CONTABILIZAÇÃO EXCLUSIVA DE AGENDAMENTOS CONCLUÍDOS E REGRAS DE CICLO */}
+          <div className="space-y-2.5">
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5 flex items-start gap-3 text-xs text-neutral-300">
+              <Info className="size-4 shrink-0 text-primary mt-0.5" />
+              <span>
+                <strong>Regra de Ciclo e Cobrança:</strong> O ciclo mensal começa no <strong>dia 05</strong> de cada mês com <strong>tolerância de pagamento até o dia 15</strong> sem bloqueios.
+                {planInfo?.isAfterDay15 ? (
+                  <strong className="text-amber-300 block mt-1">
+                    🎉 Benefício ativo: como seu plano foi ativado após o dia 15, seu faturamento formal começa no próximo ciclo (dia 05) sem taxas adicionais pelo período restante!
+                  </strong>
+                ) : (
+                  <span className="text-neutral-400 block mt-0.5">
+                    Planos escolhidos após o dia 15 iniciam o faturamento no próximo ciclo (dia 05) sem cobrança de taxas no período atual.
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="rounded-xl border border-white/5 bg-white/[0.02] p-3.5 flex items-start gap-3 text-xs text-neutral-300">
+              <Check className="size-4 shrink-0 text-emerald-400 mt-0.5" />
+              <span>
+                <strong>Contabilização exclusiva:</strong> Apenas agendamentos com status{" "}
+                <strong className="text-white">CONCLUÍDO</strong> são somados ao seu limite mensal.
+                Agendamentos cancelados, pendentes, futuros ou com falta do cliente <strong>não são contabilizados nem geram cobrança</strong>.
+              </span>
+            </div>
           </div>
 
           {/* SEÇÃO PRINCIPAL: ESCOLHA E ALTERNÂNCIA DE PLANOS (LADO A LADO) */}

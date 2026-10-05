@@ -62,7 +62,7 @@ export function SubscriptionBanner() {
         <div className="flex items-center gap-2">
           <AlertTriangle className="size-4 shrink-0 text-amber-400" />
           <span>
-            <strong>Aviso de cobrança:</strong> Seu pagamento está pendente. Regularize para manter seu acesso.{" "}
+            <strong>Período de Tolerância:</strong> Ciclo iniciado no dia 5. Você possui tolerância até o dia 15 para regularizar sem bloqueio.{" "}
             <span className="text-amber-300/80 hidden md:inline">({restMsg})</span>
           </span>
         </div>
